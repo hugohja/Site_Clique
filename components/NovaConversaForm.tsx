@@ -3,48 +3,36 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EVENT_TYPES, type PublicClient } from "@/lib/types";
+import { EVENT_TYPES } from "@/lib/types";
 
-/**
- * Só clientes cadastrados (conta verificada) iniciam conversa. Sem login, o
- * "usuário atual" é o id guardado em localStorage no cadastro de cliente.
- */
+interface Me {
+  account: { role: "profissional" | "cliente" } | null;
+  profile?: { name: string; verificationStatus: string } | null;
+}
+
+/** Só uma conta de CLIENTE logada inicia conversa (contas são separadas). */
 export default function NovaConversaForm({ professionalId }: { professionalId: string }) {
   const router = useRouter();
+  const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [client, setClient] = useState<PublicClient | null>(null);
-  const [checking, setChecking] = useState(true);
-
   const backHere = `/profissional/${professionalId}/conversar`;
 
   useEffect(() => {
-    let active = true;
-    const id = (() => {
-      try {
-        return localStorage.getItem("clica:clientId");
-      } catch {
-        return null;
-      }
-    })();
-    if (!id) {
-      setChecking(false);
-      return;
-    }
-    fetch(`/api/clients/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((c) => {
-        if (active) setClient(c);
-      })
-      .finally(() => active && setChecking(false));
-    return () => {
-      active = false;
-    };
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then(setMe)
+      .catch(() => setMe({ account: null }));
   }, []);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setMe({ account: null });
+    router.refresh();
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!client) return;
     setError(null);
     const data = new FormData(event.currentTarget);
     setSending(true);
@@ -54,7 +42,6 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId,
-          clientId: client.id,
           eventType: data.get("eventType"),
           eventDate: data.get("eventDate"),
           eventLocation: data.get("eventLocation"),
@@ -66,13 +53,6 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
         setError(body.error ?? "Não foi possível iniciar a conversa.");
         return;
       }
-      try {
-        const mine = JSON.parse(localStorage.getItem("clica:conversas") ?? "[]");
-        mine.push(body.id);
-        localStorage.setItem("clica:conversas", JSON.stringify(mine));
-      } catch {
-        // localStorage indisponível não impede o fluxo.
-      }
       router.push(`/conversa/${body.id}`);
     } catch {
       setError("Falha de conexão. Tente de novo.");
@@ -81,25 +61,46 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
     }
   }
 
-  if (checking) {
+  if (!me) {
     return (
       <p className="mono" style={{ color: "var(--text-dim)", marginTop: "2rem" }}>
-        verificando seu cadastro…
+        verificando sua conta…
       </p>
     );
   }
 
-  if (!client) {
+  if (!me.account) {
     return (
       <div className="gate-card">
-        <h2 className="section-title">Antes de conversar, crie sua conta de cliente</h2>
+        <h2 className="section-title">Entre pra conversar</h2>
         <p>
-          Pra segurança dos dois lados, quem contrata também passa por um cadastro com verificação
-          de identidade. É rápido e você só faz uma vez.
+          Pra falar com um profissional você precisa de uma conta de cliente, com verificação de
+          identidade — pra segurança dos dois lados.
         </p>
-        <Link href={`/sou-cliente?next=${encodeURIComponent(backHere)}`} className="btn">
-          Criar conta de cliente
-        </Link>
+        <div className="gate-actions">
+          <Link href={`/sou-cliente?next=${encodeURIComponent(backHere)}`} className="btn">
+            Criar conta de cliente
+          </Link>
+          <Link href={`/entrar?next=${encodeURIComponent(backHere)}`} className="btn btn-ghost">
+            Já tenho conta
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (me.account.role === "profissional") {
+    return (
+      <div className="gate-card">
+        <h2 className="section-title">Você está numa conta profissional</h2>
+        <p>
+          Contas são separadas: pra contratar alguém, saia e entre (ou crie) uma conta de cliente.
+        </p>
+        <div className="gate-actions">
+          <button type="button" className="btn btn-ghost" onClick={logout}>
+            Sair desta conta
+          </button>
+        </div>
       </div>
     );
   }
@@ -107,8 +108,8 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
   return (
     <>
       <p className="client-chip mono">
-        conversando como <strong>{client.name}</strong> · identidade{" "}
-        {client.verificationStatus === "verificado" ? "verificada ✓" : "em análise"}
+        conversando como <strong>{me.profile?.name}</strong> · identidade{" "}
+        {me.profile?.verificationStatus === "verificado" ? "verificada ✓" : "em análise"}
       </p>
       <form className="pro-form" onSubmit={handleSubmit}>
         <div className="field-row">
@@ -133,13 +134,7 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
 
         <div className="field">
           <label htmlFor="eventLocation">Local do evento (cidade / espaço)</label>
-          <input
-            id="eventLocation"
-            name="eventLocation"
-            required
-            minLength={3}
-            placeholder="Ex: Goiânia, Salão Buriti"
-          />
+          <input id="eventLocation" name="eventLocation" required minLength={3} placeholder="Ex: Goiânia, Salão Buriti" />
         </div>
 
         <div className="field">
@@ -152,8 +147,7 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
             placeholder="Conte o que você precisa: horas de cobertura, estilo, o que é importante pra você."
           />
           <span className="form-hint">
-            A conversa fica dentro do Clica. Mensagens com telefone, links ou redes sociais são
-            censuradas automaticamente até o pagamento ser confirmado.
+            Telefone, links e redes sociais são censurados até o pagamento ser confirmado.
           </span>
         </div>
 

@@ -1,10 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { clientRepository, conversationRepository, repository } from "@/lib/data";
+import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
 import { EVENT_TYPES } from "@/lib/types";
+import { currentAccount } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  // Só uma conta de CLIENTE logada pode iniciar conversa (separação de contas).
+  const account = await currentAccount((id) => accountRepository.getById(id));
+  if (!account) {
+    return NextResponse.json({ error: "Entre com sua conta de cliente pra conversar." }, { status: 401 });
+  }
+  if (account.role !== "cliente") {
+    return NextResponse.json(
+      { error: "Você está numa conta profissional. Para contratar, entre como cliente." },
+      { status: 403 }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -13,7 +26,6 @@ export async function POST(request: NextRequest) {
   }
 
   const professionalId = String(body.professionalId ?? "");
-  const clientId = String(body.clientId ?? "");
   const eventType = String(body.eventType ?? "");
   const eventDate = String(body.eventDate ?? "");
   const eventLocation = String(body.eventLocation ?? "").trim();
@@ -28,9 +40,8 @@ export async function POST(request: NextRequest) {
   const professional = await repository.getById(professionalId);
   if (!professional) errors.push("Profissional não encontrado.");
 
-  // Cliente precisa estar cadastrado (conta verificada) pra iniciar conversa.
-  const client = clientId ? await clientRepository.getById(clientId) : null;
-  if (!client) errors.push("Faça seu cadastro de cliente antes de iniciar uma conversa.");
+  const client = await clientRepository.getById(account.clientId ?? "");
+  if (!client) errors.push("Conta de cliente não encontrada.");
 
   if (errors.length > 0 || !client) {
     return NextResponse.json({ error: errors.join(" ") || "Cadastro de cliente necessário." }, { status: 400 });

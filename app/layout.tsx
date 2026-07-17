@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
+import HeaderNav from "@/components/HeaderNav";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
@@ -45,17 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="logo">
               Clica<span className="logo-dot">●</span>
             </Link>
-            <nav className="header-nav">
-              <Link href="/" className="nav-link">
-                Buscar
-              </Link>
-              <Link href="/sou-cliente" className="nav-link">
-                Sou cliente
-              </Link>
-              <Link href="/cadastro" className="nav-link nav-link-cta">
-                Sou profissional
-              </Link>
-            </nav>
+            <HeaderNav />
           </div>
         </header>
         <main>{children}</main>

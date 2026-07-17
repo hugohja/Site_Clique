@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CITIES } from "@/lib/types";
+import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
 
 /** Cadastro de cliente (quem contrata). Mesma verificação de identidade dos profissionais. */
@@ -17,6 +18,11 @@ export default function ClientForm() {
     event.preventDefault();
     setError(null);
     const data = new FormData(event.currentTarget);
+    if (String(data.get("password")) !== String(data.get("password2"))) {
+      setError("As senhas não conferem.");
+      return;
+    }
+    data.delete("password2");
     setSending(true);
     try {
       const res = await fetch("/api/clients", { method: "POST", body: data });
@@ -25,13 +31,9 @@ export default function ClientForm() {
         setError(body.error ?? "Não foi possível concluir o cadastro. Tente de novo.");
         return;
       }
-      // "Usuário atual" sem login: guarda o id no aparelho.
-      try {
-        localStorage.setItem("clica:clientId", body.id);
-      } catch {
-        // localStorage indisponível não impede o fluxo.
-      }
+      // A sessão já vem no cookie httpOnly da resposta.
       router.push(next && next.startsWith("/") ? next : "/");
+      router.refresh();
     } catch {
       setError("Falha de conexão. Tente de novo.");
     } finally {
@@ -59,11 +61,16 @@ export default function ClientForm() {
         </div>
       </div>
 
+      <CredentialFields />
       <IdentityFields />
 
       <p className="form-hint">
-        Ao enviar, sua identidade entra em análise. CPF e documento ficam privados; seu WhatsApp só
-        é revelado ao profissional após o pagamento confirmado.
+        Ao criar, você entra logado. CPF e documento ficam privados; seu WhatsApp só é revelado ao
+        profissional após o pagamento confirmado. Já tem conta?{" "}
+        <a href="/entrar" style={{ textDecoration: "underline" }}>
+          Entrar
+        </a>
+        .
       </p>
 
       {error && <div className="form-error">{error}</div>}

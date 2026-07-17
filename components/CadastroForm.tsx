@@ -3,40 +3,51 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CITIES, EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES } from "@/lib/types";
+import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
+import PortfolioUploader, { type PortfolioDraft } from "@/components/PortfolioUploader";
 
 export default function CadastroForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [portfolio, setPortfolio] = useState<PortfolioDraft[]>([]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
     const form = event.currentTarget;
-    const data = new FormData(form);
+    const fd = new FormData(form);
 
-    if (data.getAll("specialties").length === 0) {
+    if (fd.getAll("specialties").length === 0) {
       setError("Escolha ao menos uma especialidade.");
       return;
     }
-    const portfolioCount = form.elements.namedItem("portfolioPhotos") as HTMLInputElement | null;
-    if (!portfolioCount?.files || portfolioCount.files.length < MIN_PORTFOLIO_PHOTOS) {
-      setError(`Envie ao menos ${MIN_PORTFOLIO_PHOTOS} fotos de portfólio.`);
+    if (String(fd.get("password")) !== String(fd.get("password2"))) {
+      setError("As senhas não conferem.");
+      return;
+    }
+    if (portfolio.length < MIN_PORTFOLIO_PHOTOS) {
+      setError(`Adicione ao menos ${MIN_PORTFOLIO_PHOTOS} fotos de portfólio.`);
       return;
     }
 
+    // Monta o multipart: campos do form + fotos do uploader (com formato/capa).
+    fd.delete("password2");
+    portfolio.forEach((p) => fd.append("portfolioPhotos", p.file));
+    fd.set("portfolioMeta", JSON.stringify(portfolio.map((p) => ({ aspect: p.aspect, cover: p.cover }))));
+
     setSending(true);
     try {
-      // Multipart: fotos e documento vão junto, sem JSON.
-      const res = await fetch("/api/professionals", { method: "POST", body: data });
+      const res = await fetch("/api/professionals", { method: "POST", body: fd });
       const body = await res.json();
       if (!res.ok) {
         setError(body.error ?? "Não foi possível concluir o cadastro. Tente de novo.");
         return;
       }
       router.push(`/profissional/${body.id}`);
+      router.refresh();
     } catch {
       setError("Falha de conexão. Tente de novo.");
     } finally {
@@ -97,17 +108,6 @@ export default function CadastroForm() {
         <input id="priceFrom" name="priceFrom" type="number" min={1} step={1} required placeholder="Ex: 800" />
       </div>
 
-      <IdentityFields />
-
-      <div className="field">
-        <label htmlFor="portfolioPhotos">Fotos do portfólio (obrigatórias)</label>
-        <input id="portfolioPhotos" name="portfolioPhotos" type="file" accept="image/*" multiple required />
-        <span className="form-hint">
-          Selecione ao menos {MIN_PORTFOLIO_PHOTOS} de uma vez (até 12). São o que o cliente vê no
-          seu perfil.
-        </span>
-      </div>
-
       <div className="field">
         <label htmlFor="bio">Bio</label>
         <textarea
@@ -119,15 +119,22 @@ export default function CadastroForm() {
         />
       </div>
 
-      <p className="form-hint">
-        Ao enviar, sua identidade entra em análise. WhatsApp, CPF e documento ficam privados — o
-        contato só é revelado a um cliente após o pagamento confirmado.
+      <hr className="form-sep" />
+      <p className="form-sec-title">Portfólio (obrigatório)</p>
+      <PortfolioUploader items={portfolio} onChange={setPortfolio} />
+
+      <CredentialFields />
+      <IdentityFields />
+
+      <p className="fieldset-note">
+        Ao criar, você entra logado. Sua identidade fica em análise. WhatsApp, CPF e documento ficam
+        privados — o contato só é revelado a um cliente após o pagamento confirmado.
       </p>
 
       {error && <div className="form-error">{error}</div>}
 
       <button type="submit" className="btn" disabled={sending}>
-        {sending ? "Enviando…" : "Criar meu perfil"}
+        {sending ? "Enviando…" : "Criar conta profissional"}
       </button>
     </form>
   );

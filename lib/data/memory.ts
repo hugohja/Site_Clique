@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type {
+  Account,
   ChatMessage,
   Client,
   ClientInput,
@@ -13,6 +14,7 @@ import type {
 import { COMMISSION_RATE } from "@/lib/types";
 import { SEED_PROFESSIONALS } from "./seed";
 import type {
+  AccountRepository,
   ClientRepository,
   ConversationRepository,
   ProfessionalFilters,
@@ -31,6 +33,7 @@ const g = globalThis as unknown as {
   __clicaStore?: Professional[];
   __clicaClients?: Client[];
   __clicaConversations?: Conversation[];
+  __clicaAccounts?: Account[];
 };
 
 function store(): Professional[] {
@@ -43,6 +46,11 @@ function store(): Professional[] {
 function clients(): Client[] {
   if (!g.__clicaClients) g.__clicaClients = [];
   return g.__clicaClients;
+}
+
+function accounts(): Account[] {
+  if (!g.__clicaAccounts) g.__clicaAccounts = [];
+  return g.__clicaAccounts;
 }
 
 function conversations(): Conversation[] {
@@ -100,12 +108,14 @@ export const memoryRepository: ProfessionalRepository = {
   },
 
   async create(input: ProfessionalInput) {
-    const portfolio: PortfolioItem[] = input.portfolioUrls.map((url, i) => ({
+    const hasCover = input.portfolio.some((ph) => ph.cover);
+    const portfolio: PortfolioItem[] = input.portfolio.map((ph, i) => ({
       id: `up-${Date.now()}-${i}`,
       label: `IMG_${1000 + i}.JPG`,
-      tone: i % 6,
-      aspect: (["wide", "square", "tall"] as const)[i % 3],
-      url,
+      aspect: ph.aspect,
+      // Garante uma capa: se ninguém marcou, a primeira vira capa.
+      cover: ph.cover || (!hasCover && i === 0),
+      url: ph.url,
     }));
     const professional: Professional = {
       id: slugify(input.name, (id) => store().some((p) => p.id === id)),
@@ -148,6 +158,45 @@ export const memoryClientRepository: ClientRepository = {
     };
     clients().push(client);
     return client;
+  },
+};
+
+export const memoryAccountRepository: AccountRepository = {
+  async getById(id: string) {
+    return accounts().find((a) => a.id === id) ?? null;
+  },
+
+  async getByEmail(email: string) {
+    const e = email.trim().toLowerCase();
+    return accounts().find((a) => a.email === e) ?? null;
+  },
+
+  async create(input) {
+    const account: Account = {
+      id: randomUUID(),
+      role: input.role,
+      email: input.email.trim().toLowerCase(),
+      passwordHash: input.passwordHash,
+      professionalId: input.professionalId ?? null,
+      clientId: input.clientId ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    accounts().push(account);
+    return account;
+  },
+
+  async updateEmail(id: string, email: string) {
+    const account = accounts().find((a) => a.id === id);
+    if (!account) return null;
+    account.email = email.trim().toLowerCase();
+    return account;
+  },
+
+  async updatePassword(id: string, passwordHash: string) {
+    const account = accounts().find((a) => a.id === id);
+    if (!account) return null;
+    account.passwordHash = passwordHash;
+    return account;
   },
 };
 

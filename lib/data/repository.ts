@@ -1,4 +1,5 @@
 import type {
+  Account,
   ChatMessage,
   Client,
   ClientInput,
@@ -30,6 +31,20 @@ export interface ProfessionalRepository {
 export interface ClientRepository {
   getById(id: string): Promise<Client | null>;
   create(input: ClientInput): Promise<Client>;
+}
+
+export interface AccountRepository {
+  getById(id: string): Promise<Account | null>;
+  getByEmail(email: string): Promise<Account | null>;
+  create(input: {
+    role: Account["role"];
+    email: string;
+    passwordHash: string;
+    professionalId?: string;
+    clientId?: string;
+  }): Promise<Account>;
+  updateEmail(id: string, email: string): Promise<Account | null>;
+  updatePassword(id: string, passwordHash: string): Promise<Account | null>;
 }
 
 export interface ConversationRepository {

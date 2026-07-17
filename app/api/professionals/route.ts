@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { repository } from "@/lib/data";
+import { accountRepository, repository } from "@/lib/data";
 import {
   CITIES,
   DOCUMENT_TYPES,
@@ -7,9 +7,11 @@ import {
   GENDERS,
   MAX_PORTFOLIO_PHOTOS,
   MIN_PORTFOLIO_PHOTOS,
+  type PortfolioPhotoInput,
   toPublicProfessional,
 } from "@/lib/types";
 import { imageToDataUrl, isImageFile } from "@/lib/upload";
+import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -21,6 +23,8 @@ export async function GET(request: NextRequest) {
   // Nunca expor contato/identidade em endpoint público.
   return NextResponse.json(professionals.map(toPublicProfessional));
 }
+
+const ASPECTS = ["wide", "tall", "square"] as const;
 
 export async function POST(request: NextRequest) {
   let form: FormData;
@@ -34,7 +38,8 @@ export async function POST(request: NextRequest) {
   const name = String(form.get("name") ?? "").trim();
   const city = String(form.get("city") ?? "");
   const type = String(form.get("type") ?? "");
-  const email = String(form.get("email") ?? "").trim();
+  const loginEmail = String(form.get("loginEmail") ?? "").trim().toLowerCase();
+  const password = String(form.get("password") ?? "");
   const bio = String(form.get("bio") ?? "").trim();
   const whatsapp = String(form.get("whatsapp") ?? "").replace(/\D/g, "");
   const cpf = String(form.get("cpf") ?? "").replace(/\D/g, "");
@@ -47,52 +52,63 @@ export async function POST(request: NextRequest) {
   if (name.length < 2) errors.push("Informe o nome.");
   if (!CITIES.includes(city as never)) errors.push("Cidade inválida.");
   if (!["fotografo", "filmmaker", "editor"].includes(type)) errors.push("Tipo inválido.");
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push("E-mail inválido.");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
+  if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
   if (specialties.length === 0 || !specialties.every((s) => EVENT_TYPES.includes(s as never)))
     errors.push("Escolha ao menos uma especialidade válida.");
   if (!Number.isFinite(priceFrom) || priceFrom <= 0) errors.push("Informe um preço válido.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
-  // Validação de dígito verificador do CPF fica pra fase 2 — aqui só o formato.
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
-  if (!DOCUMENT_TYPES.some((d) => d.value === documentType))
-    errors.push("Selecione o tipo de documento.");
+  if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
   if (bio.length < 10) errors.push("Escreva uma bio de pelo menos 10 caracteres.");
 
-  // Foto de perfil — OBRIGATÓRIA.
+  if (loginEmail && (await accountRepository.getByEmail(loginEmail))) {
+    errors.push("Já existe uma conta com esse e-mail.");
+  }
+
   let profilePhotoUrl = "";
   const profilePhoto = form.get("profilePhoto");
-  if (!isImageFile(profilePhoto)) {
-    errors.push("A foto de perfil é obrigatória.");
-  } else {
+  if (!isImageFile(profilePhoto)) errors.push("A foto de perfil é obrigatória.");
+  else {
     const r = await imageToDataUrl(profilePhoto);
     if ("url" in r) profilePhotoUrl = r.url;
     else errors.push(r.error);
   }
 
-  // Documento com foto — OBRIGATÓRIO (nunca exibido publicamente).
   let documentPhotoUrl = "";
   const documentPhoto = form.get("documentPhoto");
-  if (!isImageFile(documentPhoto)) {
-    errors.push("Anexe a foto do documento (RG, CNH ou passaporte).");
-  } else {
+  if (!isImageFile(documentPhoto)) errors.push("Anexe a foto do documento (RG, CNH ou passaporte).");
+  else {
     const r = await imageToDataUrl(documentPhoto);
     if ("url" in r) documentPhotoUrl = r.url;
     else errors.push(r.error);
   }
 
-  // Fotos de portfólio — OBRIGATÓRIAS (mínimo MIN_PORTFOLIO_PHOTOS).
-  const portfolioUrls: string[] = [];
+  // Portfólio: fotos + metadados (formato + capa) paralelos, na ordem escolhida.
+  let meta: { aspect?: string; cover?: boolean }[] = [];
+  try {
+    meta = JSON.parse(String(form.get("portfolioMeta") ?? "[]"));
+  } catch {
+    meta = [];
+  }
   const portfolioFiles = form.getAll("portfolioPhotos").filter(isImageFile);
+  const portfolio: PortfolioPhotoInput[] = [];
   if (portfolioFiles.length < MIN_PORTFOLIO_PHOTOS) {
     errors.push(`Envie ao menos ${MIN_PORTFOLIO_PHOTOS} fotos de portfólio.`);
   } else if (portfolioFiles.length > MAX_PORTFOLIO_PHOTOS) {
     errors.push(`Envie no máximo ${MAX_PORTFOLIO_PHOTOS} fotos de portfólio.`);
   } else {
-    for (const file of portfolioFiles) {
-      const r = await imageToDataUrl(file);
-      if ("url" in r) portfolioUrls.push(r.url);
-      else errors.push(r.error);
+    for (let i = 0; i < portfolioFiles.length; i++) {
+      const r = await imageToDataUrl(portfolioFiles[i]);
+      if ("url" in r) {
+        const m = meta[i] ?? {};
+        portfolio.push({
+          url: r.url,
+          aspect: ASPECTS.includes(m.aspect as never) ? (m.aspect as never) : "square",
+          cover: Boolean(m.cover),
+        });
+      } else errors.push(r.error);
     }
   }
 
@@ -107,10 +123,10 @@ export async function POST(request: NextRequest) {
     specialties: specialties as never,
     priceFrom: Math.round(priceFrom),
     whatsapp: whatsapp.length <= 11 ? `55${whatsapp}` : whatsapp,
-    email,
+    email: loginEmail,
     bio,
     profilePhotoUrl,
-    portfolioUrls,
+    portfolio,
     cpf,
     gender: gender as never,
     birthDate: birthDate || null,
@@ -118,6 +134,20 @@ export async function POST(request: NextRequest) {
     documentPhotoUrl,
   });
 
-  // Resposta pública: sem WhatsApp, e-mail, CPF, documento.
-  return NextResponse.json(toPublicProfessional(professional), { status: 201 });
+  const account = await accountRepository.create({
+    role: "profissional",
+    email: loginEmail,
+    passwordHash: hashPassword(password),
+    professionalId: professional.id,
+  });
+  const token = createSession(account.id);
+
+  const res = NextResponse.json(toPublicProfessional(professional), { status: 201 });
+  res.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  return res;
 }

@@ -15,14 +15,25 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
 
   return (
     <>
+      <hr className="form-sep" />
+      <p className="form-sec-title">Verificação de identidade</p>
       <div className="field-row">
-        <div className="field">
-          <label htmlFor="email">E-mail</label>
-          <input id="email" name="email" type="email" required placeholder="voce@email.com" />
-        </div>
         <div className="field">
           <label htmlFor="whatsapp">WhatsApp (com DDD)</label>
           <input id="whatsapp" name="whatsapp" type="tel" required placeholder="Ex: 21 99999-8888" />
+        </div>
+        <div className="field">
+          <label htmlFor="cpf">CPF</label>
+          <input
+            id="cpf"
+            name="cpf"
+            required
+            inputMode="numeric"
+            placeholder="000.000.000-00"
+            value={cpf}
+            onChange={(e) => setCpf(maskCpf(e.target.value))}
+            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+          />
         </div>
       </div>
 
@@ -44,23 +55,6 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
           <label htmlFor="birthDate">Data de nascimento</label>
           <input id="birthDate" name="birthDate" type="date" />
         </div>
-      </div>
-
-      <div className="field">
-        <label htmlFor="cpf">CPF</label>
-        <input
-          id="cpf"
-          name="cpf"
-          required
-          inputMode="numeric"
-          placeholder="000.000.000-00"
-          value={cpf}
-          onChange={(e) => setCpf(maskCpf(e.target.value))}
-          pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-        />
-        <span className="form-hint">
-          Usado só pra identificação — nunca aparece em tela pública.
-        </span>
       </div>
 
       <div className="field">

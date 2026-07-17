@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { repository } from "@/lib/data";
+import { accountRepository, repository } from "@/lib/data";
+import { currentAccount } from "@/lib/auth";
 import { formatPrice, formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
 
@@ -10,6 +11,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const pro = await repository.getById(id);
   if (!pro) notFound();
+
+  const account = await currentAccount((accId) => accountRepository.getById(accId));
+  const isOwner = account?.role === "profissional" && account.professionalId === pro.id;
+  // Capa primeiro, resto na ordem salva.
+  const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
 
   return (
     <>
@@ -41,9 +47,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               </div>
             </div>
             {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado. */}
-            <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">
-              Iniciar conversa
-            </Link>
+            {isOwner ? (
+              <Link href="/configuracoes" className="btn-contact">
+                Configurações
+              </Link>
+            ) : (
+              <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">
+                Iniciar conversa
+              </Link>
+            )}
           </div>
           <div className="stats-strip mono">
             <span>
@@ -70,21 +82,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <div>
           <h2 className="section-title">Portfólio</h2>
           <div className="portfolio-grid">
-            {pro.portfolio.map((item) => (
-              <div key={item.id} className={`shot ${item.aspect} tone-${item.tone}`}>
-                {item.url && (
-                  // eslint-disable-next-line @next/next/no-img-element -- data URL local
-                  <img src={item.url} alt="" className="shot-img" />
-                )}
+            {portfolio.map((item) => (
+              <div key={item.id} className={`shot ${item.cover ? "cover" : item.aspect}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- data URL local */}
+                <img src={item.url} alt="" className="shot-img" />
+                {item.cover && <span className="shot-cover-tag">capa</span>}
                 <span className="mono">{item.label}</span>
               </div>
             ))}
           </div>
-          {pro.portfolio.every((item) => !item.url) && (
-            <p className="portfolio-note">
-              Este perfil ainda não enviou fotos — os tiles são placeholders do protótipo.
-            </p>
-          )}
         </div>
         <aside className="profile-aside">
           <h2 className="section-title">Especialidades</h2>

@@ -26,17 +26,41 @@ export const EVENT_TYPES = [
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-/** Tile do portfólio. Com `url` presente é uma foto enviada no cadastro; sem, um placeholder estilizado. */
+/** Tile do portfólio. O profissional escolhe o formato (aspect), a ordem e a capa. */
 export interface PortfolioItem {
   id: string;
   /** Nome de arquivo exibido no tile, estilo dado de câmera (ex: IMG_4021.RAW). */
   label: string;
-  /** Variação de tom do placeholder (0–5), mapeada em CSS. */
-  tone: number;
+  /** Formato na grade, escolhido pelo profissional. */
   aspect: "wide" | "tall" | "square";
+  /** true = foto principal (capa), exibida em destaque. No máximo uma. */
+  cover: boolean;
   /** Data URL da imagem enviada (fase atual); na fase 2 vira URL de storage. */
-  url?: string | null;
+  url: string;
 }
+
+/** Uma foto do portfólio como chega do formulário (antes de virar PortfolioItem). */
+export interface PortfolioPhotoInput {
+  url: string;
+  aspect: "wide" | "tall" | "square";
+  cover: boolean;
+}
+
+/** Conta de acesso (login). Uma conta é OU profissional OU cliente. */
+export interface Account {
+  id: string;
+  role: "profissional" | "cliente";
+  /** E-mail de login, único entre todas as contas. */
+  email: string;
+  /** Hash scrypt "salt:derivada" — a senha em claro nunca é guardada. */
+  passwordHash: string;
+  professionalId: string | null;
+  clientId: string | null;
+  createdAt: string;
+}
+
+/** Conta sem o hash de senha — o que pode circular. */
+export type PublicAccount = Omit<Account, "passwordHash">;
 
 export const GENDERS = [
   { value: "masculino", label: "Masculino" },
@@ -139,7 +163,7 @@ export interface ProfessionalInput {
   email: string;
   bio: string;
   profilePhotoUrl: string;
-  portfolioUrls: string[];
+  portfolio: PortfolioPhotoInput[];
   cpf: string;
   gender: Gender | null;
   birthDate: string | null;
