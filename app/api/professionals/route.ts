@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, repository } from "@/lib/data";
 import {
   DOCUMENT_TYPES,
-  EVENT_TYPES,
   GENDERS,
   MAX_PORTFOLIO_PHOTOS,
+  MAX_SPECIALTIES,
   MIN_PORTFOLIO_PHOTOS,
+  cleanEventLabel,
   isValidCity,
   type PortfolioPhotoInput,
   toPublicProfessional,
@@ -47,15 +48,17 @@ export async function POST(request: NextRequest) {
   const birthDate = String(form.get("birthDate") ?? "").trim();
   const documentType = String(form.get("documentType") ?? "");
   const priceFrom = Number(form.get("priceFrom"));
-  const specialties = form.getAll("specialties").map(String);
+  // Especialidades: sugestões marcadas + quaisquer "outras" digitadas (texto livre).
+  const specialties = Array.from(
+    new Set(form.getAll("specialties").map((s) => cleanEventLabel(String(s))).filter(Boolean))
+  ).slice(0, MAX_SPECIALTIES);
 
   if (name.length < 2) errors.push("Informe o nome.");
   if (!isValidCity(city)) errors.push("Escolha uma cidade válida (Nome – UF).");
   if (!["fotografo", "filmmaker", "editor"].includes(type)) errors.push("Tipo inválido.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
   if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
-  if (specialties.length === 0 || !specialties.every((s) => EVENT_TYPES.includes(s as never)))
-    errors.push("Escolha ao menos uma especialidade válida.");
+  if (specialties.length === 0) errors.push("Escolha ou escreva ao menos uma especialidade.");
   if (!Number.isFinite(priceFrom) || priceFrom <= 0) errors.push("Informe um preço válido.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");

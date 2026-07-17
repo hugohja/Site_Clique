@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EVENT_TYPES, PROFESSIONAL_TYPES } from "@/lib/types";
+import { PROFESSIONAL_TYPES } from "@/lib/types";
 import CityField from "@/components/CityField";
 
 /**
@@ -15,11 +15,13 @@ export default function SearchFilters({
   evento = "",
   tipo = "",
   ownCity,
+  eventOptions = [],
 }: {
   cidade?: string;
   evento?: string;
   tipo?: string;
   ownCity?: string | null;
+  eventOptions?: string[];
 }) {
   const router = useRouter();
   const [city, setCity] = useState(cidade);
@@ -57,7 +59,7 @@ export default function SearchFilters({
         />
         <select value={event} onChange={(e) => setEvent(e.target.value)} aria-label="Tipo de evento">
           <option value="">Todos os eventos</option>
-          {EVENT_TYPES.map((ev) => (
+          {eventOptions.map((ev) => (
             <option key={ev} value={ev}>
               {ev}
             </option>

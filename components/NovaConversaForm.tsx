@@ -16,6 +16,8 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [eventType, setEventType] = useState("");
+  const [customEvent, setCustomEvent] = useState("");
   const backHere = `/profissional/${professionalId}/conversar`;
 
   useEffect(() => {
@@ -35,6 +37,11 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
     event.preventDefault();
     setError(null);
     const data = new FormData(event.currentTarget);
+    const finalEvent = eventType === "__outro" ? customEvent.trim() : eventType;
+    if (finalEvent.length < 2) {
+      setError("Informe o tipo de evento.");
+      return;
+    }
     setSending(true);
     try {
       const res = await fetch("/api/conversas", {
@@ -42,7 +49,7 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId,
-          eventType: data.get("eventType"),
+          eventType: finalEvent,
           eventDate: data.get("eventDate"),
           eventLocation: data.get("eventLocation"),
           message: data.get("message"),
@@ -115,7 +122,12 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
         <div className="field-row">
           <div className="field">
             <label htmlFor="eventType">Tipo de evento</label>
-            <select id="eventType" name="eventType" required defaultValue="">
+            <select
+              id="eventType"
+              value={eventType}
+              onChange={(e) => setEventType(e.target.value)}
+              required
+            >
               <option value="" disabled>
                 Selecione
               </option>
@@ -124,6 +136,7 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
                   {e}
                 </option>
               ))}
+              <option value="__outro">Outros…</option>
             </select>
           </div>
           <div className="field">
@@ -131,6 +144,19 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
             <input id="eventDate" name="eventDate" type="date" required />
           </div>
         </div>
+
+        {eventType === "__outro" && (
+          <div className="field">
+            <label htmlFor="customEvent">Qual evento?</label>
+            <input
+              id="customEvent"
+              value={customEvent}
+              onChange={(e) => setCustomEvent(e.target.value)}
+              required
+              placeholder="Ex: Formatura, Batizado, Feira, Show…"
+            />
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="eventLocation">Local do evento (cidade / espaço)</label>

@@ -13,6 +13,7 @@ export default function CadastroForm() {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [city, setCity] = useState("");
+  const [outras, setOutras] = useState("");
   const [portfolio, setPortfolio] = useState<PortfolioDraft[]>([]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -22,8 +23,15 @@ export default function CadastroForm() {
     const form = event.currentTarget;
     const fd = new FormData(form);
 
+    // Especialidades digitadas em "Outros" (separadas por vírgula).
+    const custom = outras
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    custom.forEach((s) => fd.append("specialties", s));
+
     if (fd.getAll("specialties").length === 0) {
-      setError("Escolha ao menos uma especialidade.");
+      setError("Escolha ou escreva ao menos uma especialidade.");
       return;
     }
     if (!isValidCity(city)) {
@@ -98,6 +106,12 @@ export default function CadastroForm() {
             </label>
           ))}
         </div>
+        <input
+          value={outras}
+          onChange={(e) => setOutras(e.target.value)}
+          placeholder="Outros (separe por vírgula): ex. Formatura, Batizado, Gastronomia"
+        />
+        <span className="form-hint">Marque as opções acima e/ou escreva outras especialidades.</span>
       </div>
 
       <div className="field">

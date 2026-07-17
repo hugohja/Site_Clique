@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
-import { EVENT_TYPES } from "@/lib/types";
+import { cleanEventLabel } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -26,13 +26,14 @@ export async function POST(request: NextRequest) {
   }
 
   const professionalId = String(body.professionalId ?? "");
-  const eventType = String(body.eventType ?? "");
+  // Tipo de evento: uma das sugestões ou texto livre ("Outros").
+  const eventType = cleanEventLabel(String(body.eventType ?? ""));
   const eventDate = String(body.eventDate ?? "");
   const eventLocation = String(body.eventLocation ?? "").trim();
   const firstMessage = String(body.message ?? "").trim();
 
   const errors: string[] = [];
-  if (!EVENT_TYPES.includes(eventType as never)) errors.push("Tipo de evento inválido.");
+  if (eventType.length < 2) errors.push("Informe o tipo de evento.");
   if (!eventDate) errors.push("Informe a data do evento.");
   if (eventLocation.length < 3) errors.push("Informe o local do evento.");
   if (firstMessage.length < 5) errors.push("Escreva uma mensagem inicial.");
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     // é revelado ao profissional no contato liberado.
     clientName: client.name,
     clientWhatsapp: client.whatsapp,
-    eventType: eventType as never,
+    eventType,
     eventDate,
     eventLocation,
     firstMessage: {

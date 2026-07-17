@@ -2,6 +2,7 @@ import ProCard from "@/components/ProCard";
 import SearchFilters from "@/components/SearchFilters";
 import { accountRepository, clientRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
+import { EVENT_TYPES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,13 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   });
   const hasFilter = Boolean(effectiveCity || evento || tipo);
 
+  // Opções do filtro de evento: as sugestões + especialidades personalizadas
+  // que profissionais realmente cadastraram (pra "Outros" ficar pesquisável).
+  const allPros = await repository.list({});
+  const eventOptions = Array.from(
+    new Set([...EVENT_TYPES, ...allPros.flatMap((p) => p.specialties)])
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
   return (
     <>
       <section className="hero">
@@ -41,7 +49,13 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             Fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio antes
             de falar com qualquer um — e converse direto pelo chat do Clica.
           </p>
-          <SearchFilters cidade={effectiveCity} evento={evento} tipo={tipo} ownCity={ownCity} />
+          <SearchFilters
+            cidade={effectiveCity}
+            evento={evento}
+            tipo={tipo}
+            ownCity={ownCity}
+            eventOptions={eventOptions}
+          />
         </div>
       </section>
 

@@ -26,6 +26,7 @@ export function isValidCity(value: string): boolean {
   return / – [A-Z]{2}$/.test(value.trim()) && value.trim().length >= 5;
 }
 
+/** Sugestões de evento/especialidade. A pessoa pode escrever outras (campo livre). */
 export const EVENT_TYPES = [
   "Casamento",
   "Aniversário",
@@ -33,7 +34,15 @@ export const EVENT_TYPES = [
   "Ensaio",
   "Infantil",
 ] as const;
-export type EventType = (typeof EVENT_TYPES)[number];
+/** Aceita as sugestões acima ou qualquer texto informado pela pessoa. */
+export type EventType = string;
+
+export const MAX_SPECIALTIES = 12;
+
+/** Normaliza uma especialidade/evento digitado (trim + limite de tamanho). */
+export function cleanEventLabel(value: string): string {
+  return value.trim().replace(/\s+/g, " ").slice(0, 40);
+}
 
 /** Tile do portfólio. O profissional escolhe o formato (aspect), a ordem e a capa. */
 export interface PortfolioItem {
