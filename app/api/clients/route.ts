@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository } from "@/lib/data";
-import { CITIES, DOCUMENT_TYPES, GENDERS, toPublicClient } from "@/lib/types";
+import { DOCUMENT_TYPES, GENDERS, isValidCity, toPublicClient } from "@/lib/types";
 import { imageToDataUrl, isImageFile } from "@/lib/upload";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   const documentType = String(form.get("documentType") ?? "");
 
   if (name.length < 2) errors.push("Informe o nome.");
-  if (city && !CITIES.includes(city as never)) errors.push("Cidade inválida.");
+  if (!isValidCity(city)) errors.push("Escolha uma cidade válida (Nome – UF).");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
   if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");

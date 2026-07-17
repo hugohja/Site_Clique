@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CITIES } from "@/lib/types";
+import { isValidCity } from "@/lib/types";
+import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
 
@@ -13,11 +14,16 @@ export default function ClientForm() {
   const next = searchParams.get("next");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [city, setCity] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     const data = new FormData(event.currentTarget);
+    if (!isValidCity(city)) {
+      setError("Escolha sua cidade na lista de sugestões.");
+      return;
+    }
     if (String(data.get("password")) !== String(data.get("password2"))) {
       setError("As senhas não conferem.");
       return;
@@ -49,15 +55,8 @@ export default function ClientForm() {
           <input id="name" name="name" required minLength={2} placeholder="Ex: Ana Souza" />
         </div>
         <div className="field">
-          <label htmlFor="city">Cidade (opcional)</label>
-          <select id="city" name="city" defaultValue="">
-            <option value="">Prefiro não informar</option>
-            {CITIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <label htmlFor="city">Cidade</label>
+          <CityField value={city} onChange={setCity} required />
         </div>
       </div>
 

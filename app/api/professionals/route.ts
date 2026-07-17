@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, repository } from "@/lib/data";
 import {
-  CITIES,
   DOCUMENT_TYPES,
   EVENT_TYPES,
   GENDERS,
   MAX_PORTFOLIO_PHOTOS,
   MIN_PORTFOLIO_PHOTOS,
+  isValidCity,
   type PortfolioPhotoInput,
   toPublicProfessional,
 } from "@/lib/types";
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   const specialties = form.getAll("specialties").map(String);
 
   if (name.length < 2) errors.push("Informe o nome.");
-  if (!CITIES.includes(city as never)) errors.push("Cidade inválida.");
+  if (!isValidCity(city)) errors.push("Escolha uma cidade válida (Nome – UF).");
   if (!["fotografo", "filmmaker", "editor"].includes(type)) errors.push("Tipo inválido.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
   if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");

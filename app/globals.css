@@ -1154,3 +1154,80 @@ span.nav-avatar.avatar-placeholder {
   font-size: 1rem;
   margin-bottom: 0.9rem;
 }
+
+/* ---- campo de cidade (autocomplete + localização) ---- */
+
+.city-field {
+  position: relative;
+}
+.city-field input {
+  width: 100%;
+  padding-right: 2.6rem;
+}
+.city-geo {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.city-geo:hover {
+  border-color: var(--amber);
+}
+.city-suggest {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 3px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 230px;
+  overflow-y: auto;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+.city-suggest button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+}
+.city-suggest button:last-child {
+  border-bottom: none;
+}
+.city-suggest button:hover {
+  background: var(--surface-2);
+  color: var(--amber);
+}
+.city-suggest .uf {
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  margin-left: 0.5rem;
+}
+.city-note {
+  margin-top: 0.8rem;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+.city-note button {
+  background: none;
+  border: none;
+  color: var(--amber);
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+}

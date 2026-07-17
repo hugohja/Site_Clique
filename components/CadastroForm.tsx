@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CITIES, EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES } from "@/lib/types";
+import { EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES, isValidCity } from "@/lib/types";
+import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
 import PortfolioUploader, { type PortfolioDraft } from "@/components/PortfolioUploader";
@@ -11,6 +12,7 @@ export default function CadastroForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [city, setCity] = useState("");
   const [portfolio, setPortfolio] = useState<PortfolioDraft[]>([]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -22,6 +24,10 @@ export default function CadastroForm() {
 
     if (fd.getAll("specialties").length === 0) {
       setError("Escolha ao menos uma especialidade.");
+      return;
+    }
+    if (!isValidCity(city)) {
+      setError("Escolha sua cidade na lista de sugestões.");
       return;
     }
     if (String(fd.get("password")) !== String(fd.get("password2"))) {
@@ -65,16 +71,7 @@ export default function CadastroForm() {
       <div className="field-row">
         <div className="field">
           <label htmlFor="city">Cidade</label>
-          <select id="city" name="city" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {CITIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <CityField value={city} onChange={setCity} required />
         </div>
         <div className="field">
           <label htmlFor="type">Você é</label>

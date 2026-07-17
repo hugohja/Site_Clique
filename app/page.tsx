@@ -1,6 +1,7 @@
 import ProCard from "@/components/ProCard";
-import { repository } from "@/lib/data";
-import { CITIES, EVENT_TYPES, PROFESSIONAL_TYPES } from "@/lib/types";
+import SearchFilters from "@/components/SearchFilters";
+import { accountRepository, clientRepository, repository } from "@/lib/data";
+import { currentAccount } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +9,26 @@ type SearchParams = Promise<{ cidade?: string; evento?: string; tipo?: string }>
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
   const { cidade, evento, tipo } = await searchParams;
-  const professionals = await repository.list({ city: cidade, eventType: evento, type: tipo });
-  const hasFilter = Boolean(cidade || evento || tipo);
+
+  // Cidade da conta logada — usada pra filtrar automaticamente por padrão.
+  const account = await currentAccount((id) => accountRepository.getById(id));
+  const profile = account
+    ? account.role === "profissional"
+      ? await repository.getById(account.professionalId ?? "")
+      : await clientRepository.getById(account.clientId ?? "")
+    : null;
+  const ownCity = profile?.city ?? null;
+
+  // `cidade` ausente na URL + usuário com cidade → filtra pela cidade dele.
+  // `cidade` presente (mesmo vazia) = escolha explícita.
+  const effectiveCity = cidade === undefined ? ownCity ?? "" : cidade;
+
+  const professionals = await repository.list({
+    city: effectiveCity || undefined,
+    eventType: evento,
+    type: tipo,
+  });
+  const hasFilter = Boolean(effectiveCity || evento || tipo);
 
   return (
     <>
@@ -19,38 +38,10 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             Quem vai <em>fotografar</em> o seu próximo evento?
           </h1>
           <p>
-            Fotógrafos e filmmakers freelancers no Rio, Niterói, Goiânia e Anápolis. Veja o
-            portfólio antes de falar com qualquer um — e converse direto pelo chat do Clica.
+            Fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio antes
+            de falar com qualquer um — e converse direto pelo chat do Clica.
           </p>
-          <form className="filter-bar" method="get" action="/">
-            <select name="cidade" defaultValue={cidade ?? ""} aria-label="Cidade">
-              <option value="">Todas as cidades</option>
-              {CITIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select name="evento" defaultValue={evento ?? ""} aria-label="Tipo de evento">
-              <option value="">Todos os eventos</option>
-              {EVENT_TYPES.map((e) => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
-              ))}
-            </select>
-            <select name="tipo" defaultValue={tipo ?? ""} aria-label="Tipo de profissional">
-              <option value="">Foto e vídeo</option>
-              {PROFESSIONAL_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-            <button type="submit" className="btn">
-              Buscar
-            </button>
-          </form>
+          <SearchFilters cidade={effectiveCity} evento={evento} tipo={tipo} ownCity={ownCity} />
         </div>
       </section>
 
@@ -67,8 +58,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
               <span className="mono">{hasFilter ? "NO_SIGNAL.ERR" : "AWAITING_ROLL.001"}</span>
               {hasFilter ? (
                 <>
-                  Nenhum profissional com esses filtros ainda. Tente ampliar a busca — ou, se você é
-                  fotógrafo ou filmmaker,{" "}
+                  Nenhum profissional com esses filtros ainda. Tente ampliar a busca — ou, se você
+                  trabalha com isso,{" "}
                   <a href="/cadastro" style={{ textDecoration: "underline" }}>
                     cadastre-se
                   </a>
@@ -76,7 +67,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
                 </>
               ) : (
                 <>
-                  Ainda não há profissionais cadastrados. Se você é fotógrafo ou filmmaker,{" "}
+                  Ainda não há profissionais cadastrados. Se você é fotógrafo, filmmaker ou editor,{" "}
                   <a href="/cadastro" style={{ textDecoration: "underline" }}>
                     seja o primeiro a aparecer aqui
                   </a>

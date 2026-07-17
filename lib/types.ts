@@ -14,8 +14,17 @@ export const PROFESSIONAL_TYPES: { value: ProfessionalType; label: string }[] = 
   { value: "editor", label: "Editor" },
 ];
 
-export const CITIES = ["Rio de Janeiro", "Niterói", "Goiânia", "Anápolis"] as const;
-export type City = (typeof CITIES)[number];
+/**
+ * Cidade no formato "Nome – UF" (ex: "Rio de Janeiro – RJ"). A lista completa
+ * dos municípios do Brasil (IBGE) vive em /public/cidades.json e é consumida
+ * pelo autocomplete/geolocalização no cliente. O servidor só valida o formato.
+ */
+export type City = string;
+
+/** Valida o formato "Nome – UF" (com o traço do autocomplete). */
+export function isValidCity(value: string): boolean {
+  return / – [A-Z]{2}$/.test(value.trim()) && value.trim().length >= 5;
+}
 
 export const EVENT_TYPES = [
   "Casamento",
