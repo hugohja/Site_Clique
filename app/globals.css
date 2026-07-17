@@ -386,7 +386,7 @@ h3 {
   margin-right: 0.6rem;
 }
 
-.btn-whatsapp {
+.btn-contact {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -397,7 +397,7 @@ h3 {
   padding: 0.7rem 1.3rem;
 }
 
-.btn-whatsapp:hover {
+.btn-contact:hover {
   filter: brightness(1.08);
 }
 
@@ -608,4 +608,194 @@ h3 {
 .form-hint {
   color: var(--text-dim);
   font-size: 0.78rem;
+}
+
+/* ---------- chat interno ---------- */
+
+.chat-page {
+  padding-block: 2rem 3rem;
+  max-width: 760px;
+}
+
+.chat-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.chat-head h1 {
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+}
+
+.status-badge {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.3rem 0.65rem;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+.status-badge.status-pagamento_confirmado {
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.status-badge.status-contato_liberado {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.chat-privacy-note {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.contact-card {
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  background: var(--surface);
+}
+
+.contact-line {
+  font-size: 0.95rem;
+}
+
+.contact-line a {
+  color: var(--amber);
+  text-decoration: underline;
+}
+
+.contact-logistics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin-top: 0.8rem;
+  color: var(--text);
+}
+
+.contact-logistics .dim {
+  color: var(--text-dim);
+  margin-right: 0.35rem;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+.bubble {
+  max-width: 80%;
+  border-radius: var(--radius);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.93rem;
+}
+
+.bubble.mine {
+  align-self: flex-end;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--border));
+}
+
+.bubble.theirs {
+  align-self: flex-start;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.bubble-sender {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bubble-filtered {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--coral);
+  margin-top: 0.3rem;
+}
+
+.filter-warning {
+  color: var(--coral);
+  font-size: 0.78rem;
+  margin-top: 0.6rem;
+}
+
+.chat-composer {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.chat-composer input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.chat-composer input:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 1px;
+}
+
+.payment-box {
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--coral);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  background: var(--surface);
+}
+
+.payment-box p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.payment-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.payment-form input {
+  flex: 1;
+  min-width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.payment-form input:focus-visible {
+  outline: 1px solid var(--coral);
+  outline-offset: 1px;
 }

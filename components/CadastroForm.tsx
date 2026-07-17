@@ -122,7 +122,9 @@ export default function CadastroForm() {
             required
             placeholder="Ex: 21 99999-8888"
           />
-          <span className="form-hint">É pra ele que o cliente vai ligar. Nada de login por enquanto.</span>
+          <span className="form-hint">
+            Nunca aparece no seu perfil — só é liberado pro cliente após o pagamento confirmado.
+          </span>
         </div>
       </div>
 

@@ -19,7 +19,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Clica — fotógrafos e filmmakers para o seu evento",
   description:
-    "Encontre fotógrafos e filmmakers freelancers no Rio de Janeiro, Niterói, Goiânia e Anápolis. Veja o portfólio antes de falar com qualquer um e chame direto no WhatsApp.",
+    "Encontre fotógrafos e filmmakers freelancers no Rio de Janeiro, Niterói, Goiânia e Anápolis. Veja o portfólio, converse pelo chat do Clica e feche com segurança.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="container footer-inner">
             <span className="mono footer-meta">CLICA · RJ — GO · protótipo v0.1</span>
             <span className="footer-note">
-              Fotógrafos e filmmakers de evento, direto no seu WhatsApp.
+              Fotógrafos e filmmakers de evento. Converse e feche pelo Clica.
             </span>
           </div>
         </footer>

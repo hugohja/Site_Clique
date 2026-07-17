@@ -61,20 +61,56 @@ export type ProfessionalInput = Pick<
 >;
 
 /**
- * FASE 3 (não implementado): solicitação/fechamento entre cliente e profissional.
- * Definido desde já para o gateway de pagamento com split ser plugado sem
- * refatorar o modelo. Nenhuma UI usa isso ainda.
+ * Versão pública do perfil: NUNCA carrega contato. É o único shape que as
+ * APIs públicas e a UI de busca/perfil podem expor — o WhatsApp só sai do
+ * servidor dentro de uma conversa com status "contato_liberado".
  */
-export interface Booking {
+export type PublicProfessional = Omit<Professional, "whatsapp">;
+
+export function toPublicProfessional(pro: Professional): PublicProfessional {
+  const { whatsapp: _hidden, ...publicPro } = pro;
+  return publicPro;
+}
+
+/** Comissão da plataforma vigente (12%), gravada na conversa no fechamento. */
+export const COMMISSION_RATE = 0.12;
+
+/**
+ * Fluxo anti-desintermediação:
+ *  conversando          → chat aberto, contato oculto dos dois lados
+ *  pagamento_confirmado → pagamento entrou (nesta fase, simulado; na fase 3,
+ *                         webhook do gateway PIX/cartão)
+ *  contato_liberado     → WhatsApp do profissional visível pros dois lados
+ */
+export type ConversationStatus = "conversando" | "pagamento_confirmado" | "contato_liberado";
+
+export interface ChatMessage {
+  id: string;
+  sender: "cliente" | "profissional";
+  text: string;
+  /** true se o filtro anti-contato censurou trechos da mensagem. */
+  filtered: boolean;
+  createdAt: string;
+}
+
+export interface Conversation {
   id: string;
   professionalId: string;
   clientName: string;
+  /** Logística do evento — mostrada junto com o contato após a liberação. */
   eventType: EventType;
   eventDate: string;
-  status: "aberta" | "fechada" | "cancelada";
-  /** Valor fechado entre as partes, em reais. */
+  eventLocation: string;
+  status: ConversationStatus;
+  /** Valor fechado entre as partes, em reais. Base do split da fase 3. */
   agreedPrice: number | null;
-  /** Percentual de comissão da plataforma vigente no fechamento (ex: 0.12 = 12%). */
+  /** Percentual de comissão vigente no fechamento (ex: 0.12 = 12%). */
   commissionRate: number;
+  messages: ChatMessage[];
   createdAt: string;
 }
+
+export type ConversationInput = Pick<
+  Conversation,
+  "professionalId" | "clientName" | "eventType" | "eventDate" | "eventLocation"
+>;

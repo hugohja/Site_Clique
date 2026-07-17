@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repository } from "@/lib/data";
-import { formatPrice, formatRating, typeLabel, whatsappUrl } from "@/lib/format";
+import { formatPrice, formatRating, typeLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +25,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 {pro.city}
               </p>
             </div>
-            <a
-              href={whatsappUrl(pro)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-whatsapp"
-            >
-              Chamar no WhatsApp ↗
-            </a>
+            {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado. */}
+            <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">
+              Iniciar conversa
+            </Link>
           </div>
           <div className="stats-strip mono">
             <span>

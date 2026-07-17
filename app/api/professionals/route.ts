@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { repository } from "@/lib/data";
-import { CITIES, EVENT_TYPES, type ProfessionalInput } from "@/lib/types";
+import { CITIES, EVENT_TYPES, toPublicProfessional, type ProfessionalInput } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
     eventType: params.get("evento") ?? undefined,
     type: params.get("tipo") ?? undefined,
   });
-  return NextResponse.json(professionals);
+  // Nunca expor contato em endpoint público (anti-desintermediação).
+  return NextResponse.json(professionals.map(toPublicProfessional));
 }
 
 export async function POST(request: NextRequest) {
@@ -51,5 +52,5 @@ export async function POST(request: NextRequest) {
     bio,
   });
 
-  return NextResponse.json(professional, { status: 201 });
+  return NextResponse.json(toPublicProfessional(professional), { status: 201 });
 }

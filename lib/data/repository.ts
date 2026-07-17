@@ -1,4 +1,12 @@
-import type { EventType, Professional, ProfessionalInput, ProfessionalType } from "@/lib/types";
+import type {
+  ChatMessage,
+  Conversation,
+  ConversationInput,
+  EventType,
+  Professional,
+  ProfessionalInput,
+  ProfessionalType,
+} from "@/lib/types";
 
 export interface ProfessionalFilters {
   city?: string;
@@ -15,4 +23,14 @@ export interface ProfessionalRepository {
   list(filters?: ProfessionalFilters): Promise<Professional[]>;
   getById(id: string): Promise<Professional | null>;
   create(input: ProfessionalInput): Promise<Professional>;
+}
+
+export interface ConversationRepository {
+  create(input: ConversationInput & { firstMessage: ChatMessage }): Promise<Conversation>;
+  getById(id: string): Promise<Conversation | null>;
+  addMessage(conversationId: string, message: ChatMessage): Promise<Conversation | null>;
+  /** Registra o pagamento (status pagamento_confirmado + valor fechado). */
+  setPaymentConfirmed(conversationId: string, agreedPrice: number): Promise<Conversation | null>;
+  /** Libera o contato pros dois lados (status contato_liberado). */
+  releaseContact(conversationId: string): Promise<Conversation | null>;
 }

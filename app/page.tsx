@@ -20,7 +20,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           </h1>
           <p>
             Fotógrafos e filmmakers freelancers no Rio, Niterói, Goiânia e Anápolis. Veja o
-            portfólio antes de falar com qualquer um — e chame direto no WhatsApp.
+            portfólio antes de falar com qualquer um — e converse direto pelo chat do Clica.
           </p>
           <form className="filter-bar" method="get" action="/">
             <select name="cidade" defaultValue={cidade ?? ""} aria-label="Cidade">
