@@ -64,9 +64,25 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           </div>
           {professionals.length === 0 ? (
             <div className="empty-state">
-              <span className="mono">NO_SIGNAL.ERR</span>
-              Nenhum profissional com esses filtros ainda. Tente ampliar a busca — ou, se você é
-              fotógrafo ou filmmaker, <a href="/cadastro" style={{ textDecoration: "underline" }}>seja o primeiro a se cadastrar</a>.
+              <span className="mono">{hasFilter ? "NO_SIGNAL.ERR" : "AWAITING_ROLL.001"}</span>
+              {hasFilter ? (
+                <>
+                  Nenhum profissional com esses filtros ainda. Tente ampliar a busca — ou, se você é
+                  fotógrafo ou filmmaker,{" "}
+                  <a href="/cadastro" style={{ textDecoration: "underline" }}>
+                    cadastre-se
+                  </a>
+                  .
+                </>
+              ) : (
+                <>
+                  Ainda não há profissionais cadastrados. Se você é fotógrafo ou filmmaker,{" "}
+                  <a href="/cadastro" style={{ textDecoration: "underline" }}>
+                    seja o primeiro a aparecer aqui
+                  </a>
+                  .
+                </>
+              )}
             </div>
           ) : (
             <div className="card-grid">
