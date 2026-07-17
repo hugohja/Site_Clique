@@ -49,6 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="nav-link">
                 Buscar
               </Link>
+              <Link href="/sou-cliente" className="nav-link">
+                Sou cliente
+              </Link>
               <Link href="/cadastro" className="nav-link nav-link-cta">
                 Sou profissional
               </Link>

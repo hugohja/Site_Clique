@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { conversationRepository, repository } from "@/lib/data";
+import { clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
 import { EVENT_TYPES } from "@/lib/types";
 
@@ -13,14 +13,13 @@ export async function POST(request: NextRequest) {
   }
 
   const professionalId = String(body.professionalId ?? "");
-  const clientName = String(body.clientName ?? "").trim();
+  const clientId = String(body.clientId ?? "");
   const eventType = String(body.eventType ?? "");
   const eventDate = String(body.eventDate ?? "");
   const eventLocation = String(body.eventLocation ?? "").trim();
   const firstMessage = String(body.message ?? "").trim();
 
   const errors: string[] = [];
-  if (clientName.length < 2) errors.push("Informe seu nome.");
   if (!EVENT_TYPES.includes(eventType as never)) errors.push("Tipo de evento inválido.");
   if (!eventDate) errors.push("Informe a data do evento.");
   if (eventLocation.length < 3) errors.push("Informe o local do evento.");
@@ -29,14 +28,22 @@ export async function POST(request: NextRequest) {
   const professional = await repository.getById(professionalId);
   if (!professional) errors.push("Profissional não encontrado.");
 
-  if (errors.length > 0) {
-    return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
+  // Cliente precisa estar cadastrado (conta verificada) pra iniciar conversa.
+  const client = clientId ? await clientRepository.getById(clientId) : null;
+  if (!client) errors.push("Faça seu cadastro de cliente antes de iniciar uma conversa.");
+
+  if (errors.length > 0 || !client) {
+    return NextResponse.json({ error: errors.join(" ") || "Cadastro de cliente necessário." }, { status: 400 });
   }
 
   const moderated = censorContactAttempts(firstMessage);
   const conversation = await conversationRepository.create({
     professionalId,
-    clientName,
+    clientId: client.id,
+    // Snapshot do cliente: nome é público no chat; whatsapp fica guardado e só
+    // é revelado ao profissional no contato liberado.
+    clientName: client.name,
+    clientWhatsapp: client.whatsapp,
     eventType: eventType as never,
     eventDate,
     eventLocation,

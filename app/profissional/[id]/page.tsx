@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repository } from "@/lib/data";
 import { formatPrice, formatRating, typeLabel } from "@/lib/format";
+import { verificationLabel } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                   <span className="pro-type mono">{typeLabel(pro.type)}</span>
                   {pro.city}
                 </p>
+                <span className={`verify-badge mono verify-${pro.identity.status}`}>
+                  {pro.identity.status === "verificado" ? "✓ " : "⏳ "}
+                  {verificationLabel(pro.identity.status)}
+                </span>
               </div>
             </div>
             {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado. */}

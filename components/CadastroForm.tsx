@@ -2,21 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CITIES, EVENT_TYPES, GENDERS, PROFESSIONAL_TYPES } from "@/lib/types";
-
-function maskCpf(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
-}
+import { CITIES, EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES } from "@/lib/types";
+import IdentityFields from "@/components/IdentityFields";
 
 export default function CadastroForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [cpf, setCpf] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,10 +21,15 @@ export default function CadastroForm() {
       setError("Escolha ao menos uma especialidade.");
       return;
     }
+    const portfolioCount = form.elements.namedItem("portfolioPhotos") as HTMLInputElement | null;
+    if (!portfolioCount?.files || portfolioCount.files.length < MIN_PORTFOLIO_PHOTOS) {
+      setError(`Envie ao menos ${MIN_PORTFOLIO_PHOTOS} fotos de portfólio.`);
+      return;
+    }
 
     setSending(true);
     try {
-      // Multipart: os arquivos de foto vão junto, sem JSON.
+      // Multipart: fotos e documento vão junto, sem JSON.
       const res = await fetch("/api/professionals", { method: "POST", body: data });
       const body = await res.json();
       if (!res.ok) {
@@ -83,38 +80,6 @@ export default function CadastroForm() {
         </div>
       </div>
 
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="gender">Gênero</label>
-          <select id="gender" name="gender" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {GENDERS.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="cpf">CPF</label>
-          <input
-            id="cpf"
-            name="cpf"
-            required
-            inputMode="numeric"
-            placeholder="000.000.000-00"
-            value={cpf}
-            onChange={(e) => setCpf(maskCpf(e.target.value))}
-            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-          />
-          <span className="form-hint">
-            Usado só pra identificação — nunca aparece no seu perfil nem em tela pública.
-          </span>
-        </div>
-      </div>
-
       <div className="field">
         <span className="field-label">Especialidades</span>
         <div className="checkbox-grid">
@@ -127,45 +92,19 @@ export default function CadastroForm() {
         </div>
       </div>
 
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="priceFrom">Preço a partir de (R$)</label>
-          <input
-            id="priceFrom"
-            name="priceFrom"
-            type="number"
-            min={1}
-            step={1}
-            required
-            placeholder="Ex: 800"
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="whatsapp">WhatsApp (com DDD)</label>
-          <input
-            id="whatsapp"
-            name="whatsapp"
-            type="tel"
-            required
-            placeholder="Ex: 21 99999-8888"
-          />
-          <span className="form-hint">
-            Nunca aparece no seu perfil — só é liberado pro cliente após o pagamento confirmado.
-          </span>
-        </div>
+      <div className="field">
+        <label htmlFor="priceFrom">Preço a partir de (R$)</label>
+        <input id="priceFrom" name="priceFrom" type="number" min={1} step={1} required placeholder="Ex: 800" />
       </div>
 
-      <div className="field">
-        <label htmlFor="profilePhoto">Foto de perfil</label>
-        <input id="profilePhoto" name="profilePhoto" type="file" accept="image/*" />
-        <span className="form-hint">Opcional nesta fase de teste. Até 4 MB.</span>
-      </div>
+      <IdentityFields />
 
       <div className="field">
-        <label htmlFor="portfolioPhotos">Fotos do portfólio</label>
-        <input id="portfolioPhotos" name="portfolioPhotos" type="file" accept="image/*" multiple />
+        <label htmlFor="portfolioPhotos">Fotos do portfólio (obrigatórias)</label>
+        <input id="portfolioPhotos" name="portfolioPhotos" type="file" accept="image/*" multiple required />
         <span className="form-hint">
-          Selecione várias de uma vez (até 12, 4 MB cada). Sem fotos, o perfil usa placeholders.
+          Selecione ao menos {MIN_PORTFOLIO_PHOTOS} de uma vez (até 12). São o que o cliente vê no
+          seu perfil.
         </span>
       </div>
 
@@ -176,9 +115,14 @@ export default function CadastroForm() {
           name="bio"
           required
           minLength={10}
-          placeholder="Conte o que você fotografa/filma, há quanto tempo, o que entrega e o que te diferencia."
+          placeholder="Conte o que você fotografa/filma/edita, há quanto tempo, o que entrega e o que te diferencia."
         />
       </div>
+
+      <p className="form-hint">
+        Ao enviar, sua identidade entra em análise. WhatsApp, CPF e documento ficam privados — o
+        contato só é revelado a um cliente após o pagamento confirmado.
+      </p>
 
       {error && <div className="form-error">{error}</div>}
 

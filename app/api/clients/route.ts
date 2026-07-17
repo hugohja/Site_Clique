@@ -1,27 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { repository } from "@/lib/data";
-import {
-  CITIES,
-  DOCUMENT_TYPES,
-  EVENT_TYPES,
-  GENDERS,
-  MAX_PORTFOLIO_PHOTOS,
-  MIN_PORTFOLIO_PHOTOS,
-  toPublicProfessional,
-} from "@/lib/types";
+import { clientRepository } from "@/lib/data";
+import { CITIES, DOCUMENT_TYPES, GENDERS, toPublicClient } from "@/lib/types";
 import { imageToDataUrl, isImageFile } from "@/lib/upload";
 
-export async function GET(request: NextRequest) {
-  const params = request.nextUrl.searchParams;
-  const professionals = await repository.list({
-    city: params.get("cidade") ?? undefined,
-    eventType: params.get("evento") ?? undefined,
-    type: params.get("tipo") ?? undefined,
-  });
-  // Nunca expor contato/identidade em endpoint público.
-  return NextResponse.json(professionals.map(toPublicProfessional));
-}
-
+/** Cadastro de cliente (quem contrata). Mesma verificação de identidade dos profissionais. */
 export async function POST(request: NextRequest) {
   let form: FormData;
   try {
@@ -33,31 +15,21 @@ export async function POST(request: NextRequest) {
   const errors: string[] = [];
   const name = String(form.get("name") ?? "").trim();
   const city = String(form.get("city") ?? "");
-  const type = String(form.get("type") ?? "");
   const email = String(form.get("email") ?? "").trim();
-  const bio = String(form.get("bio") ?? "").trim();
   const whatsapp = String(form.get("whatsapp") ?? "").replace(/\D/g, "");
   const cpf = String(form.get("cpf") ?? "").replace(/\D/g, "");
   const gender = String(form.get("gender") ?? "");
   const birthDate = String(form.get("birthDate") ?? "").trim();
   const documentType = String(form.get("documentType") ?? "");
-  const priceFrom = Number(form.get("priceFrom"));
-  const specialties = form.getAll("specialties").map(String);
 
   if (name.length < 2) errors.push("Informe o nome.");
-  if (!CITIES.includes(city as never)) errors.push("Cidade inválida.");
-  if (!["fotografo", "filmmaker", "editor"].includes(type)) errors.push("Tipo inválido.");
+  if (city && !CITIES.includes(city as never)) errors.push("Cidade inválida.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push("E-mail inválido.");
-  if (specialties.length === 0 || !specialties.every((s) => EVENT_TYPES.includes(s as never)))
-    errors.push("Escolha ao menos uma especialidade válida.");
-  if (!Number.isFinite(priceFrom) || priceFrom <= 0) errors.push("Informe um preço válido.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
-  // Validação de dígito verificador do CPF fica pra fase 2 — aqui só o formato.
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType))
     errors.push("Selecione o tipo de documento.");
-  if (bio.length < 10) errors.push("Escreva uma bio de pelo menos 10 caracteres.");
 
   // Foto de perfil — OBRIGATÓRIA.
   let profilePhotoUrl = "";
@@ -81,36 +53,16 @@ export async function POST(request: NextRequest) {
     else errors.push(r.error);
   }
 
-  // Fotos de portfólio — OBRIGATÓRIAS (mínimo MIN_PORTFOLIO_PHOTOS).
-  const portfolioUrls: string[] = [];
-  const portfolioFiles = form.getAll("portfolioPhotos").filter(isImageFile);
-  if (portfolioFiles.length < MIN_PORTFOLIO_PHOTOS) {
-    errors.push(`Envie ao menos ${MIN_PORTFOLIO_PHOTOS} fotos de portfólio.`);
-  } else if (portfolioFiles.length > MAX_PORTFOLIO_PHOTOS) {
-    errors.push(`Envie no máximo ${MAX_PORTFOLIO_PHOTOS} fotos de portfólio.`);
-  } else {
-    for (const file of portfolioFiles) {
-      const r = await imageToDataUrl(file);
-      if ("url" in r) portfolioUrls.push(r.url);
-      else errors.push(r.error);
-    }
-  }
-
   if (errors.length > 0) {
     return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
   }
 
-  const professional = await repository.create({
+  const client = await clientRepository.create({
     name,
-    city: city as never,
-    type: type as never,
-    specialties: specialties as never,
-    priceFrom: Math.round(priceFrom),
+    city: (city || null) as never,
     whatsapp: whatsapp.length <= 11 ? `55${whatsapp}` : whatsapp,
     email,
-    bio,
     profilePhotoUrl,
-    portfolioUrls,
     cpf,
     gender: gender as never,
     birthDate: birthDate || null,
@@ -118,6 +70,6 @@ export async function POST(request: NextRequest) {
     documentPhotoUrl,
   });
 
-  // Resposta pública: sem WhatsApp, e-mail, CPF, documento.
-  return NextResponse.json(toPublicProfessional(professional), { status: 201 });
+  // Devolve o id (guardado no cliente como "usuário atual") + versão pública.
+  return NextResponse.json({ id: client.id, client: toPublicClient(client) }, { status: 201 });
 }

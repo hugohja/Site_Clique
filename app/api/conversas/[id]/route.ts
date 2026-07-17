@@ -3,8 +3,10 @@ import { conversationRepository, repository } from "@/lib/data";
 import { toPublicProfessional } from "@/lib/types";
 
 /**
- * Detalhe da conversa. O contato do profissional SÓ entra na resposta quando
- * o status é "contato_liberado" — antes disso, nem o JSON carrega o número.
+ * Detalhe da conversa. Os contatos dos DOIS lados (WhatsApp do profissional e
+ * do cliente) só entram na resposta quando o status é "contato_liberado" —
+ * antes disso, nem o JSON carrega os números. O clientWhatsapp guardado na
+ * conversa é removido do payload até a liberação.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,12 +20,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Profissional não encontrado." }, { status: 404 });
   }
 
+  const released = conversation.status === "contato_liberado";
+  // Nunca vaza clientWhatsapp no corpo da conversa; só via `contact` liberado.
+  const { clientWhatsapp, ...publicConversation } = conversation;
+
   return NextResponse.json({
-    conversation,
+    conversation: publicConversation,
     professional: toPublicProfessional(professional),
-    contact:
-      conversation.status === "contato_liberado"
-        ? { whatsapp: professional.whatsapp }
-        : null,
+    contact: released
+      ? { professionalWhatsapp: professional.whatsapp, clientWhatsapp }
+      : null,
   });
 }

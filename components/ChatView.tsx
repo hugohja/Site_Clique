@@ -7,9 +7,9 @@ import type { Conversation, PublicProfessional } from "@/lib/types";
 import { formatPrice, typeLabel } from "@/lib/format";
 
 interface ConversationPayload {
-  conversation: Conversation;
+  conversation: Omit<Conversation, "clientWhatsapp">;
   professional: PublicProfessional;
-  contact: { whatsapp: string } | null;
+  contact: { professionalWhatsapp: string; clientWhatsapp: string } | null;
 }
 
 const STATUS_LABEL: Record<Conversation["status"], string> = {
@@ -181,8 +181,22 @@ export default function ChatView({ conversationId }: { conversationId: string })
           <h2 className="section-title">Contato liberado ✓</h2>
           <p className="contact-line mono">
             WhatsApp de {professional.name}:{" "}
-            <a href={`https://wa.me/${contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
-              +{contact.whatsapp}
+            <a
+              href={`https://wa.me/${contact.professionalWhatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              +{contact.professionalWhatsapp}
+            </a>
+          </p>
+          <p className="contact-line mono">
+            WhatsApp de {conversation.clientName}:{" "}
+            <a
+              href={`https://wa.me/${contact.clientWhatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              +{contact.clientWhatsapp}
             </a>
           </p>
           <div className="contact-logistics">

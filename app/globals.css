@@ -910,3 +910,57 @@ h3 {
   height: 100%;
   object-fit: cover;
 }
+
+/* ---- Selo de verificação de identidade ---- */
+
+.verify-badge {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.verify-badge.verify-verificado {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.verify-badge.verify-em_analise {
+  border-color: color-mix(in srgb, var(--coral) 55%, var(--border));
+  color: color-mix(in srgb, var(--coral) 80%, var(--text-dim));
+}
+
+/* ---- Chip do cliente atual + porta de cadastro ---- */
+
+.client-chip {
+  display: inline-block;
+  margin-top: 1.4rem;
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.75rem;
+}
+
+.client-chip strong {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.gate-card {
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  background: var(--surface);
+}
+
+.gate-card p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1.1rem;
+}

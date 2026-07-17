@@ -1,5 +1,7 @@
 import type {
   ChatMessage,
+  Client,
+  ClientInput,
   Conversation,
   ConversationInput,
   EventType,
@@ -25,8 +27,15 @@ export interface ProfessionalRepository {
   create(input: ProfessionalInput): Promise<Professional>;
 }
 
+export interface ClientRepository {
+  getById(id: string): Promise<Client | null>;
+  create(input: ClientInput): Promise<Client>;
+}
+
 export interface ConversationRepository {
-  create(input: ConversationInput & { firstMessage: ChatMessage }): Promise<Conversation>;
+  create(
+    input: ConversationInput & { clientName: string; clientWhatsapp: string; firstMessage: ChatMessage }
+  ): Promise<Conversation>;
   getById(id: string): Promise<Conversation | null>;
   addMessage(conversationId: string, message: ChatMessage): Promise<Conversation | null>;
   /**
