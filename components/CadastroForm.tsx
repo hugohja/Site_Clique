@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CITIES, EVENT_TYPES, PROFESSIONAL_TYPES } from "@/lib/types";
+import { CITIES, EVENT_TYPES, GENDERS, PROFESSIONAL_TYPES } from "@/lib/types";
+
+function maskCpf(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  return digits
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+}
 
 export default function CadastroForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [cpf, setCpf] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -15,28 +24,16 @@ export default function CadastroForm() {
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const payload = {
-      name: data.get("name"),
-      city: data.get("city"),
-      type: data.get("type"),
-      specialties: data.getAll("specialties"),
-      priceFrom: Number(data.get("priceFrom")),
-      whatsapp: data.get("whatsapp"),
-      bio: data.get("bio"),
-    };
 
-    if (payload.specialties.length === 0) {
+    if (data.getAll("specialties").length === 0) {
       setError("Escolha ao menos uma especialidade.");
       return;
     }
 
     setSending(true);
     try {
-      const res = await fetch("/api/professionals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // Multipart: os arquivos de foto vão junto, sem JSON.
+      const res = await fetch("/api/professionals", { method: "POST", body: data });
       const body = await res.json();
       if (!res.ok) {
         setError(body.error ?? "Não foi possível concluir o cadastro. Tente de novo.");
@@ -86,10 +83,40 @@ export default function CadastroForm() {
         </div>
       </div>
 
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="gender">Gênero</label>
+          <select id="gender" name="gender" required defaultValue="">
+            <option value="" disabled>
+              Selecione
+            </option>
+            {GENDERS.map((g) => (
+              <option key={g.value} value={g.value}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="cpf">CPF</label>
+          <input
+            id="cpf"
+            name="cpf"
+            required
+            inputMode="numeric"
+            placeholder="000.000.000-00"
+            value={cpf}
+            onChange={(e) => setCpf(maskCpf(e.target.value))}
+            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+          />
+          <span className="form-hint">
+            Usado só pra identificação — nunca aparece no seu perfil nem em tela pública.
+          </span>
+        </div>
+      </div>
+
       <div className="field">
-        <span className="field label" style={{ fontSize: "0.88rem", color: "var(--text-dim)" }}>
-          Especialidades
-        </span>
+        <span className="field-label">Especialidades</span>
         <div className="checkbox-grid">
           {EVENT_TYPES.map((e) => (
             <label key={e} className="check-pill">
@@ -126,6 +153,20 @@ export default function CadastroForm() {
             Nunca aparece no seu perfil — só é liberado pro cliente após o pagamento confirmado.
           </span>
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="profilePhoto">Foto de perfil</label>
+        <input id="profilePhoto" name="profilePhoto" type="file" accept="image/*" />
+        <span className="form-hint">Opcional nesta fase de teste. Até 4 MB.</span>
+      </div>
+
+      <div className="field">
+        <label htmlFor="portfolioPhotos">Fotos do portfólio</label>
+        <input id="portfolioPhotos" name="portfolioPhotos" type="file" accept="image/*" multiple />
+        <span className="form-hint">
+          Selecione várias de uma vez (até 12, 4 MB cada). Sem fotos, o perfil usa placeholders.
+        </span>
       </div>
 
       <div className="field">

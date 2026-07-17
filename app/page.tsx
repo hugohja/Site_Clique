@@ -57,7 +57,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
       <section className="results">
         <div className="container">
           <div className="results-head">
-            <h2>{hasFilter ? "Resultados" : "Profissionais em destaque"}</h2>
+            <h2>{hasFilter ? "Resultados" : "Profissionais"}</h2>
             <span className="results-count mono">
               {professionals.length} {professionals.length === 1 ? "perfil" : "perfis"}
             </span>

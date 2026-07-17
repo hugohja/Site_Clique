@@ -29,8 +29,18 @@ export interface ConversationRepository {
   create(input: ConversationInput & { firstMessage: ChatMessage }): Promise<Conversation>;
   getById(id: string): Promise<Conversation | null>;
   addMessage(conversationId: string, message: ChatMessage): Promise<Conversation | null>;
-  /** Registra o pagamento (status pagamento_confirmado + valor fechado). */
-  setPaymentConfirmed(conversationId: string, agreedPrice: number): Promise<Conversation | null>;
-  /** Libera o contato pros dois lados (status contato_liberado). */
+  /**
+   * Profissional envia (ou substitui) a proposta de valor estruturada.
+   * Só permitido antes do aceite (conversando / proposta_enviada).
+   */
+  sendProposal(conversationId: string, amount: number): Promise<Conversation | null>;
+  /** Cliente aceita a proposta vigente dentro da plataforma (→ proposta_aceita). */
+  acceptProposal(conversationId: string): Promise<Conversation | null>;
+  /**
+   * Registra o pagamento SEMPRE pelo valor da proposta aceita registrada —
+   * não recebe valor de fora. Só permitido em proposta_aceita.
+   */
+  setPaymentConfirmed(conversationId: string): Promise<Conversation | null>;
+  /** Libera o contato pros dois lados. Só permitido após pagamento_confirmado. */
   releaseContact(conversationId: string): Promise<Conversation | null>;
 }

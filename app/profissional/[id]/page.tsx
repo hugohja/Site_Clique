@@ -18,12 +18,22 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <Link href="/">← busca</Link>
           </nav>
           <div className="profile-title-row">
-            <div>
-              <h1>{pro.name}</h1>
-              <p className="profile-sub">
-                <span className="pro-type mono">{typeLabel(pro.type)}</span>
-                {pro.city}
-              </p>
+            <div className="profile-identity">
+              {pro.profilePhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- data URL local, sem otimização
+                <img className="avatar" src={pro.profilePhotoUrl} alt={`Foto de ${pro.name}`} />
+              ) : (
+                <span className="avatar avatar-placeholder mono" aria-hidden>
+                  {pro.name.charAt(0)}
+                </span>
+              )}
+              <div>
+                <h1>{pro.name}</h1>
+                <p className="profile-sub">
+                  <span className="pro-type mono">{typeLabel(pro.type)}</span>
+                  {pro.city}
+                </p>
+              </div>
             </div>
             {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado. */}
             <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">
@@ -57,14 +67,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           <div className="portfolio-grid">
             {pro.portfolio.map((item) => (
               <div key={item.id} className={`shot ${item.aspect} tone-${item.tone}`}>
+                {item.url && (
+                  // eslint-disable-next-line @next/next/no-img-element -- data URL local
+                  <img src={item.url} alt="" className="shot-img" />
+                )}
                 <span className="mono">{item.label}</span>
               </div>
             ))}
           </div>
-          <p className="portfolio-note">
-            Nesta fase do protótipo o portfólio usa placeholders — o upload de fotos reais entra
-            junto com o cadastro persistente.
-          </p>
+          {pro.portfolio.every((item) => !item.url) && (
+            <p className="portfolio-note">
+              Este perfil ainda não enviou fotos — os tiles são placeholders do protótipo.
+            </p>
+          )}
         </div>
         <aside className="profile-aside">
           <h2 className="section-title">Especialidades</h2>
