@@ -127,6 +127,7 @@ export const memoryRepository: ProfessionalRepository = {
       specialties: input.specialties,
       whatsapp: input.whatsapp,
       email: input.email,
+      payoutPixKey: null,
       profilePhotoUrl: input.profilePhotoUrl,
       bio: input.bio,
       rating: 0,
@@ -149,6 +150,7 @@ export const memoryRepository: ProfessionalRepository = {
     if (patch.bio !== undefined) pro.bio = patch.bio;
     if (patch.specialties !== undefined) pro.specialties = patch.specialties;
     if (patch.profilePhotoUrl !== undefined) pro.profilePhotoUrl = patch.profilePhotoUrl;
+    if (patch.payoutPixKey !== undefined) pro.payoutPixKey = patch.payoutPixKey;
     return pro;
   },
 
@@ -320,6 +322,7 @@ export const memoryConversationRepository: ConversationRepository = {
       agreedPrice: null,
       commissionRate: COMMISSION_RATE,
       confirmationCode: null,
+      paidOutAt: null,
       messages: [input.firstMessage],
       createdAt: new Date().toISOString(),
     };
@@ -456,5 +459,20 @@ export const memoryConversationRepository: ConversationRepository = {
     return conversations()
       .filter((c) => c.status === "em_disputa")
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async listPendingPayouts() {
+    return conversations()
+      .filter((c) => c.status === "concluido" && !c.paidOutAt)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async markPaidOut(conversationId: string) {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return null;
+    if (conversation.status !== "concluido" || conversation.paidOutAt) return conversation;
+    conversation.paidOutAt = new Date().toISOString();
+    conversation.messages.push(systemMessage("Repasse ao profissional realizado pela Clique."));
+    return conversation;
   },
 };

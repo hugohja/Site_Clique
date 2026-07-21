@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProfileEditor from "@/components/ProfileEditor";
+import PayoutKeyEditor from "@/components/PayoutKeyEditor";
 
 interface Me {
   account: { role: "profissional" | "cliente"; email: string; professionalId: string | null } | null;
@@ -87,10 +88,16 @@ export default function SettingsPanel() {
       </p>
 
       {me.account.role === "profissional" && me.account.professionalId && (
-        <div className="settings-card">
-          <h2>Meu perfil</h2>
-          <ProfileEditor professionalId={me.account.professionalId} />
-        </div>
+        <>
+          <div className="settings-card">
+            <h2>Meu perfil</h2>
+            <ProfileEditor professionalId={me.account.professionalId} />
+          </div>
+          <div className="settings-card">
+            <h2>Recebimento (PIX)</h2>
+            <PayoutKeyEditor />
+          </div>
+        </>
       )}
 
       <div className="settings-card">

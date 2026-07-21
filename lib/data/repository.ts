@@ -30,7 +30,14 @@ export interface ProfessionalRepository {
   /** Edição de perfil pelo próprio profissional. */
   update(
     id: string,
-    patch: { name?: string; city?: string; bio?: string; specialties?: EventType[]; profilePhotoUrl?: string }
+    patch: {
+      name?: string;
+      city?: string;
+      bio?: string;
+      specialties?: EventType[];
+      profilePhotoUrl?: string;
+      payoutPixKey?: string | null;
+    }
   ): Promise<Professional | null>;
   /** Substitui todo o portfólio (usado na edição: add/remove/reordenar/enquadrar). */
   replacePortfolio(
@@ -114,4 +121,8 @@ export interface ConversationRepository {
   listForProfessional(professionalId: string): Promise<Conversation[]>;
   /** Admin: conversas em disputa (não comparecimento reportado). */
   listDisputes(): Promise<Conversation[]>;
+  /** Admin: concluídas cujo repasse ao profissional ainda não foi marcado como feito. */
+  listPendingPayouts(): Promise<Conversation[]>;
+  /** Admin marca o repasse (PIX manual) como feito — grava paidOutAt. */
+  markPaidOut(conversationId: string): Promise<Conversation | null>;
 }

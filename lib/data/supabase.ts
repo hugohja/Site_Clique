@@ -65,6 +65,7 @@ interface ProRow {
   price_from: number;
   whatsapp: string;
   email: string;
+  payout_pix_key: string | null;
   profile_photo_url: string;
   bio: string;
   rating: number | null;
@@ -113,6 +114,7 @@ interface ConversationRow {
   agreed_price: number | null;
   commission_rate: number;
   confirmation_code: string | null;
+  paid_out_at: string | null;
   created_at: string;
   messages?: MessageRow[];
 }
@@ -181,6 +183,7 @@ function toProfessional(row: ProRow): Professional {
     specialties: row.specialties ?? [],
     whatsapp: row.whatsapp,
     email: row.email,
+    payoutPixKey: row.payout_pix_key ?? null,
     profilePhotoUrl: row.profile_photo_url,
     bio: row.bio,
     rating: row.rating ?? 0,
@@ -248,6 +251,7 @@ function toConversation(row: ConversationRow): Conversation {
     agreedPrice: row.agreed_price ?? null,
     commissionRate: row.commission_rate,
     confirmationCode: row.confirmation_code ?? null,
+    paidOutAt: row.paid_out_at ? iso(row.paid_out_at) : null,
     messages,
     createdAt: iso(row.created_at),
   };
@@ -334,6 +338,7 @@ export const supabaseRepository: ProfessionalRepository = {
       price_from: 0,
       whatsapp: input.whatsapp,
       email: input.email,
+      payout_pix_key: null,
       profile_photo_url: input.profilePhotoUrl,
       bio: input.bio,
       rating: 0,
@@ -377,6 +382,7 @@ export const supabaseRepository: ProfessionalRepository = {
     if (patch.bio !== undefined) row.bio = patch.bio;
     if (patch.specialties !== undefined) row.specialties = patch.specialties;
     if (patch.profilePhotoUrl !== undefined) row.profile_photo_url = patch.profilePhotoUrl;
+    if (patch.payoutPixKey !== undefined) row.payout_pix_key = patch.payoutPixKey;
     if (Object.keys(row).length > 0) await sbUpdate("professionals", [q.eq("id", id)], row);
     return this.getById(id);
   },
@@ -715,5 +721,26 @@ export const supabaseConversationRepository: ConversationRepository = {
       q.order("created_at.asc"),
     ]);
     return rows.map(toConversation);
+  },
+
+  async listPendingPayouts() {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.eq("status", "concluido"),
+      { key: "paid_out_at", value: "is.null" },
+      q.order("created_at.asc"),
+    ]);
+    return rows.map(toConversation);
+  },
+
+  async markPaidOut(conversationId: string) {
+    const conv = await fetchConversation(conversationId);
+    if (!conv) return null;
+    if (conv.status !== "concluido" || conv.paidOutAt) return conv;
+    await sbUpdate("conversations", [q.eq("id", conversationId)], {
+      paid_out_at: new Date().toISOString(),
+    });
+    await insertSystemMessage(conversationId, "Repasse ao profissional realizado pela Clique.");
+    return fetchConversation(conversationId);
   },
 };
