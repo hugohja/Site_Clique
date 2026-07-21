@@ -2060,6 +2060,45 @@ h3 {
   word-break: break-all;
   color: var(--text-dim);
 }
+/* PIX real (Mercado Pago) */
+.pix-real {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+.pix-qr-img {
+  width: 150px;
+  height: 150px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #fff;
+}
+.pix-real-info {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.pix-real-info .pix-code {
+  display: block;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 4.5rem;
+  overflow: auto;
+}
+.pix-waiting {
+  margin-top: 0.8rem;
+  color: var(--amber);
+  font-size: 0.85rem;
+}
 .card-fake {
   padding: 1rem;
   border: 1px solid var(--border);
