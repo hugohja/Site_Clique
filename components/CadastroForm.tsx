@@ -55,7 +55,7 @@ export default function CadastroForm() {
 
     // Monta o multipart: campos do form + fotos do uploader (com formato/capa).
     fd.delete("password2");
-    fd.set("portfolioMeta", JSON.stringify(portfolio.map((p) => ({ aspect: p.aspect, cover: p.cover }))));
+    fd.set("portfolioMeta", JSON.stringify(portfolio.map((p) => ({ focus: p.focus, cover: p.cover }))));
 
     setSending(true);
     // Comprime as imagens no navegador antes de enviar: fotos de celular têm

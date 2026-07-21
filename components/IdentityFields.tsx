@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DOCUMENT_TYPES, GENDERS } from "@/lib/types";
-import { maskCpf } from "@/lib/format";
+import { maskCpf, maskPhone } from "@/lib/format";
 import FileField from "@/components/FileField";
 
 /**
@@ -13,6 +13,7 @@ import FileField from "@/components/FileField";
  */
 export default function IdentityFields({ profilePhotoRequired = true }: { profilePhotoRequired?: boolean }) {
   const [cpf, setCpf] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   return (
     <>
@@ -21,7 +22,16 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
       <div className="field-row">
         <div className="field">
           <label htmlFor="whatsapp">WhatsApp (com DDD)</label>
-          <input id="whatsapp" name="whatsapp" type="tel" required placeholder="Ex: 21 99999-8888" />
+          <input
+            id="whatsapp"
+            name="whatsapp"
+            type="tel"
+            inputMode="numeric"
+            required
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(maskPhone(e.target.value))}
+            placeholder="(21) 99999-8888"
+          />
         </div>
         <div className="field">
           <label htmlFor="cpf">CPF</label>

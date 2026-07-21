@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(professionals.map(toPublicProfessional));
 }
 
-const ASPECTS = ["wide", "tall", "square"] as const;
-
 export async function POST(request: NextRequest) {
   let form: FormData;
   try {
@@ -61,7 +59,8 @@ export async function POST(request: NextRequest) {
   if (!isStrongPassword(password))
     errors.push("A senha precisa ser forte: 8+ caracteres com letra, número e caractere especial.");
   if (specialties.length === 0) errors.push("Escolha ou escreva ao menos uma especialidade.");
-  if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
+  if (whatsapp.length < 10 || whatsapp.length > 11)
+    errors.push("WhatsApp inválido: use DDD + número (10 ou 11 dígitos).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
@@ -91,8 +90,8 @@ export async function POST(request: NextRequest) {
     else errors.push(r.error);
   }
 
-  // Portfólio: fotos + metadados (formato + capa) paralelos, na ordem escolhida.
-  let meta: { aspect?: string; cover?: boolean }[] = [];
+  // Portfólio: fotos + metadados (enquadramento + capa) paralelos, na ordem escolhida.
+  let meta: { focus?: string; cover?: boolean }[] = [];
   try {
     meta = JSON.parse(String(form.get("portfolioMeta") ?? "[]"));
   } catch {
@@ -111,7 +110,8 @@ export async function POST(request: NextRequest) {
         const m = meta[i] ?? {};
         portfolio.push({
           url: r.url,
-          aspect: ASPECTS.includes(m.aspect as never) ? (m.aspect as never) : "square",
+          aspect: "square",
+          focus: typeof m.focus === "string" ? m.focus : "50% 50%",
           cover: Boolean(m.cover),
         });
       } else errors.push(r.error);
@@ -139,12 +139,19 @@ export async function POST(request: NextRequest) {
     documentPhotoUrl,
   });
 
-  const account = await accountRepository.create({
-    role: "profissional",
-    email: loginEmail,
-    passwordHash: hashPassword(password),
-    professionalId: professional.id,
-  });
+  const account = await accountRepository
+    .create({
+      role: "profissional",
+      email: loginEmail,
+      passwordHash: hashPassword(password),
+      professionalId: professional.id,
+    })
+    .catch(() => null);
+  if (!account) {
+    // Rede/constraint de e-mail único: remove o profissional recém-criado e avisa.
+    await repository.remove(professional.id).catch(() => {});
+    return NextResponse.json({ error: "Já existe uma conta com esse e-mail." }, { status: 400 });
+  }
   const token = await createSession(account.id);
 
   const res = NextResponse.json(toPublicProfessional(professional), { status: 201 });

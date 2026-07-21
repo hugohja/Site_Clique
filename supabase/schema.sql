@@ -34,11 +34,16 @@ create table if not exists portfolio_items (
   professional_id text not null references professionals (id) on delete cascade,
   label           text not null,
   aspect          text not null check (aspect in ('wide','tall','square')),
+  focus           text not null default '50% 50%', -- enquadramento (object-position)
   cover           boolean not null default false,
   url             text not null,
   position        integer not null default 0
 );
 create index if not exists portfolio_items_pro_idx on portfolio_items (professional_id);
+
+-- Se o banco já existe (schema rodado antes), rode este ALTER uma vez:
+-- alter table portfolio_items
+--   add column if not exists focus text not null default '50% 50%';
 
 -- Identidade do profissional (PRIVADA — CPF, documento).
 create table if not exists professional_identities (

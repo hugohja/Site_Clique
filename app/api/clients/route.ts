@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
   if (!isStrongPassword(password))
     errors.push("A senha precisa ser forte: 8+ caracteres com letra, número e caractere especial.");
-  if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
+  if (whatsapp.length < 10 || whatsapp.length > 11)
+    errors.push("WhatsApp inválido: use DDD + número (10 ou 11 dígitos).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
@@ -77,12 +78,18 @@ export async function POST(request: NextRequest) {
     documentPhotoUrl,
   });
 
-  const account = await accountRepository.create({
-    role: "cliente",
-    email: loginEmail,
-    passwordHash: hashPassword(password),
-    clientId: client.id,
-  });
+  const account = await accountRepository
+    .create({
+      role: "cliente",
+      email: loginEmail,
+      passwordHash: hashPassword(password),
+      clientId: client.id,
+    })
+    .catch(() => null);
+  if (!account) {
+    await clientRepository.remove(client.id).catch(() => {});
+    return NextResponse.json({ error: "Já existe uma conta com esse e-mail." }, { status: 400 });
+  }
   const token = await createSession(account.id);
 
   const res = NextResponse.json({ id: client.id, client: toPublicClient(client) }, { status: 201 });

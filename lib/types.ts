@@ -44,13 +44,19 @@ export function cleanEventLabel(value: string): string {
   return value.trim().replace(/\s+/g, " ").slice(0, 40);
 }
 
-/** Tile do portfólio. O profissional escolhe o formato (aspect), a ordem e a capa. */
+/**
+ * Tile do portfólio. Todas as fotos aparecem no mesmo tamanho (quadrado); o
+ * profissional escolhe o enquadramento (focus = object-position "x% y%"), a
+ * ordem e a capa. `aspect` é legado (mantido por compatibilidade).
+ */
 export interface PortfolioItem {
   id: string;
   /** Nome de arquivo exibido no tile, estilo dado de câmera (ex: IMG_4021.RAW). */
   label: string;
-  /** Formato na grade, escolhido pelo profissional. */
+  /** Legado: formato antigo. Hoje a grade é uniforme. */
   aspect: "wide" | "tall" | "square";
+  /** Enquadramento: object-position (ex: "50% 30%"). Escolhido na hora de subir. */
+  focus: string;
   /** true = foto principal (capa), exibida em destaque. No máximo uma. */
   cover: boolean;
   /** Data URL da imagem enviada (fase atual); na fase 2 vira URL de storage. */
@@ -61,6 +67,7 @@ export interface PortfolioItem {
 export interface PortfolioPhotoInput {
   url: string;
   aspect: "wide" | "tall" | "square";
+  focus: string;
   cover: boolean;
 }
 

@@ -50,6 +50,7 @@ interface PortfolioRow {
   id: string;
   label: string;
   aspect: PortfolioItem["aspect"];
+  focus: string | null;
   cover: boolean;
   url: string;
   position: number;
@@ -162,7 +163,14 @@ function toProfessional(row: ProRow): Professional {
   const portfolio: PortfolioItem[] = (row.portfolio_items ?? [])
     .slice()
     .sort((a, b) => a.position - b.position)
-    .map((p) => ({ id: p.id, label: p.label, aspect: p.aspect, cover: p.cover, url: p.url }));
+    .map((p) => ({
+      id: p.id,
+      label: p.label,
+      aspect: p.aspect,
+      focus: p.focus || "50% 50%",
+      cover: p.cover,
+      url: p.url,
+    }));
   return {
     id: row.id,
     name: row.name,
@@ -340,6 +348,7 @@ export const supabaseRepository: ProfessionalRepository = {
         professional_id: id,
         label: `IMG_${1000 + i}.JPG`,
         aspect: ph.aspect,
+        focus: ph.focus || "50% 50%",
         // Garante uma capa: se ninguém marcou, a primeira vira capa.
         cover: ph.cover || (!hasCover && i === 0),
         url: ph.url,

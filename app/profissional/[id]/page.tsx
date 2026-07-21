@@ -84,6 +84,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               url: item.url,
               label: item.label,
               cover: item.cover,
+              focus: item.focus,
             }))}
           />
         </div>

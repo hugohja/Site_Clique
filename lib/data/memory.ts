@@ -114,6 +114,7 @@ export const memoryRepository: ProfessionalRepository = {
       id: `up-${Date.now()}-${i}`,
       label: `IMG_${1000 + i}.JPG`,
       aspect: ph.aspect,
+      focus: ph.focus || "50% 50%",
       // Garante uma capa: se ninguém marcou, a primeira vira capa.
       cover: ph.cover || (!hasCover && i === 0),
       url: ph.url,

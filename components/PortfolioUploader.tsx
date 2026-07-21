@@ -3,17 +3,17 @@
 export interface PortfolioDraft {
   file: File;
   url: string; // preview (object URL)
-  aspect: "wide" | "tall" | "square";
+  /** Enquadramento (object-position "x% y%") escolhido clicando na foto. */
+  focus: string;
   cover: boolean;
 }
 
-const SHAPES: { value: PortfolioDraft["aspect"]; label: string }[] = [
-  { value: "square", label: "Quadrada" },
-  { value: "wide", label: "Larga" },
-  { value: "tall", label: "Alta" },
-];
-
 const MIN = 3;
+
+function focusXY(focus: string): { left: string; top: string } {
+  const [x = "50%", y = "50%"] = focus.split(" ");
+  return { left: x, top: y };
+}
 
 export default function PortfolioUploader({
   items,
@@ -27,7 +27,7 @@ export default function PortfolioUploader({
     const added: PortfolioDraft[] = Array.from(files).map((file) => ({
       file,
       url: URL.createObjectURL(file),
-      aspect: "square",
+      focus: "50% 50%",
       cover: false,
     }));
     const next = [...items, ...added];
@@ -37,6 +37,13 @@ export default function PortfolioUploader({
 
   function update(idx: number, patch: Partial<PortfolioDraft>) {
     onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  }
+
+  function setFocusFromClick(idx: number, e: React.MouseEvent<HTMLButtonElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, Math.round(((e.clientX - r.left) / r.width) * 100)));
+    const y = Math.min(100, Math.max(0, Math.round(((e.clientY - r.top) / r.height) * 100)));
+    update(idx, { focus: `${x}% ${y}%` });
   }
 
   function setCover(idx: number) {
@@ -81,51 +88,49 @@ export default function PortfolioUploader({
         </span>
       </div>
       <p className="form-hint" style={{ marginTop: "0.5rem" }}>
-        Adicione uma a uma ou várias de vez. Em cada foto você escolhe o <b>formato</b>, a{" "}
-        <b>ordem</b> (◀ ▶) e a <b>capa</b> (★).
+        Todas as fotos aparecem no mesmo tamanho. <b>Clique na foto</b> para escolher o enquadramento
+        (o ponto que fica centralizado), use ◀ ▶ para a <b>ordem</b> e ★ para a <b>capa</b>.
       </p>
       <div className="pf-list">
-        {items.map((it, i) => (
-          <div key={it.url} className={`pf-item${it.cover ? " is-cover" : ""}`}>
-            <div className="pf-thumb">
-              {/* eslint-disable-next-line @next/next/no-img-element -- object URL local */}
-              <img src={it.url} alt="" />
-              {it.cover && <span className="pf-cover-tag">capa</span>}
-            </div>
-            <div className="pf-controls">
-              <select
-                className="pf-shape"
-                value={it.aspect}
-                onChange={(e) => update(i, { aspect: e.target.value as PortfolioDraft["aspect"] })}
+        {items.map((it, i) => {
+          const dot = focusXY(it.focus);
+          return (
+            <div key={it.url} className={`pf-item${it.cover ? " is-cover" : ""}`}>
+              <button
+                type="button"
+                className="pf-thumb"
+                onClick={(e) => setFocusFromClick(i, e)}
+                title="Clique para escolher o enquadramento"
               >
-                {SHAPES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pf-btns">
-                <button type="button" title="mover pra esquerda" onClick={() => move(i, -1)}>
-                  ◀
-                </button>
-                <button
-                  type="button"
-                  title="definir como capa"
-                  className={it.cover ? "on" : ""}
-                  onClick={() => setCover(i)}
-                >
-                  ★
-                </button>
-                <button type="button" title="mover pra direita" onClick={() => move(i, 1)}>
-                  ▶
-                </button>
-                <button type="button" title="remover" onClick={() => remove(i)}>
-                  ✕
-                </button>
+                {/* eslint-disable-next-line @next/next/no-img-element -- object URL local */}
+                <img src={it.url} alt="" style={{ objectPosition: it.focus }} />
+                {it.cover && <span className="pf-cover-tag">capa</span>}
+                <span className="pf-focus-dot" style={{ left: dot.left, top: dot.top }} aria-hidden />
+              </button>
+              <div className="pf-controls">
+                <div className="pf-btns">
+                  <button type="button" title="mover pra esquerda" onClick={() => move(i, -1)}>
+                    ◀
+                  </button>
+                  <button
+                    type="button"
+                    title="definir como capa"
+                    className={it.cover ? "on" : ""}
+                    onClick={() => setCover(i)}
+                  >
+                    ★
+                  </button>
+                  <button type="button" title="mover pra direita" onClick={() => move(i, 1)}>
+                    ▶
+                  </button>
+                  <button type="button" title="remover" onClick={() => remove(i)}>
+                    ✕
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

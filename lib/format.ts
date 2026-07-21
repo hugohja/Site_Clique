@@ -4,6 +4,15 @@ export function typeLabel(type: ProfessionalType): string {
   return PROFESSIONAL_TYPES.find((t) => t.value === type)?.label ?? type;
 }
 
+/** Máscara de telefone BR: (99) 99999-9999 (celular) ou (99) 9999-9999 (fixo). */
+export function maskPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
 /** Máscara visual de CPF: 000.000.000-00 (sem validar dígito verificador). */
 export function maskCpf(raw: string): string {
   return raw

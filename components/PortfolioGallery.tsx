@@ -7,6 +7,8 @@ interface Shot {
   url: string;
   label: string;
   cover: boolean;
+  /** Enquadramento (object-position) escolhido pelo profissional. */
+  focus: string;
 }
 
 /** Visualizador em tela cheia (lightbox) com navegação por teclado e setas. */
@@ -92,7 +94,7 @@ export default function PortfolioGallery({ items }: { items: Shot[] }) {
 
   return (
     <>
-      <div className="pf-masonry">
+      <div className="pf-grid">
         {items.map((it, i) => (
           <button
             key={it.id}
@@ -102,7 +104,7 @@ export default function PortfolioGallery({ items }: { items: Shot[] }) {
             aria-label={`Ampliar foto ${i + 1}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={it.url} alt="" loading="lazy" />
+            <img src={it.url} alt="" loading="lazy" style={{ objectPosition: it.focus }} />
             {it.cover && <span className="pf-cover-badge">capa</span>}
           </button>
         ))}
