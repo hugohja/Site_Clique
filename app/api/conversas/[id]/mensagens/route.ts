@@ -2,9 +2,16 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { conversationRepository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
+import { resolveConversationViewer } from "@/lib/conversationAuth";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  // Só participantes escrevem; o remetente vem da sessão (não é escolhido no body).
+  const { conversation: conv, role } = await resolveConversationViewer(id);
+  if (!conv) return NextResponse.json({ error: "Conversa não encontrada." }, { status: 404 });
+  if (role !== "cliente" && role !== "profissional") {
+    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+  }
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -12,7 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
   }
 
-  const sender = body.sender === "profissional" ? "profissional" : "cliente";
+  const sender = role;
   const text = String(body.text ?? "").trim();
   if (!text) {
     return NextResponse.json({ error: "Mensagem vazia." }, { status: 400 });

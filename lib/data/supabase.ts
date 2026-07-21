@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type {
   Account,
   ChatMessage,
@@ -69,6 +69,7 @@ interface ProRow {
   bio: string;
   rating: number | null;
   review_count: number | null;
+  no_show_count: number | null;
   response_time_hours: number | null;
   created_at: string;
   portfolio_items?: PortfolioRow[];
@@ -111,6 +112,7 @@ interface ConversationRow {
   proposal_accepted_at: string | null;
   agreed_price: number | null;
   commission_rate: number;
+  confirmation_code: string | null;
   created_at: string;
   messages?: MessageRow[];
 }
@@ -183,6 +185,7 @@ function toProfessional(row: ProRow): Professional {
     bio: row.bio,
     rating: row.rating ?? 0,
     reviewCount: row.review_count ?? 0,
+    noShowCount: row.no_show_count ?? 0,
     responseTimeHours: row.response_time_hours ?? null,
     portfolio,
     identity: toIdentity(one(row.professional_identities)),
@@ -244,6 +247,7 @@ function toConversation(row: ConversationRow): Conversation {
         : null,
     agreedPrice: row.agreed_price ?? null,
     commissionRate: row.commission_rate,
+    confirmationCode: row.confirmation_code ?? null,
     messages,
     createdAt: iso(row.created_at),
   };
@@ -334,6 +338,7 @@ export const supabaseRepository: ProfessionalRepository = {
       bio: input.bio,
       rating: 0,
       review_count: 0,
+      no_show_count: 0,
       response_time_hours: null,
     });
 
@@ -411,6 +416,13 @@ export const supabaseRepository: ProfessionalRepository = {
   async remove(id) {
     // FK on delete cascade remove identidade e portfólio junto.
     await sbDelete("professionals", [q.eq("id", id)]);
+  },
+
+  async registerNoShow(id) {
+    const pro = await this.getById(id);
+    if (!pro) return null;
+    await sbUpdate("professionals", [q.eq("id", id)], { no_show_count: pro.noShowCount + 1 });
+    return this.getById(id);
   },
 };
 
@@ -536,6 +548,7 @@ export const supabaseConversationRepository: ConversationRepository = {
       proposal_accepted_at: null,
       agreed_price: null,
       commission_rate: COMMISSION_RATE,
+      confirmation_code: null,
     });
     const id = rows[0].id;
     await sbInsert("messages", {
@@ -615,9 +628,78 @@ export const supabaseConversationRepository: ConversationRepository = {
     // Contato só é liberado depois do pagamento — nunca antes.
     if (conv.status !== "pagamento_confirmado" && conv.status !== "contato_liberado") return conv;
     if (conv.status === "pagamento_confirmado") {
-      await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "contato_liberado" });
-      await insertSystemMessage(conversationId, "Contato liberado pros dois lados");
+      await sbUpdate("conversations", [q.eq("id", conversationId)], {
+        status: "contato_liberado",
+        confirmation_code: String(randomInt(1000, 10000)),
+      });
+      await insertSystemMessage(
+        conversationId,
+        "Pagamento em custódia. Contato liberado — combinem o evento. No dia, o cliente passa o código de confirmação ao profissional."
+      );
     }
     return fetchConversation(conversationId);
+  },
+
+  async confirmCompletion(conversationId: string, code: string) {
+    const conv = await fetchConversation(conversationId);
+    if (!conv) return null;
+    if (conv.status !== "contato_liberado") return conv;
+    if (!conv.confirmationCode || code.trim() !== conv.confirmationCode) return conv;
+    await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "concluido" });
+    await insertSystemMessage(
+      conversationId,
+      "Código validado no evento — serviço concluído e pagamento liberado ao profissional."
+    );
+    return fetchConversation(conversationId);
+  },
+
+  async reportNoShow(conversationId: string) {
+    const conv = await fetchConversation(conversationId);
+    if (!conv) return null;
+    if (conv.status !== "contato_liberado") return conv;
+    await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "em_disputa" });
+    await insertSystemMessage(conversationId, "Cliente reportou não comparecimento. Em análise pela Clique.");
+    return fetchConversation(conversationId);
+  },
+
+  async resolveDispute(conversationId: string, outcome: "reembolsar" | "liberar") {
+    const conv = await fetchConversation(conversationId);
+    if (!conv) return null;
+    if (conv.status !== "em_disputa") return conv;
+    if (outcome === "reembolsar") {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "reembolsado" });
+      await insertSystemMessage(conversationId, "Disputa resolvida: valor reembolsado ao cliente.");
+    } else {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "concluido" });
+      await insertSystemMessage(conversationId, "Disputa resolvida: pagamento liberado ao profissional.");
+    }
+    return fetchConversation(conversationId);
+  },
+
+  async listForClient(clientId: string) {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.eq("client_id", clientId),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toConversation);
+  },
+
+  async listForProfessional(professionalId: string) {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.eq("professional_id", professionalId),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toConversation);
+  },
+
+  async listDisputes() {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.eq("status", "em_disputa"),
+      q.order("created_at.asc"),
+    ]);
+    return rows.map(toConversation);
   },
 };

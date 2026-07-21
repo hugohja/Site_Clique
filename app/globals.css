@@ -789,6 +789,93 @@ h3 {
   border-color: var(--amber);
   color: var(--amber);
 }
+.status-badge.status-concluido {
+  border-color: #24a148;
+  color: #24a148;
+}
+.status-badge.status-em_disputa {
+  border-color: #d9822b;
+  color: #d9822b;
+}
+.status-badge.status-reembolsado {
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+/* ---- custódia (escrow) ---- */
+.escrow-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  padding: 1.1rem 1.2rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.escrow-box.done {
+  background: color-mix(in srgb, #24a148 10%, var(--surface));
+  border-color: #24a148;
+}
+.escrow-code {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  text-align: center;
+  color: var(--amber);
+  background: var(--surface);
+  border: 1px dashed var(--amber);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+}
+.escrow-warn {
+  color: #d9822b;
+  font-size: 0.78rem;
+}
+.noshow-flag,
+.noshow-stat {
+  color: #d9822b;
+}
+
+/* ---- inbox de conversas ---- */
+.inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.inbox-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.9rem 1rem;
+  box-shadow: 0 1px 2px rgba(12, 16, 32, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.inbox-item:hover {
+  border-color: var(--amber);
+  box-shadow: 0 8px 22px rgba(43, 75, 242, 0.08);
+}
+.inbox-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.inbox-meta {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+.inbox-last {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .chat-privacy-note {
   color: var(--text-dim);

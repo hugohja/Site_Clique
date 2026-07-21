@@ -2,8 +2,44 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
-import { cleanEventLabel } from "@/lib/types";
+import { cleanEventLabel, type Conversation } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
+
+/** Inbox: conversas do usuário logado (cliente ou profissional). */
+export async function GET() {
+  const account = await currentAccount((id) => accountRepository.getById(id));
+  if (!account) {
+    return NextResponse.json({ error: "Entre na sua conta." }, { status: 401 });
+  }
+  let convs: Conversation[] = [];
+  if (account.role === "cliente" && account.clientId) {
+    convs = await conversationRepository.listForClient(account.clientId);
+  } else if (account.role === "profissional" && account.professionalId) {
+    convs = await conversationRepository.listForProfessional(account.professionalId);
+  }
+  const conversations = await Promise.all(
+    convs.map(async (c) => {
+      let otherName = c.clientName;
+      if (account.role === "cliente") {
+        const pro = await repository.getById(c.professionalId);
+        otherName = pro?.name ?? "profissional";
+      }
+      const last = c.messages[c.messages.length - 1];
+      return {
+        id: c.id,
+        status: c.status,
+        eventType: c.eventType,
+        eventDate: c.eventDate,
+        professionalId: c.professionalId,
+        agreedPrice: c.agreedPrice,
+        otherName,
+        lastMessage: last?.text ?? "",
+        createdAt: c.createdAt,
+      };
+    })
+  );
+  return NextResponse.json({ role: account.role, conversations });
+}
 
 export async function POST(request: NextRequest) {
   // Só uma conta de CLIENTE logada pode iniciar conversa (separação de contas).

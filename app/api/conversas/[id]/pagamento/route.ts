@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { conversationRepository } from "@/lib/data";
 import { confirmarPagamento } from "@/lib/payments";
+import { resolveConversationViewer } from "@/lib/conversationAuth";
 
 /**
  * Simulação de pagamento da fase atual. Não recebe valor: o pagamento é
@@ -13,9 +13,12 @@ import { confirmarPagamento } from "@/lib/payments";
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const existing = await conversationRepository.getById(id);
+  const { conversation: existing, role } = await resolveConversationViewer(id);
   if (!existing) {
     return NextResponse.json({ error: "Conversa não encontrada." }, { status: 404 });
+  }
+  if (role !== "cliente") {
+    return NextResponse.json({ error: "Só o cliente confirma o pagamento." }, { status: 403 });
   }
   if (existing.status === "pagamento_confirmado" || existing.status === "contato_liberado") {
     return NextResponse.json({ error: "Pagamento já confirmado nesta conversa." }, { status: 409 });

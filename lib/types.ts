@@ -142,6 +142,8 @@ export interface Professional {
   /** Média 0–5. Perfis novos começam sem nota (reviewCount 0). */
   rating: number;
   reviewCount: number;
+  /** Nº de não comparecimentos confirmados. Sinal de confiança público — sobe a cada disputa perdida. */
+  noShowCount: number;
   /** Tempo médio de resposta em horas. null = sem histórico ainda. */
   responseTimeHours: number | null;
   /** Ao menos MIN_PORTFOLIO_PHOTOS fotos reais (obrigatório no cadastro). Público. */
@@ -244,26 +246,50 @@ export function toPublicClient(client: Client): PublicClient {
 /** Comissão da plataforma vigente (12%), gravada na conversa no fechamento. */
 export const COMMISSION_RATE = 0.12;
 
+/** Comissão da plataforma sobre um valor fechado (arredondada). */
+export function commissionAmount(price: number, rate: number): number {
+  return Math.round(price * rate);
+}
+/** Quanto o profissional recebe (valor menos a comissão). */
+export function payoutAmount(price: number, rate: number): number {
+  return price - commissionAmount(price, rate);
+}
+
 /**
- * Fluxo anti-desintermediação — o negócio inteiro fecha dentro da plataforma:
+ * Fluxo com custódia (escrow) — o negócio inteiro fecha dentro da plataforma:
  *  conversando          → chat aberto, contato oculto dos dois lados
  *  proposta_enviada     → profissional propôs um valor em campo estruturado
- *  proposta_aceita      → cliente aceitou DENTRO da plataforma; só agora o
- *                         pagamento fica disponível
- *  pagamento_confirmado → pagamento entrou (nesta fase, simulado; na fase 3,
- *                         webhook do gateway PIX/cartão) — sempre pelo valor
- *                         da proposta aceita registrada, nunca por input livre
- *  contato_liberado     → contato dos DOIS lados fica visível
+ *  proposta_aceita      → cliente aceitou DENTRO da plataforma; libera o pagamento
+ *  pagamento_confirmado → pagamento entrou (simulado; na fase real, webhook do
+ *                         gateway) — sempre pelo valor da proposta aceita
+ *  contato_liberado     → dinheiro EM CUSTÓDIA na plataforma; contato dos dois
+ *                         lados revelado pra combinarem o evento; um código de
+ *                         confirmação é gerado (só o cliente vê)
+ *  concluido            → o profissional digitou o código do cliente no evento →
+ *                         pagamento liberado ao profissional (menos a comissão)
+ *  em_disputa           → o cliente reportou não comparecimento; em análise
+ *  reembolsado          → a Clique reembolsou o cliente; a nota do profissional cai
  *
- * Não existe estado em que o contato aparece antes do pagamento confirmado,
- * nem pagamento sem proposta aceita registrada.
+ * O contato nunca aparece antes do pagamento; o dinheiro nunca vai ao
+ * profissional sem o código (ou decisão do admin).
  */
 export type ConversationStatus =
   | "conversando"
   | "proposta_enviada"
   | "proposta_aceita"
   | "pagamento_confirmado"
-  | "contato_liberado";
+  | "contato_liberado"
+  | "concluido"
+  | "em_disputa"
+  | "reembolsado";
+
+/** Estados em que o dinheiro já entrou (custódia ou depois) e o contato é revelado. */
+export const PAID_STATUSES: ConversationStatus[] = [
+  "contato_liberado",
+  "concluido",
+  "em_disputa",
+  "reembolsado",
+];
 
 export interface ChatMessage {
   id: string;
@@ -302,6 +328,11 @@ export interface Conversation {
   agreedPrice: number | null;
   /** Percentual de comissão vigente no fechamento (ex: 0.12 = 12%). */
   commissionRate: number;
+  /**
+   * Código de confirmação do evento (4 dígitos), gerado quando o dinheiro entra
+   * em custódia. SÓ O CLIENTE vê; o profissional digita no evento pra concluir.
+   */
+  confirmationCode: string | null;
   messages: ChatMessage[];
   createdAt: string;
 }

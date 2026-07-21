@@ -71,6 +71,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               <span className="label">resposta</span>
               {pro.responseTimeHours !== null ? `${pro.responseTimeHours}h` : "—"}
             </span>
+            {pro.noShowCount > 0 && (
+              <span className="noshow-stat">
+                <span className="label">não compareceu</span>⚠ {pro.noShowCount}
+              </span>
+            )}
           </div>
         </div>
       </section>

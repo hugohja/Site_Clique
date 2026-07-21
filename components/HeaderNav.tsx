@@ -64,6 +64,9 @@ export default function HeaderNav() {
       <Link href="/" className="nav-link">
         Buscar
       </Link>
+      <Link href="/conversas" className="nav-link">
+        Conversas
+      </Link>
       <span className="nav-account">
         {profile?.profilePhotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- data URL local

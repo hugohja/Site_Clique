@@ -1,10 +1,11 @@
-import { accountRepository, clientRepository, repository } from "@/lib/data";
+import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { isAdminAccount } from "@/lib/admin";
 import { maskCpf, typeLabel } from "@/lib/format";
 import { DOCUMENT_TYPES } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
+import AdminDisputeActions from "@/components/AdminDisputeActions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Painel admin — Clique" };
@@ -33,12 +34,14 @@ export default async function AdminPage() {
     );
   }
 
-  const [pros, clis] = await Promise.all([
+  const [pros, clis, disputes] = await Promise.all([
     repository.listByStatus("em_analise"),
     clientRepository.listByStatus("em_analise"),
+    conversationRepository.listDisputes(),
   ]);
   const proDocs = await Promise.all(pros.map((p) => docSrc(p.identity.documentPhotoUrl)));
   const cliDocs = await Promise.all(clis.map((c) => docSrc(c.identity.documentPhotoUrl)));
+  const disputePros = await Promise.all(disputes.map((d) => repository.getById(d.professionalId)));
   const total = pros.length + clis.length;
 
   return (
@@ -54,10 +57,37 @@ export default async function AdminPage() {
         confidenciais — use apenas para verificação.
       </p>
 
+      {disputes.length > 0 && (
+        <section className="admin-section">
+          <h2 className="section-title">⚠ Disputas — não comparecimento ({disputes.length})</h2>
+          <div className="admin-list">
+            {disputes.map((d, i) => (
+              <article key={d.id} className="admin-card">
+                <div className="admin-person">
+                  <div>
+                    <h3>{disputePros[i]?.name ?? "profissional"}</h3>
+                    <p className="admin-meta mono">
+                      cliente: {d.clientName} · {d.eventType} · {d.eventDate}
+                    </p>
+                    <p className="admin-meta mono">local: {d.eventLocation}</p>
+                    {d.agreedPrice != null && (
+                      <p className="admin-meta mono">
+                        valor em custódia: R$ {d.agreedPrice.toLocaleString("pt-BR")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <AdminDisputeActions conversationId={d.id} />
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {total === 0 ? (
         <div className="empty-state">
           <span className="mono">SEM_PENDENCIAS</span>
-          Nada em análise no momento.
+          Nenhuma identidade em análise no momento.
         </div>
       ) : (
         <>

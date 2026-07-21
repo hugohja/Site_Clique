@@ -41,6 +41,8 @@ export interface ProfessionalRepository {
   listByStatus(status: VerificationStatus): Promise<Professional[]>;
   setVerificationStatus(id: string, status: VerificationStatus): Promise<Professional | null>;
   remove(id: string): Promise<void>;
+  /** Registra um não comparecimento confirmado (sobe noShowCount). */
+  registerNoShow(id: string): Promise<Professional | null>;
 }
 
 export interface ClientRepository {
@@ -86,6 +88,23 @@ export interface ConversationRepository {
    * não recebe valor de fora. Só permitido em proposta_aceita.
    */
   setPaymentConfirmed(conversationId: string): Promise<Conversation | null>;
-  /** Libera o contato pros dois lados. Só permitido após pagamento_confirmado. */
+  /**
+   * Libera o contato pros dois lados e coloca o dinheiro em custódia. Gera o
+   * código de confirmação (só o cliente vê). Só após pagamento_confirmado.
+   */
   releaseContact(conversationId: string): Promise<Conversation | null>;
+  /** Profissional conclui informando o código do cliente (contato_liberado → concluido). */
+  confirmCompletion(conversationId: string, code: string): Promise<Conversation | null>;
+  /** Cliente reporta não comparecimento (contato_liberado → em_disputa). */
+  reportNoShow(conversationId: string): Promise<Conversation | null>;
+  /** Admin resolve a disputa: "reembolsar" (→ reembolsado) ou "liberar" (→ concluido). */
+  resolveDispute(
+    conversationId: string,
+    outcome: "reembolsar" | "liberar"
+  ): Promise<Conversation | null>;
+  /** Inbox: conversas de um cliente / de um profissional (mais recentes primeiro). */
+  listForClient(clientId: string): Promise<Conversation[]>;
+  listForProfessional(professionalId: string): Promise<Conversation[]>;
+  /** Admin: conversas em disputa (não comparecimento reportado). */
+  listDisputes(): Promise<Conversation[]>;
 }

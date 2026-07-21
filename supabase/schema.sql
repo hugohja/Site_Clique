@@ -22,9 +22,12 @@ create table if not exists professionals (
   bio                 text not null,
   rating              real not null default 0,
   review_count        integer not null default 0,
+  no_show_count       integer not null default 0, -- não comparecimentos confirmados
   response_time_hours real,
   created_at          timestamptz not null default now()
 );
+-- Banco já existente? rode:
+-- alter table professionals add column if not exists no_show_count integer not null default 0;
 create index if not exists professionals_city_idx on professionals (city);
 create index if not exists professionals_type_idx on professionals (type);
 create index if not exists professionals_specialties_idx on professionals using gin (specialties);
@@ -117,14 +120,20 @@ create table if not exists conversations (
   event_date           text not null,
   event_location       text not null,
   status               text not null default 'conversando'
-                         check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado')),
+                         check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado')),
   proposal_amount      integer,
   proposal_proposed_at timestamptz,
   proposal_accepted_at timestamptz,
   agreed_price         integer,
   commission_rate      real not null,
+  confirmation_code    text, -- código do evento (custódia); só o cliente vê
   created_at           timestamptz not null default now()
 );
+-- Banco já existente? rode (atualiza o check de status e adiciona a coluna):
+-- alter table conversations drop constraint if exists conversations_status_check;
+-- alter table conversations add constraint conversations_status_check
+--   check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado'));
+-- alter table conversations add column if not exists confirmation_code text;
 create index if not exists conversations_pro_idx on conversations (professional_id);
 create index if not exists conversations_client_idx on conversations (client_id);
 
