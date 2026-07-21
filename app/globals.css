@@ -191,7 +191,7 @@ h3 {
 
 @media (max-width: 720px) {
   .filter-bar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1195,18 +1195,43 @@ span.nav-avatar.avatar-placeholder {
 }
 .city-geo {
   position: absolute;
-  right: 0.3rem;
+  right: 0.35rem;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.25rem 0.45rem;
-  font-size: 0.95rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.95rem;
+  height: 1.95rem;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: var(--amber);
+  transition: background 0.15s ease;
 }
 .city-geo:hover {
-  border-color: var(--amber);
+  background: var(--surface-2);
+}
+.city-geo:disabled {
+  opacity: 0.55;
+}
+.geo-spin {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--border);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: geospin 0.7s linear infinite;
+}
+@keyframes geospin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geo-spin {
+    animation: none;
+  }
 }
 .city-suggest {
   position: absolute;
