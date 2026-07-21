@@ -1354,6 +1354,50 @@ span.nav-avatar.avatar-placeholder {
   text-decoration: underline;
 }
 
+/* ---------- seletor de arquivo estilizado ---------- */
+.file-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.5rem;
+}
+.file-field:focus-within {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+.file-btn {
+  flex: 0 0 auto;
+  background: var(--surface-2);
+  color: var(--amber);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.file-name {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-field.has-file .file-name {
+  color: var(--text);
+}
+.file-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .footer-links {
   display: flex;
   gap: 1rem;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DOCUMENT_TYPES, GENDERS } from "@/lib/types";
 import { maskCpf } from "@/lib/format";
+import FileField from "@/components/FileField";
 
 /**
  * Bloco de identidade + verificação compartilhado pelo cadastro de profissional
@@ -59,12 +60,11 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
 
       <div className="field">
         <label htmlFor="profilePhoto">Foto de perfil{profilePhotoRequired ? " (obrigatória)" : ""}</label>
-        <input
+        <FileField
           id="profilePhoto"
           name="profilePhoto"
-          type="file"
-          accept="image/*"
           required={profilePhotoRequired}
+          buttonLabel="Escolher foto"
         />
       </div>
 
@@ -84,7 +84,7 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
         </div>
         <div className="field">
           <label htmlFor="documentPhoto">Foto do documento (obrigatória)</label>
-          <input id="documentPhoto" name="documentPhoto" type="file" accept="image/*" required />
+          <FileField id="documentPhoto" name="documentPhoto" required buttonLabel="Escolher documento" />
           <span className="form-hint">Documento com foto, pra confirmar sua identidade. Fica privado.</span>
         </div>
       </div>
