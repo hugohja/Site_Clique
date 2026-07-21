@@ -4,6 +4,7 @@ import { accountRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
+import PortfolioGallery from "@/components/PortfolioGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -77,16 +78,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       <section className="profile-body container">
         <div>
           <h2 className="section-title">Portfólio</h2>
-          <div className="portfolio-grid">
-            {portfolio.map((item) => (
-              <div key={item.id} className={`shot ${item.cover ? "cover" : item.aspect}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- data URL local */}
-                <img src={item.url} alt="" className="shot-img" />
-                {item.cover && <span className="shot-cover-tag">capa</span>}
-                <span className="mono">{item.label}</span>
-              </div>
-            ))}
-          </div>
+          <PortfolioGallery
+            items={portfolio.map((item) => ({
+              id: item.id,
+              url: item.url,
+              label: item.label,
+              cover: item.cover,
+            }))}
+          />
         </div>
         <aside className="profile-aside">
           <h2 className="section-title">Especialidades</h2>
