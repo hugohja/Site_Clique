@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isValidCity } from "@/lib/types";
+import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
@@ -30,6 +31,15 @@ export default function ClientForm() {
     }
     data.delete("password2");
     setSending(true);
+    // Comprime as imagens no navegador antes de enviar (limite de ~4,5 MB da Vercel).
+    const profileFile = data.get("profilePhoto");
+    if (profileFile instanceof File && profileFile.size > 0) {
+      data.set("profilePhoto", await resizeImage(profileFile, { maxDim: 1200 }));
+    }
+    const docFile = data.get("documentPhoto");
+    if (docFile instanceof File && docFile.size > 0) {
+      data.set("documentPhoto", await resizeImage(docFile, { maxDim: 1800 }));
+    }
     try {
       const res = await fetch("/api/clients", { method: "POST", body: data });
       const body = await res.json();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES, isValidCity } from "@/lib/types";
+import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
@@ -49,10 +50,22 @@ export default function CadastroForm() {
 
     // Monta o multipart: campos do form + fotos do uploader (com formato/capa).
     fd.delete("password2");
-    portfolio.forEach((p) => fd.append("portfolioPhotos", p.file));
     fd.set("portfolioMeta", JSON.stringify(portfolio.map((p) => ({ aspect: p.aspect, cover: p.cover }))));
 
     setSending(true);
+    // Comprime as imagens no navegador antes de enviar: fotos de celular têm
+    // vários MB e estouram o limite de corpo da requisição (~4,5 MB na Vercel).
+    const profileFile = fd.get("profilePhoto");
+    if (profileFile instanceof File && profileFile.size > 0) {
+      fd.set("profilePhoto", await resizeImage(profileFile, { maxDim: 1200 }));
+    }
+    const docFile = fd.get("documentPhoto");
+    if (docFile instanceof File && docFile.size > 0) {
+      fd.set("documentPhoto", await resizeImage(docFile, { maxDim: 1800 }));
+    }
+    for (const p of portfolio) {
+      fd.append("portfolioPhotos", await resizeImage(p.file, { maxDim: 1600 }));
+    }
     try {
       const res = await fetch("/api/professionals", { method: "POST", body: fd });
       const body = await res.json();
