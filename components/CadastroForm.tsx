@@ -8,7 +8,7 @@ import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
-import PortfolioUploader, { type PortfolioDraft } from "@/components/PortfolioUploader";
+import PortfolioEditor, { type PortfolioEntry } from "@/components/PortfolioEditor";
 
 export default function CadastroForm() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function CadastroForm() {
   const [sending, setSending] = useState(false);
   const [city, setCity] = useState("");
   const [outras, setOutras] = useState("");
-  const [portfolio, setPortfolio] = useState<PortfolioDraft[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioEntry[]>([]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,7 +69,7 @@ export default function CadastroForm() {
       fd.set("documentPhoto", await resizeImage(docFile, { maxDim: 1800 }));
     }
     for (const p of portfolio) {
-      fd.append("portfolioPhotos", await resizeImage(p.file, { maxDim: 1600 }));
+      if (p.file) fd.append("portfolioPhotos", await resizeImage(p.file, { maxDim: 1600 }));
     }
     try {
       const res = await fetch("/api/professionals", { method: "POST", body: fd });
@@ -145,7 +145,7 @@ export default function CadastroForm() {
 
       <hr className="form-sep" />
       <p className="form-sec-title">Portfólio (obrigatório)</p>
-      <PortfolioUploader items={portfolio} onChange={setPortfolio} />
+      <PortfolioEditor items={portfolio} onChange={setPortfolio} />
 
       <CredentialFields />
       <IdentityFields />

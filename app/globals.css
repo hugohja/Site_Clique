@@ -1296,6 +1296,35 @@ span.nav-avatar.avatar-placeholder {
   border-color: var(--amber);
   color: var(--amber);
 }
+.pf-item {
+  cursor: grab;
+}
+.pf-item.pf-dragging {
+  opacity: 0.45;
+}
+.pf-item.pf-over {
+  outline: 2px dashed var(--amber);
+  outline-offset: 2px;
+}
+.pf-btns {
+  align-items: center;
+}
+.pf-drag {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 0.6rem;
+  white-space: nowrap;
+  user-select: none;
+}
+.pe-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.pe-photo .avatar {
+  width: 64px;
+  height: 64px;
+}
 
 /* ---- configurações ---- */
 

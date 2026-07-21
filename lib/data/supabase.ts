@@ -365,6 +365,34 @@ export const supabaseRepository: ProfessionalRepository = {
     return created;
   },
 
+  async update(id, patch) {
+    const row: Record<string, unknown> = {};
+    if (patch.name !== undefined) row.name = patch.name;
+    if (patch.city !== undefined) row.city = patch.city;
+    if (patch.bio !== undefined) row.bio = patch.bio;
+    if (patch.specialties !== undefined) row.specialties = patch.specialties;
+    if (patch.profilePhotoUrl !== undefined) row.profile_photo_url = patch.profilePhotoUrl;
+    if (Object.keys(row).length > 0) await sbUpdate("professionals", [q.eq("id", id)], row);
+    return this.getById(id);
+  },
+
+  async replacePortfolio(id, items) {
+    await sbDelete("portfolio_items", [q.eq("professional_id", id)]);
+    const hasCover = items.some((it) => it.cover);
+    const rows = items.map((it, i) => ({
+      id: `up-${randomUUID()}`,
+      professional_id: id,
+      label: `IMG_${1000 + i}.JPG`,
+      aspect: "square",
+      focus: it.focus || "50% 50%",
+      cover: it.cover || (!hasCover && i === 0),
+      url: it.url,
+      position: i,
+    }));
+    if (rows.length > 0) await sbInsert("portfolio_items", rows);
+    return this.getById(id);
+  },
+
   async listByStatus(status) {
     // !inner filtra os profissionais pelo status da identidade (join interno).
     const rows = await sbSelect<ProRow>("professionals", [

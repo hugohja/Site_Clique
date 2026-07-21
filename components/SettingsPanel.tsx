@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ProfileEditor from "@/components/ProfileEditor";
 
 interface Me {
-  account: { role: "profissional" | "cliente"; email: string } | null;
+  account: { role: "profissional" | "cliente"; email: string; professionalId: string | null } | null;
   profile?: { name: string; verificationStatus: string } | null;
 }
 
@@ -84,6 +85,13 @@ export default function SettingsPanel() {
         {me.profile ? ` · ${me.profile.name}` : ""} · identidade{" "}
         {me.profile?.verificationStatus === "verificado" ? "verificada ✓" : "em análise"}
       </p>
+
+      {me.account.role === "profissional" && me.account.professionalId && (
+        <div className="settings-card">
+          <h2>Meu perfil</h2>
+          <ProfileEditor professionalId={me.account.professionalId} />
+        </div>
+      )}
 
       <div className="settings-card">
         <h2>E-mail de login</h2>

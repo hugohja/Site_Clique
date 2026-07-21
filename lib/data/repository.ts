@@ -27,6 +27,16 @@ export interface ProfessionalRepository {
   list(filters?: ProfessionalFilters): Promise<Professional[]>;
   getById(id: string): Promise<Professional | null>;
   create(input: ProfessionalInput): Promise<Professional>;
+  /** Edição de perfil pelo próprio profissional. */
+  update(
+    id: string,
+    patch: { name?: string; city?: string; bio?: string; specialties?: EventType[]; profilePhotoUrl?: string }
+  ): Promise<Professional | null>;
+  /** Substitui todo o portfólio (usado na edição: add/remove/reordenar/enquadrar). */
+  replacePortfolio(
+    id: string,
+    items: { url: string; focus: string; cover: boolean }[]
+  ): Promise<Professional | null>;
   /** Moderação: cadastros aguardando verificação de identidade. */
   listByStatus(status: VerificationStatus): Promise<Professional[]>;
   setVerificationStatus(id: string, status: VerificationStatus): Promise<Professional | null>;

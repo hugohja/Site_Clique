@@ -140,6 +140,32 @@ export const memoryRepository: ProfessionalRepository = {
     return professional;
   },
 
+  async update(id, patch) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    if (patch.name !== undefined) pro.name = patch.name;
+    if (patch.city !== undefined) pro.city = patch.city;
+    if (patch.bio !== undefined) pro.bio = patch.bio;
+    if (patch.specialties !== undefined) pro.specialties = patch.specialties;
+    if (patch.profilePhotoUrl !== undefined) pro.profilePhotoUrl = patch.profilePhotoUrl;
+    return pro;
+  },
+
+  async replacePortfolio(id, items) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    const hasCover = items.some((it) => it.cover);
+    pro.portfolio = items.map((it, i) => ({
+      id: `up-${Date.now()}-${i}`,
+      label: `IMG_${1000 + i}.JPG`,
+      aspect: "square",
+      focus: it.focus || "50% 50%",
+      cover: it.cover || (!hasCover && i === 0),
+      url: it.url,
+    }));
+    return pro;
+  },
+
   async listByStatus(status: VerificationStatus) {
     return store()
       .filter((p) => p.identity.status === status)
