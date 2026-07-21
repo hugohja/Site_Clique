@@ -12,8 +12,6 @@ interface Payload {
   professional: PublicProfessional;
 }
 
-type Method = "pix" | "cartao";
-
 function brl(value: number) {
   return `R$ ${value.toLocaleString("pt-BR")}`;
 }
@@ -33,8 +31,8 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
   const router = useRouter();
   const [data, setData] = useState<Payload | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "notfound" | "denied">("loading");
-  const [method, setMethod] = useState<Method>("pix");
   const [pixEnabled, setPixEnabled] = useState(false);
+  const [manualPixKey, setManualPixKey] = useState("");
   const [pixCharge, setPixCharge] = useState<PixCharge | null>(null);
   const [copied, setCopied] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -54,7 +52,10 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
     load();
     fetch("/api/pagamento/config")
       .then((r) => r.json())
-      .then((c) => setPixEnabled(Boolean(c.pixEnabled)))
+      .then((c) => {
+        setPixEnabled(Boolean(c.pixEnabled));
+        setManualPixKey(c.manualPixKey ?? "");
+      })
       .catch(() => setPixEnabled(false));
   }, [load]);
 
@@ -119,10 +120,10 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
     return pixEnabled ? payPix() : paySimulado();
   }
 
-  async function copyPix() {
-    if (!pixCharge?.qrCode) return;
+  async function copyText(value: string) {
+    if (!value) return;
     try {
-      await navigator.clipboard.writeText(pixCharge.qrCode);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -161,6 +162,7 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
 
   // Só o cliente paga, e só quando a proposta foi aceita.
   if (viewerRole !== "cliente" || conversation.status !== "proposta_aceita" || price <= 0) {
+    const informed = conversation.status === "pagamento_confirmado";
     const alreadyPaid = ["contato_liberado", "concluido", "em_disputa", "reembolsado"].includes(
       conversation.status
     );
@@ -168,9 +170,11 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
       <div className="container" style={{ paddingBlock: "4rem" }}>
         <div className="empty-state">
           <span className="mono">CHECKOUT_INDISPONIVEL</span>
-          {alreadyPaid
-            ? "Este pagamento já foi feito."
-            : "O pagamento só fica disponível depois que você aceita a proposta."}{" "}
+          {informed
+            ? "Você já informou o pagamento. A Clique está conferindo o recebimento."
+            : alreadyPaid
+              ? "Este pagamento já foi feito."
+              : "O pagamento só fica disponível depois que você aceita a proposta."}{" "}
           <Link href={`/conversa/${conversationId}`} style={{ textDecoration: "underline" }}>
             voltar à conversa
           </Link>
@@ -221,7 +225,11 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
                       <div className="pix-real-info">
                         <p className="mono">Escaneie o QR no app do seu banco, ou use o copia e cola:</p>
                         <code className="pix-code mono">{pixCharge.qrCode}</code>
-                        <button type="button" className="btn btn-sm btn-ghost" onClick={copyPix}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost"
+                          onClick={() => copyText(pixCharge.qrCode)}
+                        >
                           {copied ? "Copiado ✓" : "Copiar código PIX"}
                         </button>
                       </div>
@@ -242,59 +250,44 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
                 )}
               </>
             ) : (
-              // Simulação (sem Mercado Pago configurado).
+              // Cobrança MANUAL: PIX na chave fixa da Clique; a Clique confere depois.
               <>
                 <div className="method-options">
-                  <button
-                    type="button"
-                    className={`method-chip ${method === "pix" ? "on" : ""}`}
-                    onClick={() => setMethod("pix")}
-                  >
+                  <button type="button" className="method-chip on" aria-pressed>
                     <b>PIX</b>
-                    <span className="mono">aprovação na hora</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`method-chip ${method === "cartao" ? "on" : ""}`}
-                    onClick={() => setMethod("cartao")}
-                  >
-                    <b>Cartão de crédito</b>
-                    <span className="mono">até 12x</span>
+                    <span className="mono">chave da Clique</span>
                   </button>
                 </div>
-
-                {method === "pix" ? (
-                  <div className="method-body">
-                    <div className="pix-fake" aria-hidden>
-                      <div className="pix-qr" />
-                      <div>
-                        <p className="mono">PIX copia e cola</p>
-                        <code className="pix-code mono">clique-custodia-{conversationId.slice(0, 8)}</code>
-                      </div>
-                    </div>
-                    <p className="form-hint">Simulação desta fase — nenhum valor real é cobrado.</p>
-                  </div>
-                ) : (
-                  <div className="method-body">
-                    <div className="card-fake">
-                      <div className="field">
-                        <label htmlFor="cc-num">Número do cartão</label>
-                        <input id="cc-num" inputMode="numeric" placeholder="0000 0000 0000 0000" disabled />
-                      </div>
-                      <div className="card-row">
-                        <div className="field">
-                          <label htmlFor="cc-exp">Validade</label>
-                          <input id="cc-exp" placeholder="MM/AA" disabled />
-                        </div>
-                        <div className="field">
-                          <label htmlFor="cc-cvv">CVV</label>
-                          <input id="cc-cvv" placeholder="000" disabled />
+                <div className="method-body">
+                  {manualPixKey ? (
+                    <>
+                      <div className="pix-real">
+                        <div className="pix-real-info">
+                          <p className="mono">
+                            Faça um PIX de <strong>{brl(price)}</strong> para a chave da Clique:
+                          </p>
+                          <code className="pix-code mono">{manualPixKey}</code>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-ghost"
+                            onClick={() => copyText(manualPixKey)}
+                          >
+                            {copied ? "Copiado ✓" : "Copiar chave PIX"}
+                          </button>
                         </div>
                       </div>
-                    </div>
-                    <p className="form-hint">Simulação desta fase — nenhum valor real é cobrado.</p>
-                  </div>
-                )}
+                      <p className="form-hint">
+                        Depois de pagar, clique em <strong>“Já fiz o PIX”</strong>. A Clique confere o
+                        recebimento e libera o contato — você recebe o código de custódia.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="form-hint">
+                      O meio de pagamento está sendo configurado. Tente novamente em instantes ou fale
+                      com o suporte.
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -349,18 +342,25 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
               ⏳ Aguardando pagamento…
             </p>
           ) : (
-            <button type="button" className="btn btn-coral checkout-pay" disabled={paying} onClick={pay}>
+            <button
+              type="button"
+              className="btn btn-coral checkout-pay"
+              disabled={paying || (!pixEnabled && !manualPixKey)}
+              onClick={pay}
+            >
               {paying
                 ? pixEnabled
                   ? "Gerando PIX…"
-                  : "Processando…"
+                  : "Enviando…"
                 : pixEnabled
                   ? `Gerar PIX de ${brl(price)}`
-                  : `Pagar ${brl(price)} em custódia`}
+                  : "Já fiz o PIX"}
             </button>
           )}
           <p className="checkout-fineprint mono">
-            Ao pagar você concorda que o valor fica retido pela Clique até a confirmação do serviço.
+            {pixEnabled
+              ? "Ao pagar você concorda que o valor fica retido pela Clique até a confirmação do serviço."
+              : "A Clique confere o recebimento antes de liberar o contato — o valor fica em custódia até a confirmação do serviço."}
           </p>
         </aside>
       </div>

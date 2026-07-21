@@ -461,6 +461,12 @@ export const memoryConversationRepository: ConversationRepository = {
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   },
 
+  async listPendingPaymentConfirmations() {
+    return conversations()
+      .filter((c) => c.status === "pagamento_confirmado")
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
   async listPendingPayouts() {
     return conversations()
       .filter((c) => c.status === "concluido" && !c.paidOutAt)

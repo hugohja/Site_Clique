@@ -121,6 +121,8 @@ export interface ConversationRepository {
   listForProfessional(professionalId: string): Promise<Conversation[]>;
   /** Admin: conversas em disputa (não comparecimento reportado). */
   listDisputes(): Promise<Conversation[]>;
+  /** Admin: cobrança manual — cliente informou o PIX, aguardando conferência. */
+  listPendingPaymentConfirmations(): Promise<Conversation[]>;
   /** Admin: concluídas cujo repasse ao profissional ainda não foi marcado como feito. */
   listPendingPayouts(): Promise<Conversation[]>;
   /** Admin marca o repasse (PIX manual) como feito — grava paidOutAt. */
