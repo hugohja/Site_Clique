@@ -453,6 +453,11 @@ export const supabaseClientRepository: ClientRepository = {
     return created;
   },
 
+  async list() {
+    const rows = await sbSelect<ClientRow>("clients", [CLIENT_SELECT, q.order("name.asc")]);
+    return rows.map(toClient);
+  },
+
   async listByStatus(status) {
     const rows = await sbSelect<ClientRow>("clients", [
       q.select("*,client_identities!inner(*)"),
@@ -460,6 +465,15 @@ export const supabaseClientRepository: ClientRepository = {
       q.order("created_at.asc"),
     ]);
     return rows.map(toClient);
+  },
+
+  async update(id, patch) {
+    const row: Record<string, unknown> = {};
+    if (patch.name !== undefined) row.name = patch.name;
+    if (patch.city !== undefined) row.city = patch.city;
+    if (patch.profilePhotoUrl !== undefined) row.profile_photo_url = patch.profilePhotoUrl;
+    if (Object.keys(row).length > 0) await sbUpdate("clients", [q.eq("id", id)], row);
+    return this.getById(id);
   },
 
   async setVerificationStatus(id, status) {

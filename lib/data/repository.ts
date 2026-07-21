@@ -48,7 +48,14 @@ export interface ProfessionalRepository {
 export interface ClientRepository {
   getById(id: string): Promise<Client | null>;
   create(input: ClientInput): Promise<Client>;
+  /** Todos os clientes (uso do admin). */
+  list(): Promise<Client[]>;
   listByStatus(status: VerificationStatus): Promise<Client[]>;
+  /** Edição do perfil do cliente (admin): nome, cidade, foto. */
+  update(
+    id: string,
+    patch: { name?: string; city?: string | null; profilePhotoUrl?: string }
+  ): Promise<Client | null>;
   setVerificationStatus(id: string, status: VerificationStatus): Promise<Client | null>;
   remove(id: string): Promise<void>;
 }

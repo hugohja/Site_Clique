@@ -214,10 +214,23 @@ export const memoryClientRepository: ClientRepository = {
     return client;
   },
 
+  async list() {
+    return [...clients()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  },
+
   async listByStatus(status: VerificationStatus) {
     return clients()
       .filter((c) => c.identity.status === status)
       .sort((a, b) => a.identity.submittedAt.localeCompare(b.identity.submittedAt));
+  },
+
+  async update(id, patch) {
+    const c = clients().find((x) => x.id === id);
+    if (!c) return null;
+    if (patch.name !== undefined) c.name = patch.name;
+    if (patch.city !== undefined) c.city = patch.city;
+    if (patch.profilePhotoUrl !== undefined) c.profilePhotoUrl = patch.profilePhotoUrl;
+    return c;
   },
 
   async setVerificationStatus(id: string, status: VerificationStatus) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { accountRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
+import { isAdminAccount } from "@/lib/admin";
 import { formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
 import PortfolioGallery from "@/components/PortfolioGallery";
@@ -15,6 +16,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   const account = await currentAccount((accId) => accountRepository.getById(accId));
   const isOwner = account?.role === "profissional" && account.professionalId === pro.id;
+  const isAdmin = isAdminAccount(account);
   // Capa primeiro, resto na ordem salva.
   const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
 
@@ -51,6 +53,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             {isOwner ? (
               <Link href="/configuracoes" className="btn-contact">
                 Configurações
+              </Link>
+            ) : isAdmin ? (
+              <Link href={`/admin/profissional/${pro.id}`} className="btn-contact">
+                Editar (admin)
               </Link>
             ) : (
               <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">

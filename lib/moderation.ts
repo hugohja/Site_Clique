@@ -45,3 +45,19 @@ export function censorContactAttempts(raw: string): ModerationResult {
   }
   return { text, filtered };
 }
+
+/**
+ * Detecta (sem censurar) tentativa de expor contato/rede social. Usado em
+ * campos de PERFIL (bio), onde a regra é BLOQUEAR o salvamento — diferente do
+ * chat, que apenas censura. Assim o profissional não consegue publicar
+ * telefone, e-mail, @, link ou nome de rede social no perfil público, fechando
+ * o caminho pra combinar por fora.
+ */
+export function hasContactInfo(raw: string): boolean {
+  const found = CONTACT_PATTERNS.some((pattern) => {
+    const hit = pattern.test(raw);
+    pattern.lastIndex = 0;
+    return hit;
+  });
+  return found;
+}

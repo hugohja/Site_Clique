@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
+import { isAdminAccount } from "@/lib/admin";
 import { toPublicProfessional } from "@/lib/types";
 import { applyProfessionalUpdate } from "@/lib/proProfileUpdate";
 
-/** Edição do próprio perfil (profissional logado): nome, cidade, bio, especialidades, foto e portfólio. */
-export async function PATCH(request: NextRequest) {
+/** Admin edita o perfil de QUALQUER profissional (mesma lógica da edição do dono). */
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const account = await currentAccount((id) => accountRepository.getById(id));
-  if (!account || account.role !== "profissional" || !account.professionalId) {
-    return NextResponse.json({ error: "Entre com sua conta profissional." }, { status: 401 });
+  if (!isAdminAccount(account)) {
+    return NextResponse.json({ error: "Acesso restrito." }, { status: 403 });
   }
+  const { id } = await params;
 
   let form: FormData;
   try {
@@ -18,7 +20,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Envie o formulário completo." }, { status: 400 });
   }
 
-  const result = await applyProfessionalUpdate(account.professionalId, form);
+  const result = await applyProfessionalUpdate(id, form);
   if (!result.ok) {
     const status = result.error === "Perfil não encontrado." ? 404 : 400;
     return NextResponse.json({ error: result.error }, { status });

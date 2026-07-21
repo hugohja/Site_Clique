@@ -1829,6 +1829,42 @@ span.nav-avatar.avatar-placeholder {
   color: var(--text-dim);
   font-size: 0.78rem;
 }
+/* Rodapé de ações do card (editar + aprovar/recusar). */
+.admin-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+/* Lista compacta de gerenciamento (todos os cadastros). */
+.admin-manage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.55rem 0.8rem;
+}
+.admin-row-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.admin-row-info strong {
+  font-size: 0.95rem;
+}
+.admin-avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
 .admin-actions {
   display: flex;
   gap: 0.5rem;

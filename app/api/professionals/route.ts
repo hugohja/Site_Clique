@@ -15,6 +15,7 @@ import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
 import { isStrongPassword } from "@/lib/password";
+import { hasContactInfo } from "@/lib/moderation";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -65,6 +66,10 @@ export async function POST(request: NextRequest) {
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
   if (bio.length < 10) errors.push("Escreva uma bio de pelo menos 10 caracteres.");
+  if (bio && hasContactInfo(bio))
+    errors.push(
+      "A bio não pode conter telefone, e-mail, @, link ou rede social. O contato é feito pela plataforma."
+    );
   if (form.get("acceptedTerms") !== "on")
     errors.push("É preciso aceitar os Termos de Uso e a Política de Privacidade.");
 
