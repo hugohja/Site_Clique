@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository } from "@/lib/data";
 import { DOCUMENT_TYPES, GENDERS, isValidCity, toPublicClient } from "@/lib/types";
-import { imageToDataUrl, isImageFile } from "@/lib/upload";
+import { isImageFile } from "@/lib/upload";
+import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
 
 /** Cadastro de cliente (quem contrata). Cria conta com login + verificação de identidade. */
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
   const profilePhoto = form.get("profilePhoto");
   if (!isImageFile(profilePhoto)) errors.push("A foto de perfil é obrigatória.");
   else {
-    const r = await imageToDataUrl(profilePhoto);
+    const r = await storeImage(profilePhoto, "profile");
     if ("url" in r) profilePhotoUrl = r.url;
     else errors.push(r.error);
   }
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
   const documentPhoto = form.get("documentPhoto");
   if (!isImageFile(documentPhoto)) errors.push("Anexe a foto do documento (RG, CNH ou passaporte).");
   else {
-    const r = await imageToDataUrl(documentPhoto);
+    const r = await storeImage(documentPhoto, "document");
     if ("url" in r) documentPhotoUrl = r.url;
     else errors.push(r.error);
   }
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     passwordHash: hashPassword(password),
     clientId: client.id,
   });
-  const token = createSession(account.id);
+  const token = await createSession(account.id);
 
   const res = NextResponse.json({ id: client.id, client: toPublicClient(client) }, { status: 201 });
   res.cookies.set(SESSION_COOKIE, token, {

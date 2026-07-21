@@ -11,7 +11,8 @@ import {
   type PortfolioPhotoInput,
   toPublicProfessional,
 } from "@/lib/types";
-import { imageToDataUrl, isImageFile } from "@/lib/upload";
+import { isImageFile } from "@/lib/upload";
+import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
   const profilePhoto = form.get("profilePhoto");
   if (!isImageFile(profilePhoto)) errors.push("A foto de perfil é obrigatória.");
   else {
-    const r = await imageToDataUrl(profilePhoto);
+    const r = await storeImage(profilePhoto, "profile");
     if ("url" in r) profilePhotoUrl = r.url;
     else errors.push(r.error);
   }
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
   const documentPhoto = form.get("documentPhoto");
   if (!isImageFile(documentPhoto)) errors.push("Anexe a foto do documento (RG, CNH ou passaporte).");
   else {
-    const r = await imageToDataUrl(documentPhoto);
+    const r = await storeImage(documentPhoto, "document");
     if ("url" in r) documentPhotoUrl = r.url;
     else errors.push(r.error);
   }
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
     errors.push(`Envie no máximo ${MAX_PORTFOLIO_PHOTOS} fotos de portfólio.`);
   } else {
     for (let i = 0; i < portfolioFiles.length; i++) {
-      const r = await imageToDataUrl(portfolioFiles[i]);
+      const r = await storeImage(portfolioFiles[i], "portfolio");
       if ("url" in r) {
         const m = meta[i] ?? {};
         portfolio.push({
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
     passwordHash: hashPassword(password),
     professionalId: professional.id,
   });
-  const token = createSession(account.id);
+  const token = await createSession(account.id);
 
   const res = NextResponse.json(toPublicProfessional(professional), { status: 201 });
   res.cookies.set(SESSION_COOKIE, token, {

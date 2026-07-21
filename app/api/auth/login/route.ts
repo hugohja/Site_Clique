@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "E-mail ou senha incorretos." }, { status: 401 });
   }
 
-  const token = createSession(account.id);
+  const token = await createSession(account.id);
   const res = NextResponse.json({
     role: account.role,
     professionalId: account.professionalId,

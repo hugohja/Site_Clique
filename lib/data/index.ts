@@ -1,3 +1,4 @@
+import { isSupabaseConfigured } from "@/lib/supabase";
 import type {
   AccountRepository,
   ClientRepository,
@@ -10,15 +11,34 @@ import {
   memoryConversationRepository,
   memoryRepository,
 } from "./memory";
+import {
+  supabaseAccountRepository,
+  supabaseClientRepository,
+  supabaseConversationRepository,
+  supabaseRepository,
+} from "./supabase";
 
 /**
  * Ponto único de troca da camada de dados.
- * Fase 2: importar aqui as implementações Supabase/Postgres no lugar da memória.
+ *
+ * Com SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY definidos, usa Postgres/Storage
+ * (dados persistem). Sem eles, cai no store em memória — o protótipo e a demo
+ * continuam funcionando sem configuração nenhuma.
  */
-export const repository: ProfessionalRepository = memoryRepository;
-export const clientRepository: ClientRepository = memoryClientRepository;
-export const conversationRepository: ConversationRepository = memoryConversationRepository;
-export const accountRepository: AccountRepository = memoryAccountRepository;
+const useSupabase = isSupabaseConfigured();
+
+export const repository: ProfessionalRepository = useSupabase
+  ? supabaseRepository
+  : memoryRepository;
+export const clientRepository: ClientRepository = useSupabase
+  ? supabaseClientRepository
+  : memoryClientRepository;
+export const conversationRepository: ConversationRepository = useSupabase
+  ? supabaseConversationRepository
+  : memoryConversationRepository;
+export const accountRepository: AccountRepository = useSupabase
+  ? supabaseAccountRepository
+  : memoryAccountRepository;
 
 export type {
   AccountRepository,

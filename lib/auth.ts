@@ -1,14 +1,16 @@
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { Account } from "@/lib/types";
+import { isSupabaseConfigured, q, sbDelete, sbInsert, sbSelect } from "@/lib/supabase";
 
 /**
- * Autenticação da fase de protótipo.
+ * Autenticação.
  *
  * Senhas são guardadas como hash scrypt (salt aleatório por conta) — a senha
  * em claro nunca é persistida. As sessões são tokens opacos num cookie
- * httpOnly, mapeados em memória. Na fase 2 (com banco), a mesma interface é
- * mantida trocando o mapa em memória por uma tabela de sessões.
+ * httpOnly. Com Supabase configurado, ficam na tabela `sessions` (persistem e
+ * funcionam em ambiente serverless com várias instâncias); sem ele, ficam num
+ * mapa em memória (protótipo).
  */
 
 export const SESSION_COOKIE = "clica_session";
@@ -34,18 +36,35 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 /** Cria uma sessão para a conta e devolve o token (guardar no cookie). */
-export function createSession(accountId: string): string {
+export async function createSession(accountId: string): Promise<string> {
   const token = randomUUID() + randomBytes(16).toString("hex");
-  sessions().set(token, accountId);
+  if (isSupabaseConfigured()) {
+    await sbInsert("sessions", { token, account_id: accountId });
+  } else {
+    sessions().set(token, accountId);
+  }
   return token;
 }
 
-export function destroySession(token: string | undefined): void {
-  if (token) sessions().delete(token);
+export async function destroySession(token: string | undefined): Promise<void> {
+  if (!token) return;
+  if (isSupabaseConfigured()) {
+    await sbDelete("sessions", [q.eq("token", token)]).catch(() => {});
+  } else {
+    sessions().delete(token);
+  }
 }
 
-export function accountIdForToken(token: string | undefined): string | null {
+export async function accountIdForToken(token: string | undefined): Promise<string | null> {
   if (!token) return null;
+  if (isSupabaseConfigured()) {
+    const rows = await sbSelect<{ account_id: string }>("sessions", [
+      q.select("account_id"),
+      q.eq("token", token),
+      q.limit(1),
+    ]);
+    return rows[0]?.account_id ?? null;
+  }
   return sessions().get(token) ?? null;
 }
 
@@ -55,7 +74,7 @@ export async function currentAccount(
 ): Promise<Account | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
-  const id = accountIdForToken(token);
+  const id = await accountIdForToken(token);
   if (!id) return null;
   return lookup(id);
 }
