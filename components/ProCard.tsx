@@ -19,7 +19,12 @@ export default function ProCard({ pro }: { pro: Professional }) {
             </span>
           ))}
         </span>
-        <span className="exif mono">{formatExif(pro)}</span>
+        <span className="exif mono">
+          {formatExif(pro)}
+          {pro.noShowCount > 0 && (
+            <span className="noshow-flag"> · ⚠ {pro.noShowCount} não compareceu</span>
+          )}
+        </span>
       </span>
     </Link>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_TYPES, isValidCity } from "@/lib/types";
+import { hasContactInfo } from "@/lib/moderation";
 import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
 import PortfolioEditor, { type PortfolioEntry } from "@/components/PortfolioEditor";
@@ -16,8 +17,17 @@ interface Pro {
   portfolio: { id: string; url: string; focus: string; cover: boolean }[];
 }
 
-/** Edição do perfil do profissional (dentro de Configurações). */
-export default function ProfileEditor({ professionalId }: { professionalId: string }) {
+/**
+ * Edição do perfil do profissional. Usado pelo próprio profissional (Configurações,
+ * endpoint padrão) e pelo admin (endpoint /api/admin/professional/[id]).
+ */
+export default function ProfileEditor({
+  professionalId,
+  endpoint = "/api/account/professional",
+}: {
+  professionalId: string;
+  endpoint?: string;
+}) {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState("");
@@ -74,6 +84,11 @@ export default function ProfileEditor({ professionalId }: { professionalId: stri
     if (specialties.length === 0)
       return setMsg({ ok: false, text: "Escolha ao menos uma especialidade." });
     if (bio.trim().length < 10) return setMsg({ ok: false, text: "Escreva uma bio maior." });
+    if (hasContactInfo(bio))
+      return setMsg({
+        ok: false,
+        text: "A bio não pode ter telefone, e-mail, @, link ou rede social — o contato é feito pela plataforma.",
+      });
     if (portfolio.length < 3)
       return setMsg({ ok: false, text: "O portfólio precisa de ao menos 3 fotos." });
 
@@ -98,7 +113,7 @@ export default function ProfileEditor({ professionalId }: { professionalId: stri
 
     setSaving(true);
     try {
-      const res = await fetch("/api/account/professional", { method: "PATCH", body: fd });
+      const res = await fetch(endpoint, { method: "PATCH", body: fd });
       const body = await res.json();
       if (!res.ok) {
         setMsg({ ok: false, text: body.error ?? "Não foi possível salvar." });
@@ -177,6 +192,9 @@ export default function ProfileEditor({ professionalId }: { professionalId: stri
       <div className="field">
         <label htmlFor="pe-bio">Bio</label>
         <textarea id="pe-bio" value={bio} onChange={(e) => setBio(e.target.value)} required minLength={10} />
+        <span className="form-hint">
+          Sem telefone, e-mail, @ ou redes sociais — a conversa e o pagamento acontecem pela Clique.
+        </span>
       </div>
 
       <div className="field">

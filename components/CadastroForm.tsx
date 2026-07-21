@@ -141,6 +141,9 @@ export default function CadastroForm() {
           minLength={10}
           placeholder="Conte o que você fotografa/filma/edita, há quanto tempo, o que entrega e o que te diferencia."
         />
+        <span className="form-hint">
+          Sem telefone, e-mail, @ ou redes sociais — a conversa e o pagamento acontecem pela Clique.
+        </span>
       </div>
 
       <hr className="form-sep" />

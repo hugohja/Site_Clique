@@ -1,10 +1,12 @@
-import { accountRepository, clientRepository, repository } from "@/lib/data";
+import Link from "next/link";
+import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { isAdminAccount } from "@/lib/admin";
 import { maskCpf, typeLabel } from "@/lib/format";
 import { DOCUMENT_TYPES } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
+import AdminDisputeActions from "@/components/AdminDisputeActions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Painel admin — Clique" };
@@ -33,12 +35,16 @@ export default async function AdminPage() {
     );
   }
 
-  const [pros, clis] = await Promise.all([
+  const [pros, clis, disputes, allPros, allClis] = await Promise.all([
     repository.listByStatus("em_analise"),
     clientRepository.listByStatus("em_analise"),
+    conversationRepository.listDisputes(),
+    repository.list(),
+    clientRepository.list(),
   ]);
   const proDocs = await Promise.all(pros.map((p) => docSrc(p.identity.documentPhotoUrl)));
   const cliDocs = await Promise.all(clis.map((c) => docSrc(c.identity.documentPhotoUrl)));
+  const disputePros = await Promise.all(disputes.map((d) => repository.getById(d.professionalId)));
   const total = pros.length + clis.length;
 
   return (
@@ -54,10 +60,37 @@ export default async function AdminPage() {
         confidenciais — use apenas para verificação.
       </p>
 
+      {disputes.length > 0 && (
+        <section className="admin-section">
+          <h2 className="section-title">⚠ Disputas — não comparecimento ({disputes.length})</h2>
+          <div className="admin-list">
+            {disputes.map((d, i) => (
+              <article key={d.id} className="admin-card">
+                <div className="admin-person">
+                  <div>
+                    <h3>{disputePros[i]?.name ?? "profissional"}</h3>
+                    <p className="admin-meta mono">
+                      cliente: {d.clientName} · {d.eventType} · {d.eventDate}
+                    </p>
+                    <p className="admin-meta mono">local: {d.eventLocation}</p>
+                    {d.agreedPrice != null && (
+                      <p className="admin-meta mono">
+                        valor em custódia: R$ {d.agreedPrice.toLocaleString("pt-BR")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <AdminDisputeActions conversationId={d.id} />
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {total === 0 ? (
         <div className="empty-state">
           <span className="mono">SEM_PENDENCIAS</span>
-          Nada em análise no momento.
+          Nenhuma identidade em análise no momento.
         </div>
       ) : (
         <>
@@ -92,7 +125,12 @@ export default async function AdminPage() {
                         <span className="mono admin-nodoc">documento indisponível</span>
                       )}
                     </div>
-                    <AdminActions kind="professional" id={p.id} />
+                    <div className="admin-card-foot">
+                      <Link href={`/admin/profissional/${p.id}`} className="btn btn-sm btn-ghost">
+                        Editar perfil
+                      </Link>
+                      <AdminActions kind="professional" id={p.id} />
+                    </div>
                   </article>
                 ))}
               </div>
@@ -128,7 +166,12 @@ export default async function AdminPage() {
                         <span className="mono admin-nodoc">documento indisponível</span>
                       )}
                     </div>
-                    <AdminActions kind="client" id={c.id} />
+                    <div className="admin-card-foot">
+                      <Link href={`/admin/cliente/${c.id}`} className="btn btn-sm btn-ghost">
+                        Editar perfil
+                      </Link>
+                      <AdminActions kind="client" id={c.id} />
+                    </div>
                   </article>
                 ))}
               </div>
@@ -136,6 +179,56 @@ export default async function AdminPage() {
           )}
         </>
       )}
+
+      <section className="admin-section">
+        <h2 className="section-title">Todos os profissionais ({allPros.length})</h2>
+        {allPros.length === 0 ? (
+          <p className="admin-meta mono">Nenhum profissional cadastrado.</p>
+        ) : (
+          <div className="admin-manage">
+            {allPros.map((p) => (
+              <div key={p.id} className="admin-row">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="admin-avatar admin-avatar-sm" src={p.profilePhotoUrl} alt="" />
+                <div className="admin-row-info">
+                  <strong>{p.name}</strong>
+                  <span className="admin-meta mono">
+                    {typeLabel(p.type)} · {p.city} · {p.identity.status}
+                  </span>
+                </div>
+                <Link href={`/admin/profissional/${p.id}`} className="btn btn-sm btn-ghost">
+                  Editar
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="admin-section">
+        <h2 className="section-title">Todos os clientes ({allClis.length})</h2>
+        {allClis.length === 0 ? (
+          <p className="admin-meta mono">Nenhum cliente cadastrado.</p>
+        ) : (
+          <div className="admin-manage">
+            {allClis.map((c) => (
+              <div key={c.id} className="admin-row">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="admin-avatar admin-avatar-sm" src={c.profilePhotoUrl} alt="" />
+                <div className="admin-row-info">
+                  <strong>{c.name}</strong>
+                  <span className="admin-meta mono">
+                    {c.city ?? "—"} · {c.identity.status}
+                  </span>
+                </div>
+                <Link href={`/admin/cliente/${c.id}`} className="btn btn-sm btn-ghost">
+                  Editar
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

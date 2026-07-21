@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { conversationRepository, repository } from "@/lib/data";
-import { toPublicProfessional } from "@/lib/types";
+import { accountRepository, conversationRepository, repository } from "@/lib/data";
+import { PAID_STATUSES, toPublicProfessional } from "@/lib/types";
+import { currentAccount } from "@/lib/auth";
+import { viewerRoleFor } from "@/lib/conversationAuth";
 
 /**
- * Detalhe da conversa. Os contatos dos DOIS lados (WhatsApp do profissional e
- * do cliente) só entram na resposta quando o status é "contato_liberado" —
- * antes disso, nem o JSON carrega os números. O clientWhatsapp guardado na
- * conversa é removido do payload até a liberação.
+ * Detalhe da conversa. O papel de quem vê vem da SESSÃO. O contato dos dois
+ * lados só entra quando o dinheiro já está em custódia (PAID_STATUSES); o
+ * código de confirmação SÓ vai pro cliente; o clientWhatsapp nunca vaza no
+ * corpo (só via `contact`).
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,15 +22,23 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Profissional não encontrado." }, { status: 404 });
   }
 
-  const released = conversation.status === "contato_liberado";
-  // Nunca vaza clientWhatsapp no corpo da conversa; só via `contact` liberado.
-  const { clientWhatsapp, ...publicConversation } = conversation;
+  const account = await currentAccount((aid) => accountRepository.getById(aid));
+  const role = viewerRoleFor(account, conversation);
+  if (!role) {
+    return NextResponse.json({ error: "Entre com sua conta para ver esta conversa." }, { status: 403 });
+  }
+
+  const paid = PAID_STATUSES.includes(conversation.status);
+  const { clientWhatsapp, confirmationCode, ...rest } = conversation;
 
   return NextResponse.json({
-    conversation: publicConversation,
+    viewerRole: role,
+    conversation: {
+      ...rest,
+      // Código só é revelado ao cliente (ele passa ao profissional no evento).
+      confirmationCode: role === "cliente" ? confirmationCode : null,
+    },
     professional: toPublicProfessional(professional),
-    contact: released
-      ? { professionalWhatsapp: professional.whatsapp, clientWhatsapp }
-      : null,
+    contact: paid ? { professionalWhatsapp: professional.whatsapp, clientWhatsapp } : null,
   });
 }

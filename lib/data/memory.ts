@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type {
   Account,
   ChatMessage,
@@ -131,6 +131,7 @@ export const memoryRepository: ProfessionalRepository = {
       bio: input.bio,
       rating: 0,
       reviewCount: 0,
+      noShowCount: 0,
       responseTimeHours: null,
       portfolio,
       identity: buildIdentity(input),
@@ -184,6 +185,13 @@ export const memoryRepository: ProfessionalRepository = {
     const i = arr.findIndex((p) => p.id === id);
     if (i >= 0) arr.splice(i, 1);
   },
+
+  async registerNoShow(id: string) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    pro.noShowCount += 1;
+    return pro;
+  },
 };
 
 export const memoryClientRepository: ClientRepository = {
@@ -206,10 +214,23 @@ export const memoryClientRepository: ClientRepository = {
     return client;
   },
 
+  async list() {
+    return [...clients()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  },
+
   async listByStatus(status: VerificationStatus) {
     return clients()
       .filter((c) => c.identity.status === status)
       .sort((a, b) => a.identity.submittedAt.localeCompare(b.identity.submittedAt));
+  },
+
+  async update(id, patch) {
+    const c = clients().find((x) => x.id === id);
+    if (!c) return null;
+    if (patch.name !== undefined) c.name = patch.name;
+    if (patch.city !== undefined) c.city = patch.city;
+    if (patch.profilePhotoUrl !== undefined) c.profilePhotoUrl = patch.profilePhotoUrl;
+    return c;
   },
 
   async setVerificationStatus(id: string, status: VerificationStatus) {
@@ -277,6 +298,11 @@ function systemMessage(text: string): ChatMessage {
   return { id: randomUUID(), sender: "sistema", text, filtered: false, createdAt: new Date().toISOString() };
 }
 
+/** Código de confirmação do evento: 4 dígitos aleatórios (só o cliente vê). */
+function newConfirmationCode(): string {
+  return String(randomInt(1000, 10000));
+}
+
 export const memoryConversationRepository: ConversationRepository = {
   async create(input) {
     const conversation: Conversation = {
@@ -293,6 +319,7 @@ export const memoryConversationRepository: ConversationRepository = {
       proposal: null,
       agreedPrice: null,
       commissionRate: COMMISSION_RATE,
+      confirmationCode: null,
       messages: [input.firstMessage],
       createdAt: new Date().toISOString(),
     };
@@ -365,8 +392,69 @@ export const memoryConversationRepository: ConversationRepository = {
     }
     if (conversation.status === "pagamento_confirmado") {
       conversation.status = "contato_liberado";
-      conversation.messages.push(systemMessage("Contato liberado pros dois lados"));
+      conversation.confirmationCode = newConfirmationCode();
+      conversation.messages.push(
+        systemMessage("Pagamento em custódia. Contato liberado — combinem o evento. No dia, o cliente passa o código de confirmação ao profissional.")
+      );
     }
     return conversation;
+  },
+
+  async confirmCompletion(conversationId: string, code: string) {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return null;
+    // Só conclui a partir da custódia, com o código certo.
+    if (conversation.status !== "contato_liberado") return conversation;
+    if (!conversation.confirmationCode || code.trim() !== conversation.confirmationCode) {
+      return conversation;
+    }
+    conversation.status = "concluido";
+    conversation.messages.push(
+      systemMessage("Código validado no evento — serviço concluído e pagamento liberado ao profissional.")
+    );
+    return conversation;
+  },
+
+  async reportNoShow(conversationId: string) {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return null;
+    if (conversation.status !== "contato_liberado") return conversation;
+    conversation.status = "em_disputa";
+    conversation.messages.push(
+      systemMessage("Cliente reportou não comparecimento. Em análise pela Clique.")
+    );
+    return conversation;
+  },
+
+  async resolveDispute(conversationId: string, outcome: "reembolsar" | "liberar") {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return null;
+    if (conversation.status !== "em_disputa") return conversation;
+    if (outcome === "reembolsar") {
+      conversation.status = "reembolsado";
+      conversation.messages.push(systemMessage("Disputa resolvida: valor reembolsado ao cliente."));
+    } else {
+      conversation.status = "concluido";
+      conversation.messages.push(systemMessage("Disputa resolvida: pagamento liberado ao profissional."));
+    }
+    return conversation;
+  },
+
+  async listForClient(clientId: string) {
+    return conversations()
+      .filter((c) => c.clientId === clientId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async listForProfessional(professionalId: string) {
+    return conversations()
+      .filter((c) => c.professionalId === professionalId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async listDisputes() {
+    return conversations()
+      .filter((c) => c.status === "em_disputa")
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   },
 };
