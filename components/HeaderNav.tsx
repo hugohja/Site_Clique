@@ -79,9 +79,14 @@ export default function HeaderNav() {
         </span>
       </span>
       {account.role === "profissional" && account.professionalId && (
-        <Link href={`/profissional/${account.professionalId}`} className="nav-link">
-          Meu perfil
-        </Link>
+        <>
+          <Link href="/carteira" className="nav-link">
+            Carteira
+          </Link>
+          <Link href={`/profissional/${account.professionalId}`} className="nav-link">
+            Meu perfil
+          </Link>
+        </>
       )}
       {account.isAdmin && (
         <Link href="/admin" className="nav-link">

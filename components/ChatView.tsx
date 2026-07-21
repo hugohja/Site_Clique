@@ -387,9 +387,9 @@ export default function ChatView({ conversationId }: { conversationId: string })
                 confirmar (com o código) que ele compareceu.{" "}
                 <span className="mono">(fase de teste: pagamento simulado)</span>
               </p>
-              <button type="button" className="btn btn-coral" disabled={busy} onClick={() => post("/pagamento")}>
-                {busy ? "Processando…" : `Pagar ${brl(proposal.amount)} (custódia)`}
-              </button>
+              <Link href={`/conversa/${conversationId}/pagamento`} className="btn btn-coral">
+                {`Pagar ${brl(proposal.amount)} em custódia`}
+              </Link>
             </div>
           )}
         </div>
