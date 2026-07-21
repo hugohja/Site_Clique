@@ -51,6 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="footer-note">
               Fotógrafos, filmmakers e editores de evento. Converse e feche pelo Clique.
             </span>
+            <span className="footer-links">
+              <Link href="/termos">Termos de Uso</Link>
+              <Link href="/privacidade">Privacidade</Link>
+            </span>
           </div>
         </footer>
         <PwaRegister />

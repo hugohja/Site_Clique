@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
+  if (form.get("acceptedTerms") !== "on")
+    errors.push("É preciso aceitar os Termos de Uso e a Política de Privacidade.");
 
   if (loginEmail && (await accountRepository.getByEmail(loginEmail))) {
     errors.push("Já existe uma conta com esse e-mail.");

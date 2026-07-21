@@ -82,8 +82,16 @@ create table if not exists accounts (
   password_hash text not null,
   professional_id text references professionals (id) on delete set null,
   client_id     text references clients (id) on delete set null,
+  -- Consentimento LGPD: registrado automaticamente na criação da conta.
+  terms_accepted_at timestamptz not null default now(),
+  terms_version text not null default 'v1',
   created_at    timestamptz not null default now()
 );
+
+-- Se o banco já existe (schema rodado antes), rode este ALTER uma vez:
+-- alter table accounts
+--   add column if not exists terms_accepted_at timestamptz not null default now(),
+--   add column if not exists terms_version text not null default 'v1';
 create index if not exists accounts_email_idx on accounts (lower(email));
 
 create table if not exists sessions (

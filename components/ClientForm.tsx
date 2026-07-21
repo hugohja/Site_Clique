@@ -82,6 +82,21 @@ export default function ClientForm() {
         .
       </p>
 
+      <label className="consent">
+        <input type="checkbox" name="acceptedTerms" required />
+        <span>
+          Li e concordo com os{" "}
+          <a href="/termos" target="_blank" rel="noopener noreferrer">
+            Termos de Uso
+          </a>{" "}
+          e a{" "}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer">
+            Política de Privacidade
+          </a>
+          , incluindo o tratamento do meu CPF e documento para verificação de identidade.
+        </span>
+      </label>
+
       {error && <div className="form-error">{error}</div>}
 
       <button type="submit" className="btn" disabled={sending}>

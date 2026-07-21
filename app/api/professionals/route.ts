@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
   if (!DOCUMENT_TYPES.some((d) => d.value === documentType)) errors.push("Selecione o tipo de documento.");
   if (bio.length < 10) errors.push("Escreva uma bio de pelo menos 10 caracteres.");
+  if (form.get("acceptedTerms") !== "on")
+    errors.push("É preciso aceitar os Termos de Uso e a Política de Privacidade.");
 
   if (loginEmail && (await accountRepository.getByEmail(loginEmail))) {
     errors.push("Já existe uma conta com esse e-mail.");
