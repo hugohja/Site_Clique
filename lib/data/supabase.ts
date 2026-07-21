@@ -169,7 +169,6 @@ function toProfessional(row: ProRow): Professional {
     city: row.city,
     type: row.type,
     specialties: row.specialties ?? [],
-    priceFrom: row.price_from,
     whatsapp: row.whatsapp,
     email: row.email,
     profilePhotoUrl: row.profile_photo_url,
@@ -318,7 +317,9 @@ export const supabaseRepository: ProfessionalRepository = {
       city: input.city,
       type: input.type,
       specialties: input.specialties,
-      price_from: input.priceFrom,
+      // Coluna preço mantida por compatibilidade; o valor é definido por evento
+      // via proposta no chat, então não há mais "preço a partir de".
+      price_from: 0,
       whatsapp: input.whatsapp,
       email: input.email,
       profile_photo_url: input.profilePhotoUrl,

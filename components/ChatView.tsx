@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Conversation, PublicProfessional } from "@/lib/types";
-import { formatPrice, typeLabel } from "@/lib/format";
+import { typeLabel } from "@/lib/format";
 
 interface ConversationPayload {
   conversation: Omit<Conversation, "clientWhatsapp">;
@@ -164,7 +164,7 @@ export default function ChatView({ conversationId }: { conversationId: string })
             {role === "cliente" ? (
               <>
                 <span className="pro-type mono">{typeLabel(professional.type)}</span>
-                {professional.city} · a partir de {formatPrice(professional.priceFrom)}
+                {professional.city}
               </>
             ) : (
               <>

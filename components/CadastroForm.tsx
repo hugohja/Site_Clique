@@ -128,11 +128,6 @@ export default function CadastroForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="priceFrom">Preço a partir de (R$)</label>
-        <input id="priceFrom" name="priceFrom" type="number" min={1} step={1} required placeholder="Ex: 800" />
-      </div>
-
-      <div className="field">
         <label htmlFor="bio">Bio</label>
         <textarea
           id="bio"

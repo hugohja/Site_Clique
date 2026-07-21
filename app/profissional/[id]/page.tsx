@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { accountRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
-import { formatPrice, formatRating, typeLabel } from "@/lib/format";
+import { formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -58,10 +58,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             )}
           </div>
           <div className="stats-strip mono">
-            <span>
-              <span className="label">a partir de</span>
-              {formatPrice(pro.priceFrom)}
-            </span>
             <span>
               <span className="label">nota</span>
               {formatRating(pro)}

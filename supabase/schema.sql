@@ -15,7 +15,7 @@ create table if not exists professionals (
   city                text not null,
   type                text not null check (type in ('fotografo','filmmaker','editor')),
   specialties         text[] not null default '{}',
-  price_from          integer not null,
+  price_from          integer not null default 0, -- legado: preço agora é por evento (proposta no chat)
   whatsapp            text not null,
   email               text not null,
   profile_photo_url   text not null,

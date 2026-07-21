@@ -125,8 +125,6 @@ export interface Professional {
   city: City;
   type: ProfessionalType;
   specialties: EventType[];
-  /** Preço "a partir de", em reais. Base para o cálculo de comissão na fase de pagamento. */
-  priceFrom: number;
   /** Somente dígitos, com DDI (ex: 5521999998888). PRIVADO — só sai no contato liberado. */
   whatsapp: string;
   /** E-mail de contato. PRIVADO. */
@@ -176,7 +174,6 @@ export interface ProfessionalInput {
   city: City;
   type: ProfessionalType;
   specialties: EventType[];
-  priceFrom: number;
   whatsapp: string;
   email: string;
   bio: string;

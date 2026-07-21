@@ -14,10 +14,6 @@ export function maskCpf(raw: string): string {
     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
 }
 
-export function formatPrice(value: number): string {
-  return `R$ ${value.toLocaleString("pt-BR")}+`;
-}
-
 // Aceitam qualquer objeto com esses campos (Professional ou PublicProfessional).
 export function formatRating(pro: { rating: number; reviewCount: number }): string {
   return pro.reviewCount > 0 ? `★ ${pro.rating.toFixed(1)}` : "★ novo";
@@ -27,14 +23,14 @@ export function formatResponse(pro: { responseTimeHours: number | null }): strin
   return pro.responseTimeHours !== null ? `resp. ${pro.responseTimeHours}h` : "resp. —";
 }
 
-/** Linha de dados no estilo EXIF: "R$ 800+ · ★ 4.9 · resp. 2h" */
+/** Linha de dados no estilo EXIF: "★ 4.9 · resp. 2h". Sem preço fixo — o valor
+ * é definido por evento, via proposta no chat. */
 export function formatExif(pro: {
-  priceFrom: number;
   rating: number;
   reviewCount: number;
   responseTimeHours: number | null;
 }): string {
-  return [formatPrice(pro.priceFrom), formatRating(pro), formatResponse(pro)].join(" · ");
+  return [formatRating(pro), formatResponse(pro)].join(" · ");
 }
 
 // Nota anti-desintermediação: não existe helper de link de WhatsApp aqui de

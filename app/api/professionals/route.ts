@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
   const gender = String(form.get("gender") ?? "");
   const birthDate = String(form.get("birthDate") ?? "").trim();
   const documentType = String(form.get("documentType") ?? "");
-  const priceFrom = Number(form.get("priceFrom"));
   // Especialidades: sugestões marcadas + quaisquer "outras" digitadas (texto livre).
   const specialties = Array.from(
     new Set(form.getAll("specialties").map((s) => cleanEventLabel(String(s))).filter(Boolean))
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
   if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
   if (specialties.length === 0) errors.push("Escolha ou escreva ao menos uma especialidade.");
-  if (!Number.isFinite(priceFrom) || priceFrom <= 0) errors.push("Informe um preço válido.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");
@@ -125,7 +123,6 @@ export async function POST(request: NextRequest) {
     city: city as never,
     type: type as never,
     specialties: specialties as never,
-    priceFrom: Math.round(priceFrom),
     whatsapp: whatsapp.length <= 11 ? `55${whatsapp}` : whatsapp,
     email: loginEmail,
     bio,

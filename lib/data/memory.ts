@@ -123,7 +123,6 @@ export const memoryRepository: ProfessionalRepository = {
       city: input.city,
       type: input.type,
       specialties: input.specialties,
-      priceFrom: input.priceFrom,
       whatsapp: input.whatsapp,
       email: input.email,
       profilePhotoUrl: input.profilePhotoUrl,

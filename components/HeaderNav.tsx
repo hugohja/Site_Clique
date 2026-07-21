@@ -42,9 +42,9 @@ export default function HeaderNav() {
         <Link href="/entrar" className="nav-link">
           Entrar
         </Link>
-        <Link href="/sou-cliente" className="nav-link">
-          Sou cliente
-        </Link>
+        {/* Cliente não precisa se cadastrar pra navegar — a conta só é pedida
+            no momento de conversar com um profissional. Por isso não há CTA
+            de "Sou cliente" aqui. */}
         <Link href="/cadastro" className="nav-link nav-link-cta">
           Sou profissional
         </Link>
