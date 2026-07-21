@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import LoginForm from "@/components/LoginForm";
 
-export const metadata = { title: "Entrar — Clica" };
+export const metadata = { title: "Entrar — Clique" };
 
 export default function EntrarPage() {
   return (

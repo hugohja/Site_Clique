@@ -47,7 +47,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           </h1>
           <p>
             Fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio antes
-            de falar com qualquer um — e converse direto pelo chat do Clica.
+            de falar com qualquer um — e converse direto pelo chat do Clique.
           </p>
           <SearchFilters
             cidade={effectiveCity}

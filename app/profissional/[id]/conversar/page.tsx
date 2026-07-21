@@ -7,7 +7,7 @@ import { typeLabel } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Iniciar conversa — Clica",
+  title: "Iniciar conversa — Clique",
 };
 
 export default async function ConversarPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +25,7 @@ export default async function ConversarPage({ params }: { params: Promise<{ id: 
       </h1>
       <p>
         <span className="pro-type mono">{typeLabel(pro.type)}</span> {pro.city}. Conte o básico do
-        seu evento e mande a primeira mensagem. A conversa acontece aqui no Clica — o contato
+        seu evento e mande a primeira mensagem. A conversa acontece aqui no Clique — o contato
         direto é liberado depois da confirmação do pagamento.
       </p>
       <NovaConversaForm professionalId={pro.id} />

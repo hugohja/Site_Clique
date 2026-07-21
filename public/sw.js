@@ -1,4 +1,4 @@
-/* Service worker do Clica — cache leve para o app abrir rápido como PWA.
+/* Service worker do Clique — cache leve para o app abrir rápido como PWA.
    Páginas usam network-first (dados mudam); estáticos usam cache-first. */
 
 const CACHE = "clica-v1";

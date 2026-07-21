@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import ClientForm from "@/components/ClientForm";
 
 export const metadata = {
-  title: "Criar conta de cliente — Clica",
+  title: "Criar conta de cliente — Clique",
 };
 
 export default function SouClientePage() {

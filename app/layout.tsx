@@ -1,15 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
 import HeaderNav from "@/components/HeaderNav";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  weight: ["400", "600", "700"],
-});
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -18,14 +13,14 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clica — fotógrafos e filmmakers para o seu evento",
+  title: "Clique — fotógrafos, filmmakers e editores para o seu evento",
   description:
-    "Encontre fotógrafos e filmmakers freelancers no Rio de Janeiro, Niterói, Goiânia e Anápolis. Veja o portfólio, converse pelo chat do Clica e feche com segurança.",
+    "Encontre fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio, converse pelo chat do Clique e feche com segurança.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Clica",
+    title: "Clique",
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/icon-192.png" }],
@@ -34,17 +29,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16130f",
+  themeColor: "#2b4bf2",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
+    <html lang="pt-BR" className={`${inter.variable} ${plexMono.variable}`}>
       <body>
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="logo">
-              Clica<span className="logo-dot">●</span>
+              Clique<span className="logo-dot">●</span>
             </Link>
             <HeaderNav />
           </div>
@@ -52,9 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>{children}</main>
         <footer className="site-footer">
           <div className="container footer-inner">
-            <span className="mono footer-meta">CLICA · RJ — GO · protótipo v0.1</span>
+            <span className="mono footer-meta">CLIQUE · BRASIL · protótipo</span>
             <span className="footer-note">
-              Fotógrafos e filmmakers de evento. Converse e feche pelo Clica.
+              Fotógrafos, filmmakers e editores de evento. Converse e feche pelo Clique.
             </span>
           </div>
         </footer>

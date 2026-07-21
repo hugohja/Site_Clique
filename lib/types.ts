@@ -1,5 +1,5 @@
 /**
- * Tipos centrais do Clica.
+ * Tipos centrais do Clique.
  *
  * A estrutura já prevê as fases futuras (persistência real e pagamento com
  * split). Dados sensíveis (contato, CPF, documento) nunca saem em resposta

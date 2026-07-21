@@ -1,13 +1,14 @@
 :root {
-  --bg: #16130f;
-  --surface: #1f1b16;
-  --surface-2: #26211a;
-  --border: #373026;
-  --text: #f3efe7;
-  --text-dim: #b6ac9c;
-  --amber: #e8a33d;
-  --coral: #d8543a;
-  --radius: 4px;
+  /* Identidade "Sinal": branco + cobalto elétrico, tipografia forte. */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eef1ff;   /* tinta cobalto suave: chips, inputs, realces */
+  --border: #e6e8f2;
+  --text: #0c1020;        /* tinta azul-quase-preta */
+  --text-dim: #5b6479;    /* cinza frio */
+  --amber: #2b4bf2;       /* acento primário (cobalto) — mantém o nome do token */
+  --coral: #2b4bf2;       /* marca de cor única: mesmo cobalto */
+  --radius: 14px;
 }
 
 * {
@@ -17,7 +18,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -59,9 +60,10 @@ button {
 h1,
 h2,
 h3 {
-  font-family: var(--font-serif), Georgia, serif;
-  font-weight: 600;
-  line-height: 1.15;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
 }
 
 /* ---------- header / footer ---------- */
@@ -83,9 +85,10 @@ h3 {
 }
 
 .logo {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .logo-dot {
@@ -112,12 +115,15 @@ h3 {
 
 .nav-link-cta {
   border: 1px solid var(--amber);
-  color: var(--amber);
+  background: var(--amber);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 .nav-link-cta:hover {
-  background: var(--amber);
-  color: var(--bg);
+  filter: brightness(1.08);
+  color: #fff;
 }
 
 .site-footer {
@@ -141,25 +147,39 @@ h3 {
 
 /* ---------- hero + busca ---------- */
 
+/* Faixa cobalto de largura total: a peça mais marcante da identidade Sinal. */
 .hero {
-  padding-block: 3.2rem 2rem;
-  border-bottom: 1px solid var(--border);
+  background: var(--amber);
+  color: #fff;
+  padding-block: 3.2rem 2.6rem;
 }
 
 .hero h1 {
-  font-size: clamp(1.9rem, 4.5vw, 3rem);
-  max-width: 22ch;
+  font-size: clamp(2.1rem, 5.2vw, 3.4rem);
+  max-width: 20ch;
+  color: #fff;
 }
 
 .hero h1 em {
-  font-style: italic;
-  color: var(--amber);
+  font-style: normal;
+  color: #ffd6e6;
 }
 
 .hero p {
   margin-top: 0.9rem;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.86);
   max-width: 52ch;
+}
+
+/* Controles da busca ficam em superfície branca sobre a faixa azul. */
+.hero .btn {
+  background: var(--text);
+  color: #fff;
+}
+
+.hero .city-note,
+.hero .city-note button {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .filter-bar {
@@ -254,27 +274,24 @@ h3 {
   gap: 1rem;
 }
 
-/* Card com furos de rolo de filme na borda esquerda */
 .pro-card {
   display: flex;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  box-shadow: 0 1px 2px rgba(12, 16, 32, 0.04), 0 12px 30px rgba(43, 75, 242, 0.07);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .pro-card:hover {
-  border-color: var(--amber);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(43, 75, 242, 0.16);
 }
 
+/* A antiga borda de rolo de filme não faz parte da identidade Sinal. */
 .film-strip {
-  flex: 0 0 18px;
-  background: var(--bg);
-  border-right: 1px solid var(--border);
-  background-image: radial-gradient(circle at 50% 50%, var(--surface-2) 3px, transparent 3.5px);
-  background-size: 18px 16px;
-  background-position: center 4px;
+  display: none;
 }
 
 .pro-card-body {
@@ -316,11 +333,13 @@ h3 {
 }
 
 .tag {
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  color: var(--text-dim);
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--amber);
   font-size: 0.74rem;
-  padding: 0.12rem 0.5rem;
+  font-weight: 600;
+  padding: 0.2rem 0.62rem;
 }
 
 .exif {
@@ -486,12 +505,12 @@ h3 {
   );
 }
 
-.shot.tone-0 { background: linear-gradient(140deg, #2a241c, #1b1712); }
-.shot.tone-1 { background: linear-gradient(140deg, #322317, #1d1610); }
-.shot.tone-2 { background: linear-gradient(140deg, #29201f, #171211); }
-.shot.tone-3 { background: linear-gradient(140deg, #24251c, #141510); }
-.shot.tone-4 { background: linear-gradient(140deg, #33291a, #1c1710); }
-.shot.tone-5 { background: linear-gradient(140deg, #2b1e18, #17110e); }
+.shot.tone-0 { background: linear-gradient(140deg, #2b4bf2, #7d93ff); }
+.shot.tone-1 { background: linear-gradient(140deg, #0c1020, #3b4a80); }
+.shot.tone-2 { background: linear-gradient(140deg, #12b3a6, #4fd6c4); }
+.shot.tone-3 { background: linear-gradient(140deg, #3b4a80, #8aa0e0); }
+.shot.tone-4 { background: linear-gradient(140deg, #5b4bf2, #a79bff); }
+.shot.tone-5 { background: linear-gradient(140deg, #ff3d7f, #ffb0c8); }
 
 .portfolio-note {
   margin-top: 0.7rem;
@@ -1164,6 +1183,16 @@ span.nav-avatar.avatar-placeholder {
   width: 100%;
   padding-right: 2.6rem;
 }
+/* No filtro da home, a cidade fica igual aos selects: caixa branca arredondada. */
+.filter-bar .city-field input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 0.65rem 2.6rem 0.65rem 0.8rem;
+}
 .city-geo {
   position: absolute;
   right: 0.3rem;
@@ -1190,7 +1219,7 @@ span.nav-avatar.avatar-placeholder {
   border-radius: var(--radius);
   max-height: 230px;
   overflow-y: auto;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(12, 16, 32, 0.14);
 }
 .city-suggest button {
   display: flex;

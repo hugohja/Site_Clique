@@ -1,6 +1,6 @@
 import SettingsPanel from "@/components/SettingsPanel";
 
-export const metadata = { title: "Configurações — Clica" };
+export const metadata = { title: "Configurações — Clique" };
 
 export default function ConfiguracoesPage() {
   return (

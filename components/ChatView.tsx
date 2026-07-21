@@ -292,7 +292,7 @@ export default function ChatView({ conversationId }: { conversationId: string })
               </h2>
               <p>
                 Feche o valor por aqui. O cliente precisa aceitar dentro da plataforma antes do
-                pagamento — é isso que mantém o negócio no Clica.
+                pagamento — é isso que mantém o negócio no Clique.
               </p>
               <form className="deal-form" onSubmit={sendProposal}>
                 <input

@@ -1,12 +1,12 @@
 {
-  "name": "Clica — fotógrafos e filmmakers de evento",
-  "short_name": "Clica",
+  "name": "Clique — fotógrafos, filmmakers e editores de evento",
+  "short_name": "Clique",
   "description": "Encontre fotógrafos e filmmakers freelancers para o seu evento e chame direto no WhatsApp.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#16130f",
-  "theme_color": "#16130f",
+  "background_color": "#2b4bf2",
+  "theme_color": "#2b4bf2",
   "lang": "pt-BR",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
