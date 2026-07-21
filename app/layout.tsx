@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="container footer-inner">
             <span className="mono footer-meta">CLIQUE · BRASIL · protótipo</span>
             <span className="footer-note">
-              Fotógrafos, filmmakers e editores de evento. Converse e feche pelo Clique.
+              Fotógrafos, filmmakers e editores de foto e vídeo. Converse e feche pelo Clique.
             </span>
             <span className="footer-links">
               <Link href="/termos">Termos de Uso</Link>

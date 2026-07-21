@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -19,6 +19,8 @@ export default function HeaderNav() {
   const router = useRouter();
   const pathname = usePathname();
   const [me, setMe] = useState<Me | null>(null);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -32,9 +34,30 @@ export default function HeaderNav() {
     // Recarrega o estado da sessão a cada navegação.
   }, [pathname]);
 
+  // Fecha o menu ao trocar de página.
+  useEffect(() => setOpen(false), [pathname]);
+
+  // Fecha ao clicar fora ou apertar Esc.
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     setMe({ account: null });
+    setOpen(false);
     router.push("/");
     router.refresh();
   }
@@ -59,6 +82,8 @@ export default function HeaderNav() {
   }
 
   const { account, profile } = me;
+  const firstName = (profile?.name ?? account.email).split(" ")[0];
+
   return (
     <nav className="header-nav">
       <Link href="/" className="nav-link">
@@ -67,38 +92,66 @@ export default function HeaderNav() {
       <Link href="/conversas" className="nav-link">
         Conversas
       </Link>
-      <span className="nav-account">
-        {profile?.profilePhotoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- data URL local
-          <img className="nav-avatar" src={profile.profilePhotoUrl} alt="" />
-        ) : (
-          <span className="nav-avatar avatar-placeholder" aria-hidden />
+
+      <div className="account-menu" ref={menuRef}>
+        <button
+          type="button"
+          className="avatar-btn"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Sua conta"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {profile?.profilePhotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- data URL local
+            <img className="avatar-btn-img" src={profile.profilePhotoUrl} alt="" />
+          ) : (
+            <span className="avatar-btn-img avatar-placeholder" aria-hidden />
+          )}
+        </button>
+
+        {open && (
+          <div className="account-dropdown" role="menu">
+            <div className="account-dropdown-head">
+              {profile?.profilePhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="dropdown-avatar" src={profile.profilePhotoUrl} alt="" />
+              ) : (
+                <span className="dropdown-avatar avatar-placeholder" aria-hidden />
+              )}
+              <div className="account-dropdown-id">
+                <strong>{firstName}</strong>
+                <span className="mono dim">{account.role}</span>
+              </div>
+            </div>
+
+            <div className="account-dropdown-links">
+              {account.role === "profissional" && account.professionalId && (
+                <>
+                  <Link href={`/profissional/${account.professionalId}`} role="menuitem" className="dropdown-link">
+                    Meu perfil
+                  </Link>
+                  <Link href="/carteira" role="menuitem" className="dropdown-link">
+                    Carteira
+                  </Link>
+                </>
+              )}
+              {account.isAdmin && (
+                <Link href="/admin" role="menuitem" className="dropdown-link">
+                  Painel admin
+                </Link>
+              )}
+              <Link href="/configuracoes" role="menuitem" className="dropdown-link">
+                Configurações
+              </Link>
+            </div>
+
+            <button type="button" role="menuitem" className="dropdown-link dropdown-signout" onClick={logout}>
+              Sair
+            </button>
+          </div>
         )}
-        <span className="nav-who">
-          {account.role} · <b>{(profile?.name ?? account.email).split(" ")[0]}</b>
-        </span>
-      </span>
-      {account.role === "profissional" && account.professionalId && (
-        <>
-          <Link href="/carteira" className="nav-link">
-            Carteira
-          </Link>
-          <Link href={`/profissional/${account.professionalId}`} className="nav-link">
-            Meu perfil
-          </Link>
-        </>
-      )}
-      {account.isAdmin && (
-        <Link href="/admin" className="nav-link">
-          Admin
-        </Link>
-      )}
-      <Link href="/configuracoes" className="nav-link">
-        Configurações
-      </Link>
-      <button type="button" className="nav-link btn-ghost btn-sm" onClick={logout}>
-        Sair
-      </button>
+      </div>
     </nav>
   );
 }

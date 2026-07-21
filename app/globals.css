@@ -1214,29 +1214,112 @@ h3 {
   padding: 0.4rem 0.9rem;
 }
 
-.nav-account {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* ---- Menu de conta (avatar no canto → dropdown) ---- */
+.account-menu {
+  position: relative;
+  margin-left: 0.35rem;
 }
-.nav-who {
-  color: var(--text-dim);
-  font-size: 0.82rem;
+.avatar-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.nav-who b {
-  color: var(--amber);
-  font-weight: 600;
+.avatar-btn:hover,
+.avatar-btn[aria-expanded="true"] {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 16%, transparent);
 }
-.nav-avatar {
-  width: 26px;
-  height: 26px;
+.avatar-btn-img {
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   object-fit: cover;
-  border: 1px solid var(--border);
 }
-span.nav-avatar.avatar-placeholder {
+.avatar-placeholder {
   display: inline-block;
   background: var(--surface-2);
+}
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 232px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(12, 16, 32, 0.16);
+  padding: 0.4rem;
+  z-index: 40;
+  animation: dropdown-in 0.14s ease;
+}
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.account-dropdown-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.4rem;
+}
+.dropdown-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.account-dropdown-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.account-dropdown-id strong {
+  font-size: 0.95rem;
+}
+.account-dropdown-id .dim {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.account-dropdown-links {
+  display: flex;
+  flex-direction: column;
+}
+.dropdown-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.dropdown-link:hover {
+  background: var(--surface-2);
+}
+.dropdown-signout {
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 10px 10px;
+  color: #d92d20;
+  font-weight: 600;
+}
+.dropdown-signout:hover {
+  background: color-mix(in srgb, #d92d20 10%, transparent);
 }
 
 /* ---- separadores de seção nos formulários ---- */
