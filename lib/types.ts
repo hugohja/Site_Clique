@@ -136,6 +136,8 @@ export interface Professional {
   whatsapp: string;
   /** E-mail de contato. PRIVADO. */
   email: string;
+  /** Chave PIX para receber o repasse. PRIVADA — nunca aparece em tela/endpoint público. */
+  payoutPixKey: string | null;
   /** Foto de perfil (data URL). Obrigatória no cadastro. Pública. */
   profilePhotoUrl: string;
   bio: string;
@@ -216,11 +218,12 @@ export interface ClientInput {
  */
 export type PublicProfessional = Omit<
   Professional,
-  "whatsapp" | "email" | "identity"
+  "whatsapp" | "email" | "payoutPixKey" | "identity"
 > & { verificationStatus: VerificationStatus };
 
 export function toPublicProfessional(pro: Professional): PublicProfessional {
-  const { whatsapp: _w, email: _e, identity, ...rest } = pro;
+  // Remove TODOS os campos privados (contato + chave PIX de repasse) antes de expor.
+  const { whatsapp: _w, email: _e, payoutPixKey: _p, identity, ...rest } = pro;
   return { ...rest, verificationStatus: identity.status };
 }
 
@@ -333,6 +336,8 @@ export interface Conversation {
    * em custódia. SÓ O CLIENTE vê; o profissional digita no evento pra concluir.
    */
   confirmationCode: string | null;
+  /** Quando o admin marcou o repasse ao profissional como feito (custódia liberada). */
+  paidOutAt: string | null;
   messages: ChatMessage[];
   createdAt: string;
 }

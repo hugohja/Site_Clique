@@ -37,15 +37,18 @@ export default async function CarteiraPage() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   let emCustodia = 0; // pago, ainda não liberado (contato_liberado + em_disputa)
-  let recebido = 0; // já liberado ao profissional (concluido)
+  let aReceber = 0; // concluído, aguardando o repasse (PIX) da Clique
+  let recebido = 0; // repasse já feito pela Clique
   let comissaoTotal = 0;
   for (const c of paid) {
     const price = c.agreedPrice ?? 0;
     if (c.status === "contato_liberado" || c.status === "em_disputa") {
       emCustodia += price;
     } else if (c.status === "concluido") {
-      recebido += payoutAmount(price, c.commissionRate);
+      const payout = payoutAmount(price, c.commissionRate);
       comissaoTotal += commissionAmount(price, c.commissionRate);
+      if (c.paidOutAt) recebido += payout;
+      else aReceber += payout;
     }
   }
 
@@ -60,11 +63,16 @@ export default async function CarteiraPage() {
         evento. A comissão da plataforma já sai do valor liberado.
       </p>
 
-      <div className="wallet-cards">
+      <div className="wallet-cards wallet-cards-3">
         <div className="wallet-card custody">
           <span className="wallet-label mono">em custódia</span>
           <strong className="wallet-value">{brl(emCustodia)}</strong>
           <span className="wallet-note mono">liberado ao validar o código no evento</span>
+        </div>
+        <div className="wallet-card pending">
+          <span className="wallet-label mono">a receber</span>
+          <strong className="wallet-value">{brl(aReceber)}</strong>
+          <span className="wallet-note mono">concluído — repasse PIX a caminho</span>
         </div>
         <div className="wallet-card released">
           <span className="wallet-label mono">já recebido</span>
@@ -96,11 +104,13 @@ export default async function CarteiraPage() {
                 </div>
                 <div className="wallet-row-money">
                   <span className={`status-badge mono status-${c.status}`}>
-                    {STATUS_LABEL[c.status] ?? c.status}
+                    {c.status === "concluido" && !c.paidOutAt
+                      ? "a receber"
+                      : STATUS_LABEL[c.status] ?? c.status}
                   </span>
                   <span className="mono">
                     {c.status === "concluido" ? (
-                      <>recebeu {brl(payout)}</>
+                      c.paidOutAt ? <>recebeu {brl(payout)}</> : <>a receber {brl(payout)}</>
                     ) : c.status === "reembolsado" ? (
                       <>reembolsado {brl(price)}</>
                     ) : (

@@ -3,10 +3,11 @@ import { accountRepository, clientRepository, conversationRepository, repository
 import { currentAccount } from "@/lib/auth";
 import { isAdminAccount } from "@/lib/admin";
 import { maskCpf, typeLabel } from "@/lib/format";
-import { DOCUMENT_TYPES } from "@/lib/types";
+import { DOCUMENT_TYPES, payoutAmount } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
 import AdminDisputeActions from "@/components/AdminDisputeActions";
+import AdminPayoutActions from "@/components/AdminPayoutActions";
 import AdminBrowse from "@/components/AdminBrowse";
 
 export const dynamic = "force-dynamic";
@@ -36,16 +37,18 @@ export default async function AdminPage() {
     );
   }
 
-  const [pros, clis, disputes, allPros, allClis] = await Promise.all([
+  const [pros, clis, disputes, payouts, allPros, allClis] = await Promise.all([
     repository.listByStatus("em_analise"),
     clientRepository.listByStatus("em_analise"),
     conversationRepository.listDisputes(),
+    conversationRepository.listPendingPayouts(),
     repository.list(),
     clientRepository.list(),
   ]);
   const proDocs = await Promise.all(pros.map((p) => docSrc(p.identity.documentPhotoUrl)));
   const cliDocs = await Promise.all(clis.map((c) => docSrc(c.identity.documentPhotoUrl)));
   const disputePros = await Promise.all(disputes.map((d) => repository.getById(d.professionalId)));
+  const payoutPros = await Promise.all(payouts.map((p) => repository.getById(p.professionalId)));
   const total = pros.length + clis.length;
 
   return (
@@ -84,6 +87,48 @@ export default async function AdminPage() {
                 <AdminDisputeActions conversationId={d.id} />
               </article>
             ))}
+          </div>
+        </section>
+      )}
+
+      {payouts.length > 0 && (
+        <section className="admin-section">
+          <h2 className="section-title">💸 Repasses pendentes ({payouts.length})</h2>
+          <p className="admin-lead">
+            Serviços concluídos aguardando o PIX ao profissional. Envie o valor pra chave abaixo e
+            marque como repassado.
+          </p>
+          <div className="admin-list">
+            {payouts.map((p, i) => {
+              const pro = payoutPros[i];
+              const price = p.agreedPrice ?? 0;
+              const payout = payoutAmount(price, p.commissionRate);
+              return (
+                <article key={p.id} className="admin-card">
+                  <div className="admin-person">
+                    <div>
+                      <h3>{pro?.name ?? "profissional"}</h3>
+                      <p className="admin-meta mono">
+                        cliente: {p.clientName} · {p.eventType} · {p.eventDate}
+                      </p>
+                      <p className="admin-meta mono">
+                        repassar: <strong>R$ {payout.toLocaleString("pt-BR")}</strong> (de R${" "}
+                        {price.toLocaleString("pt-BR")})
+                      </p>
+                      <p className="admin-meta mono">
+                        chave PIX:{" "}
+                        {pro?.payoutPixKey ? (
+                          <strong>{pro.payoutPixKey}</strong>
+                        ) : (
+                          <span className="admin-nodoc">não cadastrada — peça ao profissional</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <AdminPayoutActions conversationId={p.id} />
+                </article>
+              );
+            })}
           </div>
         </section>
       )}

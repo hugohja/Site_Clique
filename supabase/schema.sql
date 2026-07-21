@@ -18,6 +18,7 @@ create table if not exists professionals (
   price_from          integer not null default 0, -- legado: preço agora é por evento (proposta no chat)
   whatsapp            text not null,
   email               text not null,
+  payout_pix_key      text, -- chave PIX para repasse (PRIVADA — nunca exposta)
   profile_photo_url   text not null,
   bio                 text not null,
   rating              real not null default 0,
@@ -28,6 +29,7 @@ create table if not exists professionals (
 );
 -- Banco já existente? rode:
 -- alter table professionals add column if not exists no_show_count integer not null default 0;
+-- alter table professionals add column if not exists payout_pix_key text;
 create index if not exists professionals_city_idx on professionals (city);
 create index if not exists professionals_type_idx on professionals (type);
 create index if not exists professionals_specialties_idx on professionals using gin (specialties);
@@ -127,6 +129,7 @@ create table if not exists conversations (
   agreed_price         integer,
   commission_rate      real not null,
   confirmation_code    text, -- código do evento (custódia); só o cliente vê
+  paid_out_at          timestamptz, -- quando o admin marcou o repasse (PIX manual) como feito
   created_at           timestamptz not null default now()
 );
 -- Banco já existente? rode (atualiza o check de status e adiciona a coluna):
@@ -134,6 +137,7 @@ create table if not exists conversations (
 -- alter table conversations add constraint conversations_status_check
 --   check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado'));
 -- alter table conversations add column if not exists confirmation_code text;
+-- alter table conversations add column if not exists paid_out_at timestamptz;
 create index if not exists conversations_pro_idx on conversations (professional_id);
 create index if not exists conversations_client_idx on conversations (client_id);
 

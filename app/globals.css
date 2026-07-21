@@ -2206,6 +2206,13 @@ h3 {
   gap: 1rem;
   margin-top: 1rem;
 }
+.wallet-cards-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.wallet-card.pending {
+  background: color-mix(in srgb, #f5a623 8%, var(--surface));
+  border-color: color-mix(in srgb, #f5a623 28%, var(--border));
+}
 .wallet-card {
   display: flex;
   flex-direction: column;
@@ -2273,7 +2280,8 @@ h3 {
   .checkout-summary {
     position: static;
   }
-  .wallet-cards {
+  .wallet-cards,
+  .wallet-cards-3 {
     grid-template-columns: 1fr;
   }
 }
