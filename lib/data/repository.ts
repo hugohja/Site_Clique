@@ -9,6 +9,7 @@ import type {
   Professional,
   ProfessionalInput,
   ProfessionalType,
+  VerificationStatus,
 } from "@/lib/types";
 
 export interface ProfessionalFilters {
@@ -26,11 +27,18 @@ export interface ProfessionalRepository {
   list(filters?: ProfessionalFilters): Promise<Professional[]>;
   getById(id: string): Promise<Professional | null>;
   create(input: ProfessionalInput): Promise<Professional>;
+  /** Moderação: cadastros aguardando verificação de identidade. */
+  listByStatus(status: VerificationStatus): Promise<Professional[]>;
+  setVerificationStatus(id: string, status: VerificationStatus): Promise<Professional | null>;
+  remove(id: string): Promise<void>;
 }
 
 export interface ClientRepository {
   getById(id: string): Promise<Client | null>;
   create(input: ClientInput): Promise<Client>;
+  listByStatus(status: VerificationStatus): Promise<Client[]>;
+  setVerificationStatus(id: string, status: VerificationStatus): Promise<Client | null>;
+  remove(id: string): Promise<void>;
 }
 
 export interface AccountRepository {
@@ -45,6 +53,9 @@ export interface AccountRepository {
   }): Promise<Account>;
   updateEmail(id: string, email: string): Promise<Account | null>;
   updatePassword(id: string, passwordHash: string): Promise<Account | null>;
+  /** Remove a conta ligada a um perfil (usado ao recusar um cadastro). */
+  deleteByProfessionalId(professionalId: string): Promise<void>;
+  deleteByClientId(clientId: string): Promise<void>;
 }
 
 export interface ConversationRepository {

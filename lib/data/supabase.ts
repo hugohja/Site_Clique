@@ -355,6 +355,26 @@ export const supabaseRepository: ProfessionalRepository = {
     if (!created) throw new Error("Falha ao criar o profissional.");
     return created;
   },
+
+  async listByStatus(status) {
+    // !inner filtra os profissionais pelo status da identidade (join interno).
+    const rows = await sbSelect<ProRow>("professionals", [
+      q.select("*,portfolio_items(*),professional_identities!inner(*)"),
+      { key: "professional_identities.status", value: `eq.${status}` },
+      q.order("created_at.asc"),
+    ]);
+    return rows.map(toProfessional);
+  },
+
+  async setVerificationStatus(id, status) {
+    await sbUpdate("professional_identities", [q.eq("professional_id", id)], { status });
+    return this.getById(id);
+  },
+
+  async remove(id) {
+    // FK on delete cascade remove identidade e portfólio junto.
+    await sbDelete("professionals", [q.eq("id", id)]);
+  },
 };
 
 export const supabaseClientRepository: ClientRepository = {
@@ -382,6 +402,24 @@ export const supabaseClientRepository: ClientRepository = {
     const created = await this.getById(id);
     if (!created) throw new Error("Falha ao criar o cliente.");
     return created;
+  },
+
+  async listByStatus(status) {
+    const rows = await sbSelect<ClientRow>("clients", [
+      q.select("*,client_identities!inner(*)"),
+      { key: "client_identities.status", value: `eq.${status}` },
+      q.order("created_at.asc"),
+    ]);
+    return rows.map(toClient);
+  },
+
+  async setVerificationStatus(id, status) {
+    await sbUpdate("client_identities", [q.eq("client_id", id)], { status });
+    return this.getById(id);
+  },
+
+  async remove(id) {
+    await sbDelete("clients", [q.eq("id", id)]);
   },
 };
 
@@ -418,6 +456,14 @@ export const supabaseAccountRepository: AccountRepository = {
   async updatePassword(id: string, passwordHash: string) {
     const rows = await sbUpdate<AccountRow>("accounts", [q.eq("id", id)], { password_hash: passwordHash });
     return rows[0] ? toAccount(rows[0]) : null;
+  },
+
+  async deleteByProfessionalId(professionalId: string) {
+    await sbDelete("accounts", [q.eq("professional_id", professionalId)]);
+  },
+
+  async deleteByClientId(clientId: string) {
+    await sbDelete("accounts", [q.eq("client_id", clientId)]);
   },
 };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { accountRepository, clientRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
+import { isAdminAccount } from "@/lib/admin";
 
 /** Quem está logado — usado pelo header e pelas telas que dependem da sessão. */
 export async function GET() {
@@ -21,6 +22,7 @@ export async function GET() {
       email: account.email,
       professionalId: account.professionalId,
       clientId: account.clientId,
+      isAdmin: isAdminAccount(account),
     },
     profile: profile
       ? {

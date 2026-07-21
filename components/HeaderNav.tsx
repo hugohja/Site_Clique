@@ -5,7 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 interface Me {
-  account: { id: string; role: "profissional" | "cliente"; email: string; professionalId: string | null } | null;
+  account: {
+    id: string;
+    role: "profissional" | "cliente";
+    email: string;
+    professionalId: string | null;
+    isAdmin?: boolean;
+  } | null;
   profile?: { id: string; name: string; profilePhotoUrl: string; verificationStatus: string } | null;
 }
 
@@ -72,6 +78,11 @@ export default function HeaderNav() {
       {account.role === "profissional" && account.professionalId && (
         <Link href={`/profissional/${account.professionalId}`} className="nav-link">
           Meu perfil
+        </Link>
+      )}
+      {account.isAdmin && (
+        <Link href="/admin" className="nav-link">
+          Admin
         </Link>
       )}
       <Link href="/configuracoes" className="nav-link">

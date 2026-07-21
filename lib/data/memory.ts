@@ -10,6 +10,7 @@ import type {
   PortfolioItem,
   Professional,
   ProfessionalInput,
+  VerificationStatus,
 } from "@/lib/types";
 import { COMMISSION_RATE } from "@/lib/types";
 import { SEED_PROFESSIONALS } from "./seed";
@@ -137,6 +138,25 @@ export const memoryRepository: ProfessionalRepository = {
     store().push(professional);
     return professional;
   },
+
+  async listByStatus(status: VerificationStatus) {
+    return store()
+      .filter((p) => p.identity.status === status)
+      .sort((a, b) => a.identity.submittedAt.localeCompare(b.identity.submittedAt));
+  },
+
+  async setVerificationStatus(id: string, status: VerificationStatus) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    pro.identity.status = status;
+    return pro;
+  },
+
+  async remove(id: string) {
+    const arr = store();
+    const i = arr.findIndex((p) => p.id === id);
+    if (i >= 0) arr.splice(i, 1);
+  },
 };
 
 export const memoryClientRepository: ClientRepository = {
@@ -157,6 +177,25 @@ export const memoryClientRepository: ClientRepository = {
     };
     clients().push(client);
     return client;
+  },
+
+  async listByStatus(status: VerificationStatus) {
+    return clients()
+      .filter((c) => c.identity.status === status)
+      .sort((a, b) => a.identity.submittedAt.localeCompare(b.identity.submittedAt));
+  },
+
+  async setVerificationStatus(id: string, status: VerificationStatus) {
+    const c = clients().find((x) => x.id === id);
+    if (!c) return null;
+    c.identity.status = status;
+    return c;
+  },
+
+  async remove(id: string) {
+    const arr = clients();
+    const i = arr.findIndex((c) => c.id === id);
+    if (i >= 0) arr.splice(i, 1);
   },
 };
 
@@ -196,6 +235,14 @@ export const memoryAccountRepository: AccountRepository = {
     if (!account) return null;
     account.passwordHash = passwordHash;
     return account;
+  },
+
+  async deleteByProfessionalId(professionalId: string) {
+    g.__clicaAccounts = accounts().filter((a) => a.professionalId !== professionalId);
+  },
+
+  async deleteByClientId(clientId: string) {
+    g.__clicaAccounts = accounts().filter((a) => a.clientId !== clientId);
   },
 };
 
