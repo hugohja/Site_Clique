@@ -4,6 +4,7 @@ import { DOCUMENT_TYPES, GENDERS, isValidCity, toPublicClient } from "@/lib/type
 import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
+import { isStrongPassword } from "@/lib/password";
 
 /** Cadastro de cliente (quem contrata). Cria conta com login + verificação de identidade. */
 export async function POST(request: NextRequest) {
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
   if (name.length < 2) errors.push("Informe o nome.");
   if (!isValidCity(city)) errors.push("Escolha uma cidade válida (Nome – UF).");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
-  if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
+  if (!isStrongPassword(password))
+    errors.push("A senha precisa ser forte: 8+ caracteres com letra, número e caractere especial.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");
   if (!GENDERS.some((g) => g.value === gender)) errors.push("Selecione o gênero.");

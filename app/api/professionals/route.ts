@@ -14,6 +14,7 @@ import {
 import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
+import { isStrongPassword } from "@/lib/password";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -57,7 +58,8 @@ export async function POST(request: NextRequest) {
   if (!isValidCity(city)) errors.push("Escolha uma cidade válida (Nome – UF).");
   if (!["fotografo", "filmmaker", "editor"].includes(type)) errors.push("Tipo inválido.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) errors.push("E-mail de login inválido.");
-  if (password.length < 6) errors.push("A senha precisa ter ao menos 6 caracteres.");
+  if (!isStrongPassword(password))
+    errors.push("A senha precisa ser forte: 8+ caracteres com letra, número e caractere especial.");
   if (specialties.length === 0) errors.push("Escolha ou escreva ao menos uma especialidade.");
   if (whatsapp.length < 10 || whatsapp.length > 15) errors.push("WhatsApp inválido (use DDD + número).");
   if (cpf.length !== 11) errors.push("CPF incompleto (use o formato 000.000.000-00).");

@@ -104,6 +104,12 @@ export async function sbDelete(table: string, filters: QueryPair[]): Promise<voi
   await rest(table, { method: "DELETE" }, filters);
 }
 
+/** Codifica cada segmento do caminho, mantendo as barras (o endpoint de sign
+ * do Storage não aceita "/" escapado como %2F). */
+function encodePath(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
 /** Sobe um arquivo pro Storage. Retorna o caminho do objeto (bucket-relative). */
 export async function sbUpload(
   bucket: string,
@@ -111,7 +117,7 @@ export async function sbUpload(
   file: File
 ): Promise<{ path: string } | { error: string }> {
   const { url } = requireConfig();
-  const res = await fetch(`${url}/storage/v1/object/${bucket}/${encodeURIComponent(path)}`, {
+  const res = await fetch(`${url}/storage/v1/object/${bucket}/${encodePath(path)}`, {
     method: "POST",
     headers: headers({ "Content-Type": file.type || "application/octet-stream", "x-upsert": "true" }),
     body: Buffer.from(await file.arrayBuffer()),
@@ -126,7 +132,7 @@ export async function sbUpload(
 /** URL pública de um objeto em bucket público. */
 export function sbPublicUrl(bucket: string, path: string): string {
   const { url } = requireConfig();
-  return `${url}/storage/v1/object/public/${bucket}/${encodeURIComponent(path)}`;
+  return `${url}/storage/v1/object/public/${bucket}/${encodePath(path)}`;
 }
 
 /**
@@ -139,7 +145,7 @@ export async function sbSignedUrl(
   expiresIn = 60
 ): Promise<string | null> {
   const { url } = requireConfig();
-  const res = await fetch(`${url}/storage/v1/object/sign/${bucket}/${encodeURIComponent(path)}`, {
+  const res = await fetch(`${url}/storage/v1/object/sign/${bucket}/${encodePath(path)}`, {
     method: "POST",
     headers: headers({ "Content-Type": "application/json" }),
     body: JSON.stringify({ expiresIn }),

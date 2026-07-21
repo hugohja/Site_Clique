@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES, isValidCity } from "@/lib/types";
+import { isStrongPassword } from "@/lib/password";
 import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
 import CredentialFields from "@/components/CredentialFields";
@@ -41,6 +42,10 @@ export default function CadastroForm() {
     }
     if (String(fd.get("password")) !== String(fd.get("password2"))) {
       setError("As senhas não conferem.");
+      return;
+    }
+    if (!isStrongPassword(String(fd.get("password")))) {
+      setError("A senha precisa ser forte: 8+ caracteres com letra, número e caractere especial.");
       return;
     }
     if (portfolio.length < MIN_PORTFOLIO_PHOTOS) {
