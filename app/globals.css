@@ -1948,6 +1948,32 @@ h3 {
   height: 40px;
   border-radius: 10px;
 }
+.admin-browse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.admin-search {
+  flex: 1 1 260px;
+  max-width: 360px;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+.admin-search:focus {
+  outline: none;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 14%, transparent);
+}
+.admin-subhead {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin: 1rem 0 0.5rem;
+}
 
 /* ---------- Checkout (custódia) ---------- */
 .checkout {

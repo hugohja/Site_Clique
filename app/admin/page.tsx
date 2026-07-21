@@ -7,6 +7,7 @@ import { DOCUMENT_TYPES } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
 import AdminDisputeActions from "@/components/AdminDisputeActions";
+import AdminBrowse from "@/components/AdminBrowse";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Painel admin — Clique" };
@@ -180,55 +181,23 @@ export default async function AdminPage() {
         </>
       )}
 
-      <section className="admin-section">
-        <h2 className="section-title">Todos os profissionais ({allPros.length})</h2>
-        {allPros.length === 0 ? (
-          <p className="admin-meta mono">Nenhum profissional cadastrado.</p>
-        ) : (
-          <div className="admin-manage">
-            {allPros.map((p) => (
-              <div key={p.id} className="admin-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="admin-avatar admin-avatar-sm" src={p.profilePhotoUrl} alt="" />
-                <div className="admin-row-info">
-                  <strong>{p.name}</strong>
-                  <span className="admin-meta mono">
-                    {typeLabel(p.type)} · {p.city} · {p.identity.status}
-                  </span>
-                </div>
-                <Link href={`/admin/profissional/${p.id}`} className="btn btn-sm btn-ghost">
-                  Editar
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="admin-section">
-        <h2 className="section-title">Todos os clientes ({allClis.length})</h2>
-        {allClis.length === 0 ? (
-          <p className="admin-meta mono">Nenhum cliente cadastrado.</p>
-        ) : (
-          <div className="admin-manage">
-            {allClis.map((c) => (
-              <div key={c.id} className="admin-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="admin-avatar admin-avatar-sm" src={c.profilePhotoUrl} alt="" />
-                <div className="admin-row-info">
-                  <strong>{c.name}</strong>
-                  <span className="admin-meta mono">
-                    {c.city ?? "—"} · {c.identity.status}
-                  </span>
-                </div>
-                <Link href={`/admin/cliente/${c.id}`} className="btn btn-sm btn-ghost">
-                  Editar
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <AdminBrowse
+        pros={allPros.map((p) => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          city: p.city,
+          status: p.identity.status,
+          photo: p.profilePhotoUrl,
+        }))}
+        clients={allClis.map((c) => ({
+          id: c.id,
+          name: c.name,
+          city: c.city ?? "",
+          status: c.identity.status,
+          photo: c.profilePhotoUrl,
+        }))}
+      />
     </div>
   );
 }
