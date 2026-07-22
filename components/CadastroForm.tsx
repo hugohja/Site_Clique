@@ -146,6 +146,20 @@ export default function CadastroForm() {
         </span>
       </div>
 
+      <div className="field">
+        <label htmlFor="payoutPixKey">Chave PIX para receber</label>
+        <input
+          id="payoutPixKey"
+          name="payoutPixKey"
+          maxLength={140}
+          placeholder="CPF, e-mail, telefone ou chave aleatória"
+        />
+        <span className="form-hint">
+          É pra cá que a Clique te envia o repasse quando um serviço é concluído. Fica privada —
+          nunca aparece no seu perfil. Dá pra cadastrar ou trocar depois nas Configurações.
+        </span>
+      </div>
+
       <hr className="form-sep" />
       <p className="form-sec-title">Portfólio (obrigatório)</p>
       <PortfolioEditor items={portfolio} onChange={setPortfolio} />

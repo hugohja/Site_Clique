@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
   const gender = String(form.get("gender") ?? "");
   const birthDate = String(form.get("birthDate") ?? "").trim();
   const documentType = String(form.get("documentType") ?? "");
+  // Chave PIX de repasse (opcional no cadastro; privada, só sai no painel de repasse).
+  const payoutPixKey = String(form.get("payoutPixKey") ?? "").trim().slice(0, 140);
   // Especialidades: sugestões marcadas + quaisquer "outras" digitadas (texto livre).
   const specialties = Array.from(
     new Set(form.getAll("specialties").map((s) => cleanEventLabel(String(s))).filter(Boolean))
@@ -149,6 +151,11 @@ export async function POST(request: NextRequest) {
     documentType: documentType as never,
     documentPhotoUrl,
   });
+
+  // Guarda a chave PIX de repasse, se informada no cadastro.
+  if (payoutPixKey) {
+    await repository.update(professional.id, { payoutPixKey }).catch(() => {});
+  }
 
   const account = await accountRepository
     .create({
