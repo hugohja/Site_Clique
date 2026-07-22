@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EVENT_TYPES, eventDateTimeError } from "@/lib/types";
+import FancySelect from "@/components/FancySelect";
 
 interface Me {
   account: { role: "profissional" | "cliente" } | null;
@@ -142,22 +143,17 @@ export default function NovaConversaForm({
         <div className="field-row">
           <div className="field">
             <label htmlFor="eventType">Tipo de evento</label>
-            <select
+            <FancySelect
               id="eventType"
+              ariaLabel="Tipo de evento"
               value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Selecione
-              </option>
-              {EVENT_TYPES.map((e) => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
-              ))}
-              <option value="__outro">Outros…</option>
-            </select>
+              onChange={setEventType}
+              options={[
+                { value: "", label: "Selecione" },
+                ...EVENT_TYPES.map((e) => ({ value: e, label: e })),
+                { value: "__outro", label: "Outros…" },
+              ]}
+            />
           </div>
           <div className="field">
             <label htmlFor="eventDate">Data do evento</label>
