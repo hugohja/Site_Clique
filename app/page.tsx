@@ -2,7 +2,7 @@ import ProCard from "@/components/ProCard";
 import SearchFilters from "@/components/SearchFilters";
 import { accountRepository, clientRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
-import { EVENT_TYPES, isReservedLabel } from "@/lib/types";
+import { EVENT_TYPES } from "@/lib/types";
 import { isProSort, type ProSort } from "@/lib/ranking";
 
 export const dynamic = "force-dynamic";
@@ -34,15 +34,9 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   });
   const hasFilter = Boolean(effectiveCity || evento || tipo);
 
-  // Opções do filtro de evento: as sugestões + especialidades personalizadas
-  // que profissionais realmente cadastraram (pra "Outros" ficar pesquisável).
-  const allPros = await repository.list({});
-  const eventOptions = Array.from(
-    new Set([...EVENT_TYPES, ...allPros.flatMap((p) => p.specialties)])
-  )
-    // Remove palavras reservadas (ex.: "ADMIN") que não são eventos.
-    .filter((ev) => !isReservedLabel(ev))
-    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+  // Filtro de evento: só os tipos PRINCIPAIS (curados). Especialidades livres
+  // que cada profissional digita não entram aqui, pra não poluir a lista.
+  const eventOptions = [...EVENT_TYPES];
 
   return (
     <>
