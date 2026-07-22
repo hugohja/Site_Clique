@@ -9,16 +9,27 @@
 
 const CENSOR = "***";
 
+// Nome dos apps/redes sociais (inclui "arroba", usado pra driblar o @).
+const SOCIAL =
+  "(?:whats\\s?app|whats|wpp|zap+|zapzap|telegram|t\\.me|signal|insta(?:gram)?|face(?:book)?|tik\\s?tok|arroba|snap(?:chat)?|kwai|direct|dm)";
+
+// Palavrinhas de ligação que costumam separar a rede social do usuário
+// ("insta É hugohja", "meu insta hugohja", "insta aí fulano"...).
+const FILLER = "(?:e|eh|é|o|a|no|na|meu|minha|ai|aí|la|lá|arroba)";
+
 const CONTACT_PATTERNS: RegExp[] = [
   // Sequências com cara de telefone: 9+ dígitos com separadores comuns
   // (evita censurar datas tipo 17/07/2026, que têm 8 dígitos).
   /(?:\+?\d[\s\-.()]*){9,}\d/g,
   // E-mail (antes do @usuário, que capturaria só metade).
   /[\w.+-]+@[\w-]+\.[\w.-]+/g,
-  // Menções a apps de mensagem/rede social.
-  /\b(?:whats\s?app|whats|wpp|zap+|zapzap|telegram|t\.me|signal|insta(?:gram)?|face(?:book)?|tik\s?tok|direct|dm)\b/gi,
-  // @usuário.
-  /@[a-zA-Z0-9_.]{2,}/g,
+  // Rede social + o @usuário logo em seguida (mesmo com "é/no/meu/aí" no meio):
+  // censura a rede social E o nome de usuário juntos. Fecha o "me chama no insta fulano".
+  new RegExp(`\\b${SOCIAL}\\b(?:\\s+${FILLER}(?=\\s)){0,2}\\s*[:@=./\\-]?\\s*[a-zA-Z0-9_][a-zA-Z0-9_.]+`, "gi"),
+  // Rede social sozinha (sem usuário ao lado).
+  new RegExp(`\\b${SOCIAL}\\b`, "gi"),
+  // @usuário (aceita espaço depois do @: "@ fulano").
+  /@\s*[a-zA-Z0-9_.]{2,}/g,
   // Links e domínios.
   /(?:https?:\/\/|www\.)\S+/gi,
   /\b[\w-]+\.(?:com|com\.br|net|org|br|io|me|link|app)(?:\/\S*)?\b/gi,
