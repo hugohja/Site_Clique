@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
-import { cleanEventLabel, type Conversation } from "@/lib/types";
+import { cleanEventLabel, hasUnread, type Conversation } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 
 /** Inbox: conversas do usuário logado (cliente ou profissional). */
@@ -17,8 +17,8 @@ export async function GET() {
   } else if (account.role === "profissional" && account.professionalId) {
     convs = await conversationRepository.listForProfessional(account.professionalId);
   }
-  // "Não lida" = a última mensagem é da OUTRA pessoa (não sua, não do sistema).
-  const otherRole = account.role === "cliente" ? "profissional" : "cliente";
+  // "Não lida" = há mensagem da outra pessoa depois da última vez que você abriu.
+  const myRole = account.role as "cliente" | "profissional";
   const conversations = await Promise.all(
     convs.map(async (c) => {
       let otherName = c.clientName;
@@ -36,7 +36,7 @@ export async function GET() {
         agreedPrice: c.agreedPrice,
         otherName,
         lastMessage: last?.text ?? "",
-        unread: last?.sender === otherRole,
+        unread: hasUnread(c, myRole),
         createdAt: c.createdAt,
       };
     })

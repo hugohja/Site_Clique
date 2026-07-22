@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import NovaConversaForm from "@/components/NovaConversaForm";
-import { repository } from "@/lib/data";
+import { accountRepository, repository } from "@/lib/data";
+import { currentAccount } from "@/lib/auth";
 import { typeLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,30 @@ export default async function ConversarPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const pro = await repository.getById(id);
   if (!pro) notFound();
+
+  const account = await currentAccount((accId) => accountRepository.getById(accId));
+  const isOwner = account?.role === "profissional" && account.professionalId === pro.id;
+  // Só cliente contrata. O dono do perfil (e qualquer profissional) não inicia conversa.
+  if (isOwner || account?.role === "profissional") {
+    return (
+      <div className="container form-page">
+        <nav className="breadcrumb mono">
+          <Link href={`/profissional/${pro.id}`}>← perfil</Link>
+        </nav>
+        <div className="empty-state" style={{ marginTop: "1.5rem" }}>
+          <span className="mono">{isOwner ? "ESTE_E_SEU_PERFIL" : "CONTA_PROFISSIONAL"}</span>
+          {isOwner
+            ? "Este é o seu perfil — você não inicia conversa consigo mesmo."
+            : "Contas profissionais não contratam. Para contratar, entre com uma conta de cliente."}{" "}
+          {isOwner && (
+            <Link href="/configuracoes" style={{ textDecoration: "underline" }}>
+              ir para configurações
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container form-page">

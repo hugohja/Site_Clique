@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { accountRepository, conversationRepository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
-import type { Conversation } from "@/lib/types";
+import { hasUnread, type Conversation } from "@/lib/types";
 
 /** Contador leve de conversas "não lidas" (última mensagem da outra pessoa) — pro selo no menu. */
 export async function GET() {
@@ -14,10 +14,7 @@ export async function GET() {
   } else if (account.role === "profissional" && account.professionalId) {
     convs = await conversationRepository.listForProfessional(account.professionalId);
   }
-  const otherRole = account.role === "cliente" ? "profissional" : "cliente";
-  const count = convs.filter((c) => {
-    const last = c.messages[c.messages.length - 1];
-    return last?.sender === otherRole;
-  }).length;
+  const myRole = account.role as "cliente" | "profissional";
+  const count = convs.filter((c) => hasUnread(c, myRole)).length;
   return NextResponse.json({ count });
 }

@@ -323,6 +323,8 @@ export const memoryConversationRepository: ConversationRepository = {
       commissionRate: COMMISSION_RATE,
       confirmationCode: null,
       paidOutAt: null,
+      clientLastReadAt: null,
+      proLastReadAt: null,
       messages: [input.firstMessage],
       createdAt: new Date().toISOString(),
     };
@@ -480,5 +482,13 @@ export const memoryConversationRepository: ConversationRepository = {
     conversation.paidOutAt = new Date().toISOString();
     conversation.messages.push(systemMessage("Repasse ao profissional realizado pela Clique."));
     return conversation;
+  },
+
+  async markRead(conversationId: string, role: "cliente" | "profissional") {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const now = new Date().toISOString();
+    if (role === "cliente") conversation.clientLastReadAt = now;
+    else conversation.proLastReadAt = now;
   },
 };

@@ -115,6 +115,8 @@ interface ConversationRow {
   commission_rate: number;
   confirmation_code: string | null;
   paid_out_at: string | null;
+  client_last_read_at: string | null;
+  pro_last_read_at: string | null;
   created_at: string;
   messages?: MessageRow[];
 }
@@ -252,6 +254,8 @@ function toConversation(row: ConversationRow): Conversation {
     commissionRate: row.commission_rate,
     confirmationCode: row.confirmation_code ?? null,
     paidOutAt: row.paid_out_at ? iso(row.paid_out_at) : null,
+    clientLastReadAt: row.client_last_read_at ? iso(row.client_last_read_at) : null,
+    proLastReadAt: row.pro_last_read_at ? iso(row.pro_last_read_at) : null,
     messages,
     createdAt: iso(row.created_at),
   };
@@ -751,5 +755,12 @@ export const supabaseConversationRepository: ConversationRepository = {
     });
     await insertSystemMessage(conversationId, "Repasse ao profissional realizado pela Clique.");
     return fetchConversation(conversationId);
+  },
+
+  async markRead(conversationId: string, role: "cliente" | "profissional") {
+    const col = role === "cliente" ? "client_last_read_at" : "pro_last_read_at";
+    await sbUpdate("conversations", [q.eq("id", conversationId)], {
+      [col]: new Date().toISOString(),
+    });
   },
 };

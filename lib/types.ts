@@ -338,8 +338,20 @@ export interface Conversation {
   confirmationCode: string | null;
   /** Quando o admin marcou o repasse ao profissional como feito (custódia liberada). */
   paidOutAt: string | null;
+  /** Última vez que cada lado abriu a conversa — base do "não lida". */
+  clientLastReadAt: string | null;
+  proLastReadAt: string | null;
   messages: ChatMessage[];
   createdAt: string;
+}
+
+/** Uma conversa tem mensagem não lida pro papel dado se a última mensagem é da
+ * outra pessoa (ou do sistema) e chegou depois da última vez que ele abriu. */
+export function hasUnread(conv: Conversation, role: "cliente" | "profissional"): boolean {
+  const last = conv.messages[conv.messages.length - 1];
+  if (!last || last.sender === role) return false;
+  const lastRead = role === "cliente" ? conv.clientLastReadAt : conv.proLastReadAt;
+  return !lastRead || last.createdAt > lastRead;
 }
 
 export type ConversationInput = Pick<
