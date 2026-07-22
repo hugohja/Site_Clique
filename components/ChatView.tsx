@@ -11,6 +11,7 @@ interface ConversationPayload {
   conversation: Omit<Conversation, "clientWhatsapp">;
   professional: PublicProfessional;
   contact: { professionalWhatsapp: string; clientWhatsapp: string } | null;
+  review: { rating: number; comment: string } | null;
 }
 
 const STATUS_LABEL: Record<Conversation["status"], string> = {
@@ -41,6 +42,8 @@ export default function ChatView({ conversationId }: { conversationId: string })
   const [wasFiltered, setWasFiltered] = useState(false);
   const [proposalValue, setProposalValue] = useState("");
   const [codeInput, setCodeInput] = useState("");
+  const [reviewStars, setReviewStars] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
@@ -326,6 +329,65 @@ export default function ChatView({ conversationId }: { conversationId: string })
           <p className="mono">
             valor {brl(price)} · comissão Clique {brl(commission)} · profissional recebe {brl(payout)}
           </p>
+
+          {data.review ? (
+            <div className="review-done">
+              <span className="review-stars-static" aria-label={`${data.review.rating} de 5`}>
+                {"★".repeat(data.review.rating)}
+                <span className="review-stars-empty">{"★".repeat(5 - data.review.rating)}</span>
+              </span>
+              {data.review.comment && <p className="review-comment">“{data.review.comment}”</p>}
+              <span className="mono dim">
+                {role === "cliente" ? "sua avaliação" : `avaliação de ${conversation.clientName}`}
+              </span>
+            </div>
+          ) : role === "cliente" ? (
+            <form
+              className="review-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (reviewStars < 1) {
+                  setActionError("Escolha de 1 a 5 estrelas.");
+                  return;
+                }
+                post("/avaliar", { rating: reviewStars, comment: reviewComment }).then((ok) => {
+                  if (ok) {
+                    setReviewStars(0);
+                    setReviewComment("");
+                  }
+                });
+              }}
+            >
+              <h3 className="review-title">Como foi o serviço de {professional.name}?</h3>
+              <div className="review-stars" role="radiogroup" aria-label="Nota">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    type="button"
+                    key={n}
+                    className={`review-star ${n <= reviewStars ? "on" : ""}`}
+                    aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
+                    aria-pressed={n === reviewStars}
+                    onClick={() => setReviewStars(n)}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Conte como foi (opcional): pontualidade, qualidade, atendimento…"
+                maxLength={600}
+              />
+              <button type="submit" className="btn btn-sm" disabled={busy || reviewStars < 1}>
+                {busy ? "Enviando…" : "Enviar avaliação"}
+              </button>
+            </form>
+          ) : (
+            <p className="mono dim" style={{ marginTop: "0.6rem" }}>
+              Aguardando a avaliação do cliente.
+            </p>
+          )}
         </div>
       )}
       {status === "em_disputa" && (

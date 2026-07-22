@@ -10,6 +10,8 @@ import type {
   PortfolioItem,
   Professional,
   ProfessionalInput,
+  Review,
+  ReviewInput,
   VerificationStatus,
 } from "@/lib/types";
 import { COMMISSION_RATE } from "@/lib/types";
@@ -20,6 +22,7 @@ import type {
   ConversationRepository,
   ProfessionalFilters,
   ProfessionalRepository,
+  ReviewRepository,
 } from "./repository";
 
 /**
@@ -35,6 +38,7 @@ const g = globalThis as unknown as {
   __clicaClients?: Client[];
   __clicaConversations?: Conversation[];
   __clicaAccounts?: Account[];
+  __clicaReviews?: Review[];
 };
 
 function store(): Professional[] {
@@ -57,6 +61,11 @@ function accounts(): Account[] {
 function conversations(): Conversation[] {
   if (!g.__clicaConversations) g.__clicaConversations = [];
   return g.__clicaConversations;
+}
+
+function reviews(): Review[] {
+  if (!g.__clicaReviews) g.__clicaReviews = [];
+  return g.__clicaReviews;
 }
 
 function slugify(name: string, taken: (id: string) => boolean): string {
@@ -192,6 +201,14 @@ export const memoryRepository: ProfessionalRepository = {
     const pro = store().find((p) => p.id === id);
     if (!pro) return null;
     pro.noShowCount += 1;
+    return pro;
+  },
+
+  async updateRating(id: string, rating: number, reviewCount: number) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    pro.rating = rating;
+    pro.reviewCount = reviewCount;
     return pro;
   },
 };
@@ -491,5 +508,32 @@ export const memoryConversationRepository: ConversationRepository = {
     const now = new Date().toISOString();
     if (role === "cliente") conversation.clientLastReadAt = now;
     else conversation.proLastReadAt = now;
+  },
+};
+
+export const memoryReviewRepository: ReviewRepository = {
+  async create(input: ReviewInput) {
+    const review: Review = {
+      id: randomUUID(),
+      conversationId: input.conversationId,
+      professionalId: input.professionalId,
+      clientId: input.clientId,
+      clientName: input.clientName,
+      rating: input.rating,
+      comment: input.comment,
+      createdAt: new Date().toISOString(),
+    };
+    reviews().push(review);
+    return review;
+  },
+
+  async listByProfessional(professionalId: string) {
+    return reviews()
+      .filter((r) => r.professionalId === professionalId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async getByConversation(conversationId: string) {
+    return reviews().find((r) => r.conversationId === conversationId) ?? null;
   },
 };

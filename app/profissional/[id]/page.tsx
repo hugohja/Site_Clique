@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { repository } from "@/lib/data";
+import { repository, reviewRepository } from "@/lib/data";
 import { formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
 import PortfolioGallery from "@/components/PortfolioGallery";
@@ -15,6 +15,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   // Capa primeiro, resto na ordem salva.
   const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
+  const reviews = await reviewRepository.listByProfessional(pro.id);
 
   return (
     <>
@@ -96,6 +97,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </div>
           <h2 className="section-title">Sobre</h2>
           <p className="bio">{pro.bio}</p>
+
+          <h2 className="section-title">Avaliações ({reviews.length})</h2>
+          {reviews.length === 0 ? (
+            <p className="bio" style={{ color: "var(--text-dim)" }}>
+              Ainda sem avaliações. As notas aparecem aqui depois dos primeiros serviços concluídos.
+            </p>
+          ) : (
+            <div className="review-list">
+              {reviews.map((r) => (
+                <div key={r.id} className="review-item">
+                  <div className="review-item-head">
+                    <span className="review-stars-static" aria-label={`${r.rating} de 5`}>
+                      {"★".repeat(r.rating)}
+                      <span className="review-stars-empty">{"★".repeat(5 - r.rating)}</span>
+                    </span>
+                    <strong>{r.clientName}</strong>
+                  </div>
+                  {r.comment && <p className="review-comment">“{r.comment}”</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
       </section>
     </>

@@ -157,6 +157,20 @@ create table if not exists messages (
 );
 create index if not exists messages_conversation_idx on messages (conversation_id, created_at);
 
+-- ---------- Avaliações (nota do profissional) ----------
+create table if not exists reviews (
+  id              uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null unique references conversations (id) on delete cascade,
+  professional_id text not null references professionals (id) on delete cascade,
+  client_id       text not null references clients (id) on delete cascade,
+  client_name     text not null,
+  rating          integer not null check (rating between 1 and 5),
+  comment         text not null default '',
+  created_at      timestamptz not null default now()
+);
+create index if not exists reviews_pro_idx on reviews (professional_id);
+-- unique(conversation_id) garante uma avaliação por conversa.
+
 -- ---------- RLS: ligado, sem política pública ----------
 -- A service_role key (usada pelo servidor) ignora RLS. A anon key não passa.
 alter table professionals          enable row level security;
@@ -168,6 +182,7 @@ alter table accounts               enable row level security;
 alter table sessions               enable row level security;
 alter table conversations          enable row level security;
 alter table messages               enable row level security;
+alter table reviews                enable row level security;
 
 -- ---------- Storage ----------
 -- Bucket público (foto de perfil + portfólio) e privado (documentos).

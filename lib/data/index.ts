@@ -4,18 +4,21 @@ import type {
   ClientRepository,
   ConversationRepository,
   ProfessionalRepository,
+  ReviewRepository,
 } from "./repository";
 import {
   memoryAccountRepository,
   memoryClientRepository,
   memoryConversationRepository,
   memoryRepository,
+  memoryReviewRepository,
 } from "./memory";
 import {
   supabaseAccountRepository,
   supabaseClientRepository,
   supabaseConversationRepository,
   supabaseRepository,
+  supabaseReviewRepository,
 } from "./supabase";
 
 /**
@@ -39,6 +42,9 @@ export const conversationRepository: ConversationRepository = useSupabase
 export const accountRepository: AccountRepository = useSupabase
   ? supabaseAccountRepository
   : memoryAccountRepository;
+export const reviewRepository: ReviewRepository = useSupabase
+  ? supabaseReviewRepository
+  : memoryReviewRepository;
 
 export type {
   AccountRepository,
@@ -46,4 +52,5 @@ export type {
   ConversationRepository,
   ProfessionalFilters,
   ProfessionalRepository,
+  ReviewRepository,
 } from "./repository";
