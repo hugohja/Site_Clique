@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
-import { cleanEventLabel, hasUnread, type Conversation } from "@/lib/types";
+import { cleanEventLabel, eventDateTimeError, hasUnread, type Conversation } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 
 /** Inbox: conversas do usuário logado (cliente ou profissional). */
@@ -32,6 +32,7 @@ export async function GET() {
         status: c.status,
         eventType: c.eventType,
         eventDate: c.eventDate,
+        eventTime: c.eventTime,
         professionalId: c.professionalId,
         agreedPrice: c.agreedPrice,
         otherName,
@@ -69,12 +70,15 @@ export async function POST(request: NextRequest) {
   // Tipo de evento: uma das sugestões ou texto livre ("Outros").
   const eventType = cleanEventLabel(String(body.eventType ?? ""));
   const eventDate = String(body.eventDate ?? "");
+  const eventTime = String(body.eventTime ?? "");
   const eventLocation = String(body.eventLocation ?? "").trim();
   const firstMessage = String(body.message ?? "").trim();
 
   const errors: string[] = [];
   if (eventType.length < 2) errors.push("Informe o tipo de evento.");
-  if (!eventDate) errors.push("Informe a data do evento.");
+  // Data + hora: nada no passado; se for hoje, mínimo 2h de antecedência (fuso BR).
+  const dateErr = eventDateTimeError(eventDate, eventTime);
+  if (dateErr) errors.push(dateErr);
   if (eventLocation.length < 3) errors.push("Informe o local do evento.");
   if (firstMessage.length < 5) errors.push("Escreva uma mensagem inicial.");
 
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
     clientWhatsapp: client.whatsapp,
     eventType,
     eventDate,
+    eventTime,
     eventLocation,
     firstMessage: {
       id: randomUUID(),

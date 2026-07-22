@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EVENT_TYPES } from "@/lib/types";
+import { EVENT_TYPES, eventDateTimeError } from "@/lib/types";
 
 interface Me {
   account: { role: "profissional" | "cliente" } | null;
@@ -19,6 +19,8 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
   const [eventType, setEventType] = useState("");
   const [customEvent, setCustomEvent] = useState("");
   const backHere = `/profissional/${professionalId}/conversar`;
+  // Data mínima no seletor = hoje (data local do navegador; o servidor confere no fuso BR).
+  const todayStr = new Date().toLocaleDateString("en-CA");
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -42,6 +44,13 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
       setError("Informe o tipo de evento.");
       return;
     }
+    const eventDate = String(data.get("eventDate") ?? "");
+    const eventTime = String(data.get("eventTime") ?? "");
+    const dateErr = eventDateTimeError(eventDate, eventTime);
+    if (dateErr) {
+      setError(dateErr);
+      return;
+    }
     setSending(true);
     try {
       const res = await fetch("/api/conversas", {
@@ -50,7 +59,8 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
         body: JSON.stringify({
           professionalId,
           eventType: finalEvent,
-          eventDate: data.get("eventDate"),
+          eventDate,
+          eventTime,
           eventLocation: data.get("eventLocation"),
           message: data.get("message"),
         }),
@@ -141,7 +151,17 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
           </div>
           <div className="field">
             <label htmlFor="eventDate">Data do evento</label>
-            <input id="eventDate" name="eventDate" type="date" required />
+            <input id="eventDate" name="eventDate" type="date" required min={todayStr} />
+          </div>
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="eventTime">Horário do evento</label>
+            <input id="eventTime" name="eventTime" type="time" required />
+            <span className="form-hint">
+              Se for hoje, escolha um horário com pelo menos 2 horas de antecedência.
+            </span>
           </div>
         </div>
 
