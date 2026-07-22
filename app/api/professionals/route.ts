@@ -11,6 +11,7 @@ import {
   type PortfolioPhotoInput,
   toPublicProfessional,
 } from "@/lib/types";
+import { isProSort } from "@/lib/ranking";
 import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
@@ -19,10 +20,12 @@ import { hasContactInfo } from "@/lib/moderation";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
+  const ordenar = params.get("ordenar");
   const professionals = await repository.list({
     city: params.get("cidade") ?? undefined,
     eventType: params.get("evento") ?? undefined,
     type: params.get("tipo") ?? undefined,
+    sort: isProSort(ordenar) ? ordenar : undefined,
   });
   // Nunca expor contato/identidade em endpoint público.
   return NextResponse.json(professionals.map(toPublicProfessional));
