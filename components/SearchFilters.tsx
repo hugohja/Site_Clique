@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PROFESSIONAL_TYPES } from "@/lib/types";
 import { PRO_SORTS } from "@/lib/ranking";
 import CityField from "@/components/CityField";
+import FancySelect from "@/components/FancySelect";
 
 /**
  * Filtro de busca. A cidade usa autocomplete + localização (todas as cidades do
@@ -63,36 +64,30 @@ export default function SearchFilters({
           }}
           placeholder="Cidade — todas"
         />
-        <select value={event} onChange={(e) => setEvent(e.target.value)} aria-label="Tipo de evento">
-          <option value="">Todos os eventos</option>
-          {eventOptions.map((ev) => (
-            <option key={ev} value={ev}>
-              {ev}
-            </option>
-          ))}
-        </select>
-        <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Tipo de profissional">
-          <option value="">Todos os tipos</option>
-          {PROFESSIONAL_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-        <select
+        <FancySelect
+          value={event}
+          onChange={setEvent}
+          ariaLabel="Tipo de evento"
+          options={[{ value: "", label: "Todos os eventos" }, ...eventOptions.map((ev) => ({ value: ev, label: ev }))]}
+        />
+        <FancySelect
+          value={type}
+          onChange={setType}
+          ariaLabel="Tipo de profissional"
+          options={[
+            { value: "", label: "Todos os tipos" },
+            ...PROFESSIONAL_TYPES.map((t) => ({ value: t.value, label: t.label })),
+          ]}
+        />
+        <FancySelect
           value={sort}
-          onChange={(e) => {
-            setSort(e.target.value);
-            apply({ sort: e.target.value });
+          onChange={(v) => {
+            setSort(v);
+            apply({ sort: v });
           }}
-          aria-label="Ordenar por"
-        >
-          {PRO_SORTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          ariaLabel="Ordenar por"
+          options={PRO_SORTS.map((s) => ({ value: s.value, label: s.label }))}
+        />
         <button type="submit" className="btn">
           Buscar
         </button>

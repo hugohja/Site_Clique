@@ -195,23 +195,93 @@ h3 {
   }
 }
 
-.filter-bar select {
-  appearance: none;
+/* ---- Dropdown estilizado (FancySelect) ---- */
+.fs {
+  position: relative;
+}
+.fs-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   font: inherit;
   font-size: 0.92rem;
-  padding: 0.65rem 2.2rem 0.65rem 0.8rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23b6ac9c' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
-
-.filter-bar select:focus-visible {
-  outline: 1px solid var(--amber);
-  outline-offset: 1px;
+.fs-btn:hover {
+  border-color: color-mix(in srgb, var(--text-dim) 60%, var(--border));
+}
+.fs.open .fs-btn,
+.fs-btn:focus-visible {
+  outline: none;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+.fs-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fs-arrow {
+  display: flex;
+  color: var(--text-dim);
+  transition: transform 0.16s ease;
+}
+.fs.open .fs-arrow {
+  transform: rotate(180deg);
+}
+.fs-list {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+  max-height: 290px;
+  overflow-y: auto;
+  animation: fs-pop 0.12s ease;
+}
+@keyframes fs-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.fs-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: calc(var(--radius) - 3px);
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.fs-option.active {
+  background: var(--surface-2);
+}
+.fs-option.sel {
+  color: var(--amber);
+  font-weight: 600;
+}
+.fs-check {
+  color: var(--amber);
+  font-size: 0.85rem;
 }
 
 .btn {
