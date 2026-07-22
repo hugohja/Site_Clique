@@ -50,6 +50,17 @@ export interface PixCharge {
   qrCodeBase64: string; // imagem do QR (base64 PNG)
   ticketUrl: string; // página de pagamento do MP
   amount: number;
+  expiresAt: string; // quando o PIX expira (ISO 8601), "" se sem expiração
+}
+
+/**
+ * Formata uma data no ISO 8601 com offset de Brasília (UTC-3, fixo), como o
+ * Mercado Pago espera em date_of_expiration (ex: 2026-07-22T18:35:00.000-03:00).
+ */
+function mpExpirationDate(minutesFromNow: number): string {
+  const target = Date.now() + minutesFromNow * 60_000;
+  // Desloca pra "wall clock" de Brasília e troca o Z pelo offset -03:00.
+  return new Date(target - 3 * 3_600_000).toISOString().replace("Z", "-03:00");
 }
 
 /**
@@ -62,7 +73,10 @@ export async function mpCreatePixCharge(input: {
   payerEmail: string;
   externalReference: string;
   idempotencyKey: string;
+  /** Minutos até o PIX expirar (padrão 30). */
+  expiresInMinutes?: number;
 }): Promise<PixCharge> {
+  const dateOfExpiration = mpExpirationDate(input.expiresInMinutes ?? 30);
   const body = await mpFetch("/v1/payments", {
     method: "POST",
     headers: { "X-Idempotency-Key": input.idempotencyKey },
@@ -71,6 +85,7 @@ export async function mpCreatePixCharge(input: {
       description: input.description,
       payment_method_id: "pix",
       external_reference: input.externalReference,
+      date_of_expiration: dateOfExpiration,
       payer: { email: input.payerEmail },
     }),
   });
@@ -84,6 +99,7 @@ export async function mpCreatePixCharge(input: {
     qrCodeBase64: String(poi.qr_code_base64 ?? ""),
     ticketUrl: String(poi.ticket_url ?? ""),
     amount: Number(body.transaction_amount ?? input.amount),
+    expiresAt: String(body.date_of_expiration ?? dateOfExpiration),
   };
 }
 

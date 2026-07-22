@@ -14,6 +14,13 @@ interface Payload {
 
 const brl = formatBRL;
 
+/** Segundos → "M:SS" pra contagem regressiva do PIX. */
+function mmss(total: number): string {
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 /**
  * Checkout da custódia (fase de teste: pagamento SIMULADO). Só o cliente da
  * conversa, com a proposta aceita, pode pagar. Ao confirmar, chama a rota de
@@ -23,6 +30,7 @@ interface PixCharge {
   qrCode: string;
   qrCodeBase64: string;
   ticketUrl: string;
+  expiresAt: string;
 }
 
 export default function CheckoutView({ conversationId }: { conversationId: string }) {
@@ -32,9 +40,30 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
   const [pixEnabled, setPixEnabled] = useState(false);
   const [manualPixKey, setManualPixKey] = useState("");
   const [pixCharge, setPixCharge] = useState<PixCharge | null>(null);
+  const [attempt, setAttempt] = useState(1);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const expired = remaining === 0;
+
+  // Contagem regressiva até o PIX expirar (30 min). Zera quando um novo é gerado.
+  useEffect(() => {
+    if (!pixCharge?.expiresAt) {
+      setRemaining(null);
+      return;
+    }
+    const target = Date.parse(pixCharge.expiresAt);
+    if (Number.isNaN(target)) {
+      setRemaining(null);
+      return;
+    }
+    const tick = () => setRemaining(Math.max(0, Math.round((target - Date.now()) / 1000)));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [pixCharge?.expiresAt]);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/conversas/${conversationId}`, { cache: "no-store" });
@@ -101,22 +130,40 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
   }
 
   // PIX real: gera a cobrança no Mercado Pago e mostra o QR / copia e cola.
-  async function payPix() {
+  async function payPix(att = attempt) {
     setError(null);
     setPaying(true);
     try {
-      const res = await fetch(`/api/conversas/${conversationId}/pagamento/pix`, { method: "POST" });
+      const res = await fetch(`/api/conversas/${conversationId}/pagamento/pix`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attempt: att }),
+      });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body.error ?? "Não foi possível gerar o PIX.");
         return;
       }
-      setPixCharge({ qrCode: body.qrCode, qrCodeBase64: body.qrCodeBase64, ticketUrl: body.ticketUrl });
+      setPixCharge({
+        qrCode: body.qrCode,
+        qrCodeBase64: body.qrCodeBase64,
+        ticketUrl: body.ticketUrl,
+        expiresAt: body.expiresAt ?? "",
+      });
     } catch {
       setError("Falha de conexão. Tente de novo.");
     } finally {
       setPaying(false);
     }
+  }
+
+  // PIX expirou: gera outro (nova tentativa → cobrança nova no Mercado Pago).
+  function regeneratePix() {
+    const next = attempt + 1;
+    setAttempt(next);
+    setPixCharge(null);
+    setRemaining(null);
+    payPix(next);
   }
 
   function pay() {
@@ -214,7 +261,25 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
                     <span className="mono">aprovação na hora</span>
                   </button>
                 </div>
-                {pixCharge ? (
+                {pixCharge && expired ? (
+                  <div className="method-body">
+                    <div className="pix-expired">
+                      <p className="pix-expired-title mono">⏱ PIX expirado</p>
+                      <p className="form-hint">
+                        Esse código passou dos 30 minutos e não vale mais. Gere um novo pra continuar
+                        — o valor é o mesmo.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-coral"
+                        disabled={paying}
+                        onClick={regeneratePix}
+                      >
+                        {paying ? "Gerando…" : "Gerar novo PIX"}
+                      </button>
+                    </div>
+                  </div>
+                ) : pixCharge ? (
                   <div className="method-body">
                     <div className="pix-real">
                       {pixCharge.qrCodeBase64 ? (
@@ -237,6 +302,11 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
                         </button>
                       </div>
                     </div>
+                    {remaining !== null && (
+                      <p className={`pix-timer mono ${remaining <= 60 ? "warn" : ""}`}>
+                        ⏱ Expira em {mmss(remaining)}
+                      </p>
+                    )}
                     <p className="pix-waiting mono">⏳ Aguardando a confirmação do pagamento…</p>
                     <p className="form-hint">
                       Assim que o PIX cair, o contato é liberado automaticamente — esta tela avança
@@ -246,8 +316,8 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
                 ) : (
                   <div className="method-body">
                     <p className="form-hint">
-                      Clique em pagar pra gerar o PIX. O valor fica em custódia da Clique até você
-                      confirmar o serviço.
+                      Clique em pagar pra gerar o PIX. Você tem 30 minutos pra pagar; depois disso é só
+                      gerar outro. O valor fica em custódia da Clique até você confirmar o serviço.
                     </p>
                   </div>
                 )}
@@ -343,10 +413,19 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
             <strong>{brl(price)}</strong>
           </div>
           {error && <div className="form-error">{error}</div>}
-          {pixCharge ? (
+          {pixCharge && !expired ? (
             <p className="pix-waiting mono" style={{ textAlign: "center" }}>
-              ⏳ Aguardando pagamento…
+              ⏳ Aguardando pagamento…{remaining !== null ? ` (${mmss(remaining)})` : ""}
             </p>
+          ) : pixCharge && expired ? (
+            <button
+              type="button"
+              className="btn btn-coral checkout-pay"
+              disabled={paying}
+              onClick={regeneratePix}
+            >
+              {paying ? "Gerando…" : "Gerar novo PIX"}
+            </button>
           ) : (
             <button
               type="button"

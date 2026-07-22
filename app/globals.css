@@ -2393,6 +2393,31 @@ h3 {
   color: var(--amber);
   font-size: 0.85rem;
 }
+.pix-timer {
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.pix-timer.warn {
+  color: var(--coral);
+}
+.pix-expired {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--coral);
+  border-left: 3px solid var(--coral);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--coral) 8%, var(--surface));
+}
+.pix-expired-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--coral);
+}
 .card-fake {
   padding: 1rem;
   border: 1px solid var(--border);
