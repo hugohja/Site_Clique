@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import { isProSort } from "@/lib/ranking";
 import { notifyWelcome } from "@/lib/notify";
+import { isAdminEmail } from "@/lib/admin";
 import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
@@ -28,8 +29,11 @@ export async function GET(request: NextRequest) {
     type: params.get("tipo") ?? undefined,
     sort: isProSort(ordenar) ? ordenar : undefined,
   });
-  // Nunca expor contato/identidade em endpoint público.
-  return NextResponse.json(professionals.map(toPublicProfessional));
+  // Nunca expor contato/identidade em endpoint público; contas de admin não
+  // são profissionais e ficam fora da listagem.
+  return NextResponse.json(
+    professionals.filter((p) => !isAdminEmail(p.email)).map(toPublicProfessional)
+  );
 }
 
 export async function POST(request: NextRequest) {

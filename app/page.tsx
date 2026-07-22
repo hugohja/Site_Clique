@@ -3,6 +3,7 @@ import SearchFilters from "@/components/SearchFilters";
 import { accountRepository, clientRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { EVENT_TYPES } from "@/lib/types";
+import { isAdminEmail } from "@/lib/admin";
 import { isProSort, type ProSort } from "@/lib/ranking";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +27,15 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   // `cidade` presente (mesmo vazia) = escolha explícita.
   const effectiveCity = cidade === undefined ? ownCity ?? "" : cidade;
 
-  const professionals = await repository.list({
-    city: effectiveCity || undefined,
-    eventType: evento,
-    type: tipo,
-    sort,
-  });
+  const professionals = (
+    await repository.list({
+      city: effectiveCity || undefined,
+      eventType: evento,
+      type: tipo,
+      sort,
+    })
+    // Contas de admin não são profissionais — nunca aparecem na busca pública.
+  ).filter((p) => !isAdminEmail(p.email));
   const hasFilter = Boolean(effectiveCity || evento || tipo);
 
   // Filtro de evento: só os tipos PRINCIPAIS (curados). Especialidades livres

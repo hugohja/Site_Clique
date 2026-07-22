@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { repository, reviewRepository } from "@/lib/data";
 import { formatRating, typeLabel } from "@/lib/format";
 import { cleanUnavailableDates, isReservedLabel, todayInBrazil, verificationLabel } from "@/lib/types";
+import { isAdminEmail } from "@/lib/admin";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import ProfileCTA from "@/components/ProfileCTA";
 
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const pro = await repository.getById(id);
-  if (!pro) notFound();
+  // Conta de admin não é profissional — o perfil não existe pro público.
+  if (!pro || isAdminEmail(pro.email)) notFound();
 
   // Capa primeiro, resto na ordem salva.
   const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
