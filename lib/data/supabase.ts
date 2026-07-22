@@ -759,8 +759,13 @@ export const supabaseConversationRepository: ConversationRepository = {
 
   async markRead(conversationId: string, role: "cliente" | "profissional") {
     const col = role === "cliente" ? "client_last_read_at" : "pro_last_read_at";
-    await sbUpdate("conversations", [q.eq("id", conversationId)], {
-      [col]: new Date().toISOString(),
-    });
+    try {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], {
+        [col]: new Date().toISOString(),
+      });
+    } catch {
+      // Coluna ainda não migrada: não quebra a conversa. O "não lida" só passa
+      // a zerar de fato quando o ALTER (client_last_read_at/pro_last_read_at) rodar.
+    }
   },
 };
