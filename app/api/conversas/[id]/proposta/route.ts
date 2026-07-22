@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { conversationRepository } from "@/lib/data";
 import { resolveConversationViewer } from "@/lib/conversationAuth";
+import { notifyProposal } from "@/lib/notify";
 
 /**
  * Envia uma proposta ou contraproposta. O profissional abre o orçamento; a
@@ -47,5 +48,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // Snap aos centavos (evita 2000.499999); o valor é sempre positivo já validado.
   const updated = await conversationRepository.sendProposal(id, Math.round(amount * 100) / 100, role);
+  if (updated) after(() => notifyProposal(updated, request.nextUrl.origin));
   return NextResponse.json({ status: updated?.status, proposal: updated?.proposal });
 }

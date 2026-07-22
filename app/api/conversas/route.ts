@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { censorContactAttempts } from "@/lib/moderation";
 import { cleanEventLabel, eventDateTimeError, hasUnread, type Conversation } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
+import { notifyNewConversation } from "@/lib/notify";
 
 /** Inbox: conversas do usuário logado (cliente ou profissional). */
 export async function GET() {
@@ -112,6 +113,9 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     },
   });
+
+  // Avisa o profissional do novo pedido — depois da resposta, sem travar.
+  after(() => notifyNewConversation(conversation, request.nextUrl.origin));
 
   return NextResponse.json({ id: conversation.id }, { status: 201 });
 }
