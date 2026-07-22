@@ -361,6 +361,31 @@ export type ConversationInput = Pick<
   "professionalId" | "clientId" | "eventType" | "eventDate" | "eventTime" | "eventLocation"
 >;
 
+/** Avaliação do cliente após o serviço concluído. Uma por conversa. */
+export interface Review {
+  id: string;
+  conversationId: string;
+  professionalId: string;
+  clientId: string;
+  /** Nome do cliente no momento da avaliação (público no perfil). */
+  clientName: string;
+  /** 1 a 5 estrelas. */
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export type ReviewInput = Pick<
+  Review,
+  "conversationId" | "professionalId" | "clientId" | "clientName" | "rating" | "comment"
+>;
+
+/** Normaliza uma nota pro intervalo 1–5 (inteiro). */
+export function cleanRating(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(5, Math.max(1, Math.round(n)));
+}
+
 /** Antecedência mínima para eventos no mesmo dia (2 horas). */
 export const MIN_EVENT_LEAD_HOURS = 2;
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { accountRepository, conversationRepository, repository } from "@/lib/data";
+import { accountRepository, conversationRepository, repository, reviewRepository } from "@/lib/data";
 import { PAID_STATUSES, hasUnread, toPublicProfessional } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 import { viewerRoleFor } from "@/lib/conversationAuth";
@@ -36,6 +36,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const paid = PAID_STATUSES.includes(conversation.status);
   const { clientWhatsapp, confirmationCode, ...rest } = conversation;
 
+  // Avaliação já feita (se houver) — some o formulário e mostra a nota dada.
+  const review = conversation.status === "concluido" ? await reviewRepository.getByConversation(id) : null;
+
   return NextResponse.json({
     viewerRole: role,
     conversation: {
@@ -45,5 +48,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     },
     professional: toPublicProfessional(professional),
     contact: paid ? { professionalWhatsapp: professional.whatsapp, clientWhatsapp } : null,
+    review: review ? { rating: review.rating, comment: review.comment } : null,
   });
 }

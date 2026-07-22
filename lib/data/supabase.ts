@@ -13,6 +13,8 @@ import type {
   Professional,
   ProfessionalInput,
   ProfessionalType,
+  Review,
+  ReviewInput,
   VerificationStatus,
 } from "@/lib/types";
 import { COMMISSION_RATE } from "@/lib/types";
@@ -23,6 +25,7 @@ import type {
   ConversationRepository,
   ProfessionalFilters,
   ProfessionalRepository,
+  ReviewRepository,
 } from "./repository";
 
 /**
@@ -436,6 +439,14 @@ export const supabaseRepository: ProfessionalRepository = {
     await sbUpdate("professionals", [q.eq("id", id)], { no_show_count: pro.noShowCount + 1 });
     return this.getById(id);
   },
+
+  async updateRating(id, rating, reviewCount) {
+    await sbUpdate("professionals", [q.eq("id", id)], {
+      rating,
+      review_count: reviewCount,
+    });
+    return this.getById(id);
+  },
 };
 
 export const supabaseClientRepository: ClientRepository = {
@@ -769,6 +780,75 @@ export const supabaseConversationRepository: ConversationRepository = {
     } catch {
       // Coluna ainda não migrada: não quebra a conversa. O "não lida" só passa
       // a zerar de fato quando o ALTER (client_last_read_at/pro_last_read_at) rodar.
+    }
+  },
+};
+
+interface ReviewRow {
+  id: string;
+  conversation_id: string;
+  professional_id: string;
+  client_id: string;
+  client_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+function toReview(row: ReviewRow): Review {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    professionalId: row.professional_id,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    rating: row.rating,
+    comment: row.comment,
+    createdAt: iso(row.created_at),
+  };
+}
+
+export const supabaseReviewRepository: ReviewRepository = {
+  async create(input: ReviewInput) {
+    const id = randomUUID();
+    await sbInsert("reviews", {
+      id,
+      conversation_id: input.conversationId,
+      professional_id: input.professionalId,
+      client_id: input.clientId,
+      client_name: input.clientName,
+      rating: input.rating,
+      comment: input.comment,
+    });
+    const rows = await sbSelect<ReviewRow>("reviews", [q.select("*"), q.eq("id", id), q.limit(1)]);
+    if (!rows[0]) throw new Error("Falha ao salvar a avaliação.");
+    return toReview(rows[0]);
+  },
+
+  async listByProfessional(professionalId: string) {
+    try {
+      const rows = await sbSelect<ReviewRow>("reviews", [
+        q.select("*"),
+        q.eq("professional_id", professionalId),
+        q.order("created_at.desc"),
+      ]);
+      return rows.map(toReview);
+    } catch {
+      // Tabela reviews ainda não migrada: não quebra o perfil.
+      return [];
+    }
+  },
+
+  async getByConversation(conversationId: string) {
+    try {
+      const rows = await sbSelect<ReviewRow>("reviews", [
+        q.select("*"),
+        q.eq("conversation_id", conversationId),
+        q.limit(1),
+      ]);
+      return rows[0] ? toReview(rows[0]) : null;
+    } catch {
+      return null;
     }
   },
 };

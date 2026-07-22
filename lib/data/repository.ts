@@ -9,6 +9,8 @@ import type {
   Professional,
   ProfessionalInput,
   ProfessionalType,
+  Review,
+  ReviewInput,
   VerificationStatus,
 } from "@/lib/types";
 
@@ -50,6 +52,8 @@ export interface ProfessionalRepository {
   remove(id: string): Promise<void>;
   /** Registra um não comparecimento confirmado (sobe noShowCount). */
   registerNoShow(id: string): Promise<Professional | null>;
+  /** Atualiza a nota média e a contagem de avaliações (recalculadas a cada review). */
+  updateRating(id: string, rating: number, reviewCount: number): Promise<Professional | null>;
 }
 
 export interface ClientRepository {
@@ -129,4 +133,12 @@ export interface ConversationRepository {
   markPaidOut(conversationId: string): Promise<Conversation | null>;
   /** Marca a conversa como lida por um dos lados (ao abrir) — zera o "não lida". */
   markRead(conversationId: string, role: "cliente" | "profissional"): Promise<void>;
+}
+
+export interface ReviewRepository {
+  create(input: ReviewInput): Promise<Review>;
+  /** Avaliações de um profissional (mais recentes primeiro). */
+  listByProfessional(professionalId: string): Promise<Review[]>;
+  /** A avaliação de uma conversa, se já existir (impede avaliar duas vezes). */
+  getByConversation(conversationId: string): Promise<Review | null>;
 }
