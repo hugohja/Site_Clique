@@ -62,6 +62,14 @@ export default async function CarteiraPage() {
         evento. A comissão da plataforma já sai do valor liberado.
       </p>
 
+      {!pro?.payoutPixKey && (
+        <div className="wallet-alert">
+          <strong>Cadastre sua chave PIX para receber.</strong> Sem ela, a Clique não consegue te
+          repassar o dinheiro dos serviços concluídos.{" "}
+          <Link href="/configuracoes">Cadastrar chave PIX →</Link>
+        </div>
+      )}
+
       <div className="wallet-cards wallet-cards-3">
         <div className="wallet-card custody">
           <span className="wallet-label mono">em custódia</span>

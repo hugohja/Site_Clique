@@ -157,7 +157,11 @@ export default async function AdminPage() {
                       </p>
                     </div>
                   </div>
-                  <AdminPayoutActions conversationId={p.id} />
+                  <AdminPayoutActions
+                    conversationId={p.id}
+                    pixKey={pro?.payoutPixKey ?? null}
+                    amount={payout}
+                  />
                 </article>
               );
             })}

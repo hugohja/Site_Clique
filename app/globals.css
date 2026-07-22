@@ -2490,3 +2490,30 @@ h3 {
   flex-wrap: wrap;
   flex: 0 0 auto;
 }
+
+.payout-copy {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.wallet-alert {
+  margin-bottom: 1.2rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--coral);
+  border-left: 3px solid var(--coral);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--coral) 8%, var(--surface));
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.wallet-alert strong {
+  color: var(--text);
+}
+
+.wallet-alert a {
+  color: var(--amber);
+  font-weight: 600;
+  white-space: nowrap;
+}
