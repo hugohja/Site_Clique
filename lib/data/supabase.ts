@@ -824,6 +824,14 @@ export const supabaseConversationRepository: ConversationRepository = {
     return rows.map(toConversation);
   },
 
+  async listAll() {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toConversation);
+  },
+
   async markPaidOut(conversationId: string) {
     const conv = await fetchConversation(conversationId);
     if (!conv) return null;

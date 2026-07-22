@@ -2640,6 +2640,42 @@ h3 {
   flex-wrap: wrap;
 }
 
+/* ---- Métricas do painel admin ---- */
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
+}
+@media (max-width: 900px) {
+  .admin-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.metric-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.metric-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
 .wallet-alert {
   margin-bottom: 1.2rem;
   padding: 0.9rem 1.1rem;
