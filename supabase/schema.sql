@@ -130,6 +130,8 @@ create table if not exists conversations (
   commission_rate      real not null,
   confirmation_code    text, -- código do evento (custódia); só o cliente vê
   paid_out_at          timestamptz, -- quando o admin marcou o repasse (PIX manual) como feito
+  client_last_read_at  timestamptz, -- última vez que o cliente abriu (base do "não lida")
+  pro_last_read_at     timestamptz, -- última vez que o profissional abriu
   created_at           timestamptz not null default now()
 );
 -- Banco já existente? rode (atualiza o check de status e adiciona a coluna):
@@ -138,6 +140,8 @@ create table if not exists conversations (
 --   check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado'));
 -- alter table conversations add column if not exists confirmation_code text;
 -- alter table conversations add column if not exists paid_out_at timestamptz;
+-- alter table conversations add column if not exists client_last_read_at timestamptz;
+-- alter table conversations add column if not exists pro_last_read_at timestamptz;
 create index if not exists conversations_pro_idx on conversations (professional_id);
 create index if not exists conversations_client_idx on conversations (client_id);
 

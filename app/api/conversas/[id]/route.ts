@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { accountRepository, conversationRepository, repository } from "@/lib/data";
-import { PAID_STATUSES, toPublicProfessional } from "@/lib/types";
+import { PAID_STATUSES, hasUnread, toPublicProfessional } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 import { viewerRoleFor } from "@/lib/conversationAuth";
 
@@ -26,6 +26,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const role = viewerRoleFor(account, conversation);
   if (!role) {
     return NextResponse.json({ error: "Entre com sua conta para ver esta conversa." }, { status: 403 });
+  }
+
+  // Abrir a conversa marca como lida pra quem é participante — some o aviso.
+  if ((role === "cliente" || role === "profissional") && hasUnread(conversation, role)) {
+    await conversationRepository.markRead(id, role);
   }
 
   const paid = PAID_STATUSES.includes(conversation.status);

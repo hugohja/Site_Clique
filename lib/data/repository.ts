@@ -127,4 +127,6 @@ export interface ConversationRepository {
   listPendingPayouts(): Promise<Conversation[]>;
   /** Admin marca o repasse (PIX manual) como feito — grava paidOutAt. */
   markPaidOut(conversationId: string): Promise<Conversation | null>;
+  /** Marca a conversa como lida por um dos lados (ao abrir) — zera o "não lida". */
+  markRead(conversationId: string, role: "cliente" | "profissional"): Promise<void>;
 }
