@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { accountRepository, repository } from "@/lib/data";
 import {
   DOCUMENT_TYPES,
@@ -12,6 +12,7 @@ import {
   toPublicProfessional,
 } from "@/lib/types";
 import { isProSort } from "@/lib/ranking";
+import { notifyWelcome } from "@/lib/notify";
 import { isImageFile } from "@/lib/upload";
 import { storeImage } from "@/lib/storage";
 import { SESSION_COOKIE, createSession, hashPassword } from "@/lib/auth";
@@ -174,6 +175,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Já existe uma conta com esse e-mail." }, { status: 400 });
   }
   const token = await createSession(account.id);
+
+  // E-mail de boas-vindas — depois da resposta, sem travar o cadastro.
+  after(() => notifyWelcome({ to: loginEmail, name, role: "profissional" }, request.nextUrl.origin));
 
   const res = NextResponse.json(toPublicProfessional(professional), { status: 201 });
   res.cookies.set(SESSION_COOKIE, token, {

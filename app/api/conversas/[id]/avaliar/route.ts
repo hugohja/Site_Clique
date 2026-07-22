@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { clientRepository, repository, reviewRepository } from "@/lib/data";
 import { resolveConversationViewer } from "@/lib/conversationAuth";
 import { cleanRating } from "@/lib/types";
+import { notifyNewReview } from "@/lib/notify";
 
 /**
  * O cliente avalia o profissional depois do serviço concluído. Uma avaliação
@@ -55,6 +56,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const all = await reviewRepository.listByProfessional(conversation.professionalId);
   const avg = all.reduce((s, r) => s + r.rating, 0) / all.length;
   await repository.updateRating(conversation.professionalId, Math.round(avg * 10) / 10, all.length);
+
+  // Avisa o profissional da nova avaliação — depois da resposta, sem travar.
+  after(() =>
+    notifyNewReview(
+      {
+        professionalId: conversation.professionalId,
+        rating,
+        comment,
+        clientName: review.clientName,
+        eventType: conversation.eventType,
+      },
+      request.nextUrl.origin
+    )
+  );
 
   return NextResponse.json({ review });
 }

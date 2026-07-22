@@ -84,6 +84,63 @@ export async function notifyProposal(conv: Conversation, baseUrl: string): Promi
   }
 }
 
+/** E-mail de boas-vindas/confirmação quando a conta é criada. */
+export async function notifyWelcome(
+  input: { to: string; name: string; role: "profissional" | "cliente" },
+  baseUrl: string
+): Promise<void> {
+  if (!isEmailConfigured() || !input.to) return;
+  try {
+    const isPro = input.role === "profissional";
+    const first = input.name.trim().split(/\s+/)[0] || input.name;
+    const { html, text } = renderEmail({
+      heading: `Bem-vindo(a) ao Clique, ${first}!`,
+      lines: isPro
+        ? [
+            "Sua conta profissional foi criada e seu perfil já entra na busca.",
+            "Sua identidade fica em análise — ao ser verificada, você ganha o selo ✓ e mais destaque na busca.",
+            "Os pedidos chegam pelo chat; seu contato só é revelado ao cliente depois do pagamento.",
+          ]
+        : [
+            "Sua conta foi criada. Agora é só achar um profissional e conversar pelo chat.",
+            "O pagamento fica em custódia da Clique e só é liberado quando você confirmar, com o código, que o profissional compareceu.",
+          ],
+      cta: isPro ? "Abrir minhas configurações" : "Encontrar profissionais",
+      ctaUrl: isPro ? `${baseUrl.replace(/\/$/, "")}/configuracoes` : baseUrl.replace(/\/$/, ""),
+    });
+    await sendEmail({ to: input.to, subject: "Bem-vindo(a) ao Clique", html, text });
+  } catch {
+    /* best-effort */
+  }
+}
+
+/** Profissional recebeu uma nova avaliação. */
+export async function notifyNewReview(
+  input: { professionalId: string; rating: number; comment: string; clientName: string; eventType: string },
+  baseUrl: string
+): Promise<void> {
+  if (!isEmailConfigured()) return;
+  try {
+    const pro = await repository.getById(input.professionalId);
+    if (!pro?.email) return;
+    const stars = "★".repeat(input.rating) + "☆".repeat(Math.max(0, 5 - input.rating));
+    const lines = [
+      `${input.clientName} avaliou o seu serviço de ${input.eventType}: ${stars} (${input.rating}/5).`,
+    ];
+    if (input.comment) lines.push(`"${input.comment}"`);
+    lines.push("A avaliação já aparece no seu perfil e entra no cálculo da sua nota.");
+    const { html, text } = renderEmail({
+      heading: "Você recebeu uma nova avaliação",
+      lines,
+      cta: "Ver meu perfil",
+      ctaUrl: `${baseUrl.replace(/\/$/, "")}/profissional/${pro.id}`,
+    });
+    await sendEmail({ to: pro.email, subject: `Nova avaliação: ${stars}`, html, text });
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** Proposta aceita → avisa quem tinha feito a proposta. */
 export async function notifyProposalAccepted(conv: Conversation, baseUrl: string): Promise<void> {
   if (!isEmailConfigured() || !conv.proposal) return;
