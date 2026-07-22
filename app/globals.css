@@ -322,6 +322,93 @@ h3 {
   padding-block: 2rem;
 }
 
+/* ---- Landing: como funciona + CTA profissional ---- */
+.how {
+  padding-block: 2.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.how-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.4rem;
+}
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1rem;
+}
+@media (max-width: 760px) {
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+}
+.how-step {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.3rem;
+  background: var(--bg);
+}
+.how-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+.how-step h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+.how-step p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  margin-top: 1.4rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.trust-item {
+  white-space: nowrap;
+}
+.pro-cta {
+  padding-block: 2.5rem;
+}
+.pro-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--coral);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.8rem;
+  background: var(--surface);
+}
+.pro-cta-inner h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+}
+.pro-cta-inner p {
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  max-width: 560px;
+}
+.pro-cta-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .results-head {
   display: flex;
   align-items: baseline;
