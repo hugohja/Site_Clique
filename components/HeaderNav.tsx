@@ -19,6 +19,7 @@ export default function HeaderNav() {
   const router = useRouter();
   const pathname = usePathname();
   const [me, setMe] = useState<Me | null>(null);
+  const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +33,18 @@ export default function HeaderNav() {
       active = false;
     };
     // Recarrega o estado da sessão a cada navegação.
+  }, [pathname]);
+
+  // Selo de conversas não lidas — atualiza a cada navegação.
+  useEffect(() => {
+    let active = true;
+    fetch("/api/conversas/unread")
+      .then((r) => r.json())
+      .then((d) => active && setUnread(Number(d.count) || 0))
+      .catch(() => active && setUnread(0));
+    return () => {
+      active = false;
+    };
   }, [pathname]);
 
   // Fecha o menu ao trocar de página.
@@ -89,8 +102,9 @@ export default function HeaderNav() {
       <Link href="/" className="nav-link">
         Buscar
       </Link>
-      <Link href="/conversas" className="nav-link">
+      <Link href="/conversas" className="nav-link nav-link-badge">
         Conversas
+        {unread > 0 && <span className="nav-badge" aria-label={`${unread} não lidas`}>{unread}</span>}
       </Link>
 
       <div className="account-menu" ref={menuRef}>
