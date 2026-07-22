@@ -120,6 +120,15 @@ create table if not exists sessions (
 );
 create index if not exists sessions_account_idx on sessions (account_id);
 
+-- Tokens de redefinição de senha ("esqueci minha senha"): uso único, com validade.
+create table if not exists password_resets (
+  token      text primary key,
+  account_id uuid not null references accounts (id) on delete cascade,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+alter table password_resets enable row level security;
+
 -- ---------- Conversas (chat + máquina de estados) ----------
 create table if not exists conversations (
   id                   uuid primary key default gen_random_uuid(),
