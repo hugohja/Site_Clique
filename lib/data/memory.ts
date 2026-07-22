@@ -211,6 +211,11 @@ export const memoryRepository: ProfessionalRepository = {
     pro.reviewCount = reviewCount;
     return pro;
   },
+
+  async existsByCpf(cpf: string) {
+    const digits = cpf.replace(/\D/g, "");
+    return digits.length > 0 && store().some((p) => p.identity.cpf === digits);
+  },
 };
 
 export const memoryClientRepository: ClientRepository = {
@@ -263,6 +268,11 @@ export const memoryClientRepository: ClientRepository = {
     const arr = clients();
     const i = arr.findIndex((c) => c.id === id);
     if (i >= 0) arr.splice(i, 1);
+  },
+
+  async existsByCpf(cpf: string) {
+    const digits = cpf.replace(/\D/g, "");
+    return digits.length > 0 && clients().some((c) => c.identity.cpf === digits);
   },
 };
 

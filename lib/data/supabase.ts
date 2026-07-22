@@ -450,6 +450,17 @@ export const supabaseRepository: ProfessionalRepository = {
     });
     return this.getById(id);
   },
+
+  async existsByCpf(cpf: string) {
+    const digits = cpf.replace(/\D/g, "");
+    if (!digits) return false;
+    const rows = await sbSelect<{ cpf: string }>("professional_identities", [
+      q.select("cpf"),
+      q.eq("cpf", digits),
+      q.limit(1),
+    ]);
+    return rows.length > 0;
+  },
 };
 
 export const supabaseClientRepository: ClientRepository = {
@@ -509,6 +520,17 @@ export const supabaseClientRepository: ClientRepository = {
 
   async remove(id) {
     await sbDelete("clients", [q.eq("id", id)]);
+  },
+
+  async existsByCpf(cpf: string) {
+    const digits = cpf.replace(/\D/g, "");
+    if (!digits) return false;
+    const rows = await sbSelect<{ cpf: string }>("client_identities", [
+      q.select("cpf"),
+      q.eq("cpf", digits),
+      q.limit(1),
+    ]);
+    return rows.length > 0;
   },
 };
 
