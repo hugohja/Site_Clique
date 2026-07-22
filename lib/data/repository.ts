@@ -13,11 +13,14 @@ import type {
   ReviewInput,
   VerificationStatus,
 } from "@/lib/types";
+import type { ProSort } from "@/lib/ranking";
 
 export interface ProfessionalFilters {
   city?: string;
   eventType?: EventType | string;
   type?: ProfessionalType | string;
+  /** Ordenação da busca (padrão: relevância). */
+  sort?: ProSort;
 }
 
 /**

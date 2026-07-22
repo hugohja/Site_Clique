@@ -3,13 +3,15 @@ import SearchFilters from "@/components/SearchFilters";
 import { accountRepository, clientRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { EVENT_TYPES } from "@/lib/types";
+import { isProSort, type ProSort } from "@/lib/ranking";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ cidade?: string; evento?: string; tipo?: string }>;
+type SearchParams = Promise<{ cidade?: string; evento?: string; tipo?: string; ordenar?: string }>;
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
-  const { cidade, evento, tipo } = await searchParams;
+  const { cidade, evento, tipo, ordenar } = await searchParams;
+  const sort: ProSort = isProSort(ordenar) ? ordenar : "relevancia";
 
   // Cidade da conta logada — usada pra filtrar automaticamente por padrão.
   const account = await currentAccount((id) => accountRepository.getById(id));
@@ -28,6 +30,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     city: effectiveCity || undefined,
     eventType: evento,
     type: tipo,
+    sort,
   });
   const hasFilter = Boolean(effectiveCity || evento || tipo);
 
@@ -53,6 +56,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             cidade={effectiveCity}
             evento={evento}
             tipo={tipo}
+            ordenar={sort}
             ownCity={ownCity}
             eventOptions={eventOptions}
           />

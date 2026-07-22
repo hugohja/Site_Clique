@@ -326,6 +326,32 @@ h3 {
   font-size: 0.88rem;
 }
 
+.pro-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pro-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pro-badge.top {
+  color: #a8760a;
+  background: color-mix(in srgb, #f5a623 22%, transparent);
+}
+
+.pro-badge.verified {
+  color: #1a7f37;
+  background: color-mix(in srgb, #24a148 18%, transparent);
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

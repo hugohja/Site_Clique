@@ -18,6 +18,7 @@ import type {
   VerificationStatus,
 } from "@/lib/types";
 import { COMMISSION_RATE } from "@/lib/types";
+import { rankProfessionals } from "@/lib/ranking";
 import { q, sbDelete, sbInsert, sbSelect, sbUpdate } from "@/lib/supabase";
 import type {
   AccountRepository,
@@ -329,7 +330,8 @@ export const supabaseRepository: ProfessionalRepository = {
     if (filters.type) pairs.push(q.eq("type", String(filters.type)));
     if (filters.eventType) pairs.push(q.contains("specialties", String(filters.eventType)));
     const rows = await sbSelect<ProRow>("professionals", pairs);
-    return rows.map(toProfessional);
+    // Ordenação de destaque/relevância é feita em memória (nota, verificação, etc.).
+    return rankProfessionals(rows.map(toProfessional), filters.sort ?? "relevancia");
   },
 
   async getById(id: string) {

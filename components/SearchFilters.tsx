@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROFESSIONAL_TYPES } from "@/lib/types";
+import { PRO_SORTS } from "@/lib/ranking";
 import CityField from "@/components/CityField";
 
 /**
@@ -14,12 +15,14 @@ export default function SearchFilters({
   cidade = "",
   evento = "",
   tipo = "",
+  ordenar = "relevancia",
   ownCity,
   eventOptions = [],
 }: {
   cidade?: string;
   evento?: string;
   tipo?: string;
+  ordenar?: string;
   ownCity?: string | null;
   eventOptions?: string[];
 }) {
@@ -27,13 +30,16 @@ export default function SearchFilters({
   const [city, setCity] = useState(cidade);
   const [event, setEvent] = useState(evento);
   const [type, setType] = useState(tipo);
+  const [sort, setSort] = useState(ordenar);
 
-  function apply(next?: { city?: string }) {
+  function apply(next?: { city?: string; sort?: string }) {
     const params = new URLSearchParams();
     // cidade sempre presente (mesmo vazia) = escolha explícita, desliga o auto.
     params.set("cidade", next?.city ?? city);
     if (event) params.set("evento", event);
     if (type) params.set("tipo", type);
+    const s = next?.sort ?? sort;
+    if (s && s !== "relevancia") params.set("ordenar", s);
     router.push(`/?${params.toString()}`);
   }
 
@@ -70,6 +76,20 @@ export default function SearchFilters({
           {PROFESSIONAL_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => {
+            setSort(e.target.value);
+            apply({ sort: e.target.value });
+          }}
+          aria-label="Ordenar por"
+        >
+          {PRO_SORTS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </select>

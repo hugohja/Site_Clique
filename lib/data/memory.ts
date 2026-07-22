@@ -15,6 +15,7 @@ import type {
   VerificationStatus,
 } from "@/lib/types";
 import { COMMISSION_RATE } from "@/lib/types";
+import { rankProfessionals } from "@/lib/ranking";
 import { SEED_PROFESSIONALS } from "./seed";
 import type {
   AccountRepository,
@@ -109,8 +110,7 @@ export const memoryRepository: ProfessionalRepository = {
     if (filters.type) result = result.filter((p) => p.type === filters.type);
     if (filters.eventType)
       result = result.filter((p) => p.specialties.includes(filters.eventType as never));
-    // Ordem neutra (data de cadastro): sem camada de destaque ou priorização.
-    return result.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return rankProfessionals(result, filters.sort ?? "relevancia");
   },
 
   async getById(id: string) {
