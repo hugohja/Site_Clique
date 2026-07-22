@@ -76,6 +76,7 @@ interface ProRow {
   review_count: number | null;
   no_show_count: number | null;
   response_time_hours: number | null;
+  unavailable_dates: string[] | null;
   created_at: string;
   portfolio_items?: PortfolioRow[];
   professional_identities?: IdentityRow[] | IdentityRow | null;
@@ -199,6 +200,7 @@ function toProfessional(row: ProRow): Professional {
     noShowCount: row.no_show_count ?? 0,
     responseTimeHours: row.response_time_hours ?? null,
     portfolio,
+    unavailableDates: row.unavailable_dates ?? [],
     identity: toIdentity(one(row.professional_identities)),
     createdAt: iso(row.created_at),
   };
@@ -462,6 +464,16 @@ export const supabaseRepository: ProfessionalRepository = {
       q.limit(1),
     ]);
     return rows.length > 0;
+  },
+
+  async setUnavailableDates(id: string, dates: string[]) {
+    // Coluna nova — best-effort pra não travar antes da migração.
+    try {
+      await sbUpdate("professionals", [q.eq("id", id)], { unavailable_dates: dates });
+    } catch {
+      /* unavailable_dates ainda não migrada */
+    }
+    return this.getById(id);
   },
 };
 

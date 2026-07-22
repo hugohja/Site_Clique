@@ -11,7 +11,13 @@ interface Me {
 }
 
 /** Só uma conta de CLIENTE logada inicia conversa (contas são separadas). */
-export default function NovaConversaForm({ professionalId }: { professionalId: string }) {
+export default function NovaConversaForm({
+  professionalId,
+  unavailableDates = [],
+}: {
+  professionalId: string;
+  unavailableDates?: string[];
+}) {
   const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +55,10 @@ export default function NovaConversaForm({ professionalId }: { professionalId: s
     const dateErr = eventDateTimeError(eventDate, eventTime);
     if (dateErr) {
       setError(dateErr);
+      return;
+    }
+    if (unavailableDates.includes(eventDate)) {
+      setError("O profissional está indisponível nessa data. Escolha outro dia.");
       return;
     }
     setSending(true);

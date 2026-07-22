@@ -59,6 +59,8 @@ export interface ProfessionalRepository {
   updateRating(id: string, rating: number, reviewCount: number): Promise<Professional | null>;
   /** Já existe uma conta PROFISSIONAL com este CPF? (só dígitos) */
   existsByCpf(cpf: string): Promise<boolean>;
+  /** Define as datas de indisponibilidade (agenda) do profissional. */
+  setUnavailableDates(id: string, dates: string[]): Promise<Professional | null>;
 }
 
 export interface ClientRepository {

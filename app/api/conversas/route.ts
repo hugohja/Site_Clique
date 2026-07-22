@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
 
   const professional = await repository.getById(professionalId);
   if (!professional) errors.push("Profissional não encontrado.");
+  else if (professional.unavailableDates?.includes(eventDate)) {
+    errors.push("O profissional marcou essa data como indisponível. Escolha outra data.");
+  }
 
   const client = await clientRepository.getById(account.clientId ?? "");
   if (!client) errors.push("Conta de cliente não encontrada.");

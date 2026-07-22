@@ -150,9 +150,37 @@ export interface Professional {
   responseTimeHours: number | null;
   /** Ao menos MIN_PORTFOLIO_PHOTOS fotos reais (obrigatório no cadastro). Público. */
   portfolio: PortfolioItem[];
+  /**
+   * Datas (YYYY-MM-DD) em que o profissional está indisponível/ocupado. Público
+   * — o cliente vê pra não pedir uma data já tomada, e a criação de conversa
+   * bloqueia essas datas.
+   */
+  unavailableDates: string[];
   /** Dados de identidade — PRIVADOS. */
   identity: IdentityRecord;
   createdAt: string;
+}
+
+/** Normaliza uma lista de datas de indisponibilidade: só YYYY-MM-DD futuras
+ * (fuso BR), sem repetição, ordenadas. Máx. de um ano de datas. */
+export function cleanUnavailableDates(dates: unknown, today: string): string[] {
+  if (!Array.isArray(dates)) return [];
+  const seen = new Set<string>();
+  for (const d of dates) {
+    const s = String(d).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s) && s >= today) seen.add(s);
+  }
+  return [...seen].sort().slice(0, 366);
+}
+
+/** Data de hoje (YYYY-MM-DD) no fuso de Brasília. */
+export function todayInBrazil(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 /** Cliente (quem contrata). Conta própria, verificada, reutilizada nas conversas. */

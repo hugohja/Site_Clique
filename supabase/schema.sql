@@ -25,11 +25,13 @@ create table if not exists professionals (
   review_count        integer not null default 0,
   no_show_count       integer not null default 0, -- não comparecimentos confirmados
   response_time_hours real,
+  unavailable_dates   text[] not null default '{}', -- agenda: datas ocupadas (YYYY-MM-DD)
   created_at          timestamptz not null default now()
 );
 -- Banco já existente? rode:
 -- alter table professionals add column if not exists no_show_count integer not null default 0;
 -- alter table professionals add column if not exists payout_pix_key text;
+-- alter table professionals add column if not exists unavailable_dates text[] not null default '{}';
 create index if not exists professionals_city_idx on professionals (city);
 create index if not exists professionals_type_idx on professionals (type);
 create index if not exists professionals_specialties_idx on professionals using gin (specialties);
