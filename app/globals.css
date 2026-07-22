@@ -433,34 +433,69 @@ h3 {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
 }
 .review-title {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 700;
+  margin: 0;
+}
+.review-rate {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.review-hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }
 .review-stars {
-  display: flex;
-  gap: 0.15rem;
+  display: inline-flex;
+  gap: 0.25rem;
 }
 .review-star {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   line-height: 1;
   color: var(--border);
   padding: 0;
-  transition: color 0.1s ease, transform 0.1s ease;
+  transition: color 0.12s ease, transform 0.12s ease;
 }
 .review-star:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 .review-star.on {
   color: #f5a623;
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, #f5a623 45%, transparent));
 }
 .review-form textarea {
-  min-height: 4.5rem;
+  min-height: 5rem;
+  resize: vertical;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 0.7rem 0.85rem;
+}
+.review-form textarea::placeholder {
+  color: var(--text-dim);
+}
+.review-form textarea:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 1px;
+}
+.review-form .btn {
+  align-self: flex-start;
 }
 .review-done {
   margin-top: 0.9rem;

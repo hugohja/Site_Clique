@@ -27,6 +27,15 @@ const STATUS_LABEL: Record<Conversation["status"], string> = {
 
 const brl = formatBRL;
 
+/** Palavra que acompanha a nota escolhida no formulário de avaliação. */
+const RATING_WORDS: Record<number, string> = {
+  1: "Ruim",
+  2: "Regular",
+  3: "Bom",
+  4: "Muito bom",
+  5: "Excelente",
+};
+
 /**
  * Chat interno + custódia (escrow). O papel de quem vê vem da SESSÃO (o servidor
  * decide se é o cliente ou o profissional daquela conversa). Fluxo: proposta →
@@ -361,19 +370,24 @@ export default function ChatView({ conversationId }: { conversationId: string })
               }}
             >
               <h3 className="review-title">Como foi o serviço de {professional.name}?</h3>
-              <div className="review-stars" role="radiogroup" aria-label="Nota">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    type="button"
-                    key={n}
-                    className={`review-star ${n <= reviewStars ? "on" : ""}`}
-                    aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
-                    aria-pressed={n === reviewStars}
-                    onClick={() => setReviewStars(n)}
-                  >
-                    ★
-                  </button>
-                ))}
+              <div className="review-rate">
+                <div className="review-stars" role="radiogroup" aria-label="Nota">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      type="button"
+                      key={n}
+                      className={`review-star ${n <= reviewStars ? "on" : ""}`}
+                      aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
+                      aria-pressed={n === reviewStars}
+                      onClick={() => setReviewStars(n)}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <span className="review-hint mono">
+                  {reviewStars > 0 ? RATING_WORDS[reviewStars] : "toque nas estrelas"}
+                </span>
               </div>
               <textarea
                 value={reviewComment}
