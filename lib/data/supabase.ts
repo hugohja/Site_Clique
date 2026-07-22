@@ -106,6 +106,7 @@ interface ConversationRow {
   client_whatsapp: string;
   event_type: string;
   event_date: string;
+  event_time: string | null;
   event_location: string;
   status: ConversationStatus;
   proposal_amount: number | null;
@@ -240,6 +241,7 @@ function toConversation(row: ConversationRow): Conversation {
     clientWhatsapp: row.client_whatsapp,
     eventType: row.event_type,
     eventDate: row.event_date,
+    eventTime: row.event_time ?? "",
     eventLocation: row.event_location,
     status: row.status,
     proposal:
@@ -565,6 +567,7 @@ export const supabaseConversationRepository: ConversationRepository = {
       client_whatsapp: input.clientWhatsapp,
       event_type: input.eventType,
       event_date: input.eventDate,
+      event_time: input.eventTime,
       event_location: input.eventLocation,
       status: "conversando",
       proposal_amount: null,

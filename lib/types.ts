@@ -323,6 +323,8 @@ export interface Conversation {
   /** Logística do evento — mostrada junto com o contato após a liberação. */
   eventType: EventType;
   eventDate: string;
+  /** Horário do evento (HH:MM). */
+  eventTime: string;
   eventLocation: string;
   status: ConversationStatus;
   /** Proposta vigente (a última enviada). null enquanto status = conversando. */
@@ -356,5 +358,37 @@ export function hasUnread(conv: Conversation, role: "cliente" | "profissional"):
 
 export type ConversationInput = Pick<
   Conversation,
-  "professionalId" | "clientId" | "eventType" | "eventDate" | "eventLocation"
+  "professionalId" | "clientId" | "eventType" | "eventDate" | "eventTime" | "eventLocation"
 >;
+
+/** Antecedência mínima para eventos no mesmo dia (2 horas). */
+export const MIN_EVENT_LEAD_HOURS = 2;
+
+/**
+ * Valida a data + hora do evento no fuso de Brasília (UTC-3, sem horário de
+ * verão desde 2019). Retorna mensagem de erro, ou null se estiver ok.
+ * Regras: nada no passado; se for hoje, pelo menos 2h de antecedência.
+ */
+export function eventDateTimeError(date: string, time: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "Informe a data do evento.";
+  if (!/^\d{2}:\d{2}$/.test(time)) return "Informe o horário do evento.";
+
+  const now = Date.now();
+  const eventMs = Date.parse(`${date}T${time}:00-03:00`);
+  if (Number.isNaN(eventMs)) return "Data ou horário inválidos.";
+
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(now));
+
+  if (date < today) return "A data do evento já passou — escolha uma data futura.";
+  if (date === today && eventMs - now < MIN_EVENT_LEAD_HOURS * 3600_000) {
+    return `Para hoje, escolha um horário com pelo menos ${MIN_EVENT_LEAD_HOURS} horas de antecedência.`;
+  }
+  // Teto leve só pra pegar erro grosseiro de digitação no ano (ex.: 2099).
+  if (eventMs - now > 5 * 365 * 24 * 3600_000) return "Data muito distante — confira o ano.";
+  return null;
+}

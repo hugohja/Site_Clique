@@ -168,7 +168,10 @@ export default function ChatView({ conversationId }: { conversationId: string })
           <h1>{other}</h1>
           <p className="profile-sub">
             {role === "profissional" ? (
-              <>cliente · {conversation.eventType} · {conversation.eventDate}</>
+              <>
+                cliente · {conversation.eventType} · {conversation.eventDate}
+                {conversation.eventTime ? ` às ${conversation.eventTime}` : ""}
+              </>
             ) : (
               <>
                 <span className="pro-type mono">{typeLabel(professional.type)}</span>
@@ -197,7 +200,10 @@ export default function ChatView({ conversationId }: { conversationId: string })
           </p>
           <div className="contact-logistics">
             <span className="mono"><span className="dim">evento</span> {conversation.eventType}</span>
-            <span className="mono"><span className="dim">data</span> {conversation.eventDate}</span>
+            <span className="mono">
+              <span className="dim">data</span> {conversation.eventDate}
+              {conversation.eventTime ? ` às ${conversation.eventTime}` : ""}
+            </span>
             <span className="mono"><span className="dim">local</span> {conversation.eventLocation}</span>
             {price > 0 && <span className="mono"><span className="dim">valor</span> {brl(price)}</span>}
           </div>

@@ -81,7 +81,7 @@ export default async function AdminPage() {
                   <div>
                     <h3>{p.clientName} → {paymentPros[i]?.name ?? "profissional"}</h3>
                     <p className="admin-meta mono">
-                      {p.eventType} · {p.eventDate} · {p.eventLocation}
+                      {p.eventType} · {p.eventDate}{p.eventTime ? ` às ${p.eventTime}` : ""} · {p.eventLocation}
                     </p>
                     {p.proposal?.amount != null && (
                       <p className="admin-meta mono">
@@ -107,7 +107,7 @@ export default async function AdminPage() {
                   <div>
                     <h3>{disputePros[i]?.name ?? "profissional"}</h3>
                     <p className="admin-meta mono">
-                      cliente: {d.clientName} · {d.eventType} · {d.eventDate}
+                      cliente: {d.clientName} · {d.eventType} · {d.eventDate}{d.eventTime ? ` às ${d.eventTime}` : ""}
                     </p>
                     <p className="admin-meta mono">local: {d.eventLocation}</p>
                     {d.agreedPrice != null && (
@@ -142,7 +142,7 @@ export default async function AdminPage() {
                     <div>
                       <h3>{pro?.name ?? "profissional"}</h3>
                       <p className="admin-meta mono">
-                        cliente: {p.clientName} · {p.eventType} · {p.eventDate}
+                        cliente: {p.clientName} · {p.eventType} · {p.eventDate}{p.eventTime ? ` às ${p.eventTime}` : ""}
                       </p>
                       <p className="admin-meta mono">
                         repassar: <strong>{formatBRL(payout)}</strong> (de {formatBRL(price)})

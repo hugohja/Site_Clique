@@ -323,7 +323,10 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
             </div>
             <div>
               <span className="dim">data</span>
-              <span>{conversation.eventDate}</span>
+              <span>
+                {conversation.eventDate}
+                {conversation.eventTime ? ` às ${conversation.eventTime}` : ""}
+              </span>
             </div>
             <div>
               <span className="dim">local</span>

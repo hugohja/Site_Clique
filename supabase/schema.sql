@@ -120,6 +120,7 @@ create table if not exists conversations (
   client_whatsapp      text not null,
   event_type           text not null,
   event_date           text not null,
+  event_time           text, -- horário do evento (HH:MM)
   event_location       text not null,
   status               text not null default 'conversando'
                          check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado')),
@@ -142,6 +143,7 @@ create table if not exists conversations (
 -- alter table conversations add column if not exists paid_out_at timestamptz;
 -- alter table conversations add column if not exists client_last_read_at timestamptz;
 -- alter table conversations add column if not exists pro_last_read_at timestamptz;
+-- alter table conversations add column if not exists event_time text;
 create index if not exists conversations_pro_idx on conversations (professional_id);
 create index if not exists conversations_client_idx on conversations (client_id);
 

@@ -10,6 +10,7 @@ interface Item {
   status: string;
   eventType: string;
   eventDate: string;
+  eventTime: string;
   professionalId: string;
   agreedPrice: number | null;
   otherName: string;
@@ -81,6 +82,7 @@ export default function ConversasPage() {
                 </div>
                 <span className="inbox-meta mono">
                   {c.eventType} · {c.eventDate}
+                  {c.eventTime ? ` às ${c.eventTime}` : ""}
                   {c.agreedPrice ? ` · ${formatBRL(c.agreedPrice)}` : ""}
                 </span>
                 {c.lastMessage && (

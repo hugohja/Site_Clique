@@ -316,6 +316,7 @@ export const memoryConversationRepository: ConversationRepository = {
       clientWhatsapp: input.clientWhatsapp,
       eventType: input.eventType,
       eventDate: input.eventDate,
+      eventTime: input.eventTime,
       eventLocation: input.eventLocation,
       status: "conversando",
       proposal: null,
