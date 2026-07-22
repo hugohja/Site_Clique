@@ -246,8 +246,12 @@ export function toPublicClient(client: Client): PublicClient {
   };
 }
 
-/** Comissão da plataforma vigente (12%), gravada na conversa no fechamento. */
-export const COMMISSION_RATE = 0.12;
+/**
+ * Comissão da plataforma vigente (18%). É GRAVADA em cada conversa quando ela é
+ * criada (commissionRate), então mudar esta taxa vale só pros negócios novos —
+ * os que já estão em andamento mantêm a taxa com que foram criados.
+ */
+export const COMMISSION_RATE = 0.18;
 
 /** Comissão da plataforma sobre um valor fechado (arredondada aos centavos). */
 export function commissionAmount(price: number, rate: number): number {
@@ -337,7 +341,7 @@ export interface Conversation {
   proposal: Proposal | null;
   /** Valor fechado, copiado da proposta aceita no pagamento. Base do split da fase 3. */
   agreedPrice: number | null;
-  /** Percentual de comissão vigente no fechamento (ex: 0.12 = 12%). */
+  /** Percentual de comissão vigente no fechamento (ex: 0.18 = 18%). */
   commissionRate: number;
   /**
    * Código de confirmação do evento (4 dígitos), gerado quando o dinheiro entra
