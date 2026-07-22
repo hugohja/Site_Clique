@@ -23,6 +23,7 @@ const STATUS_LABEL: Record<Conversation["status"], string> = {
   concluido: "concluído",
   em_disputa: "em disputa",
   reembolsado: "reembolsado",
+  cancelado: "cancelado",
 };
 
 const brl = formatBRL;
@@ -162,7 +163,14 @@ export default function ChatView({ conversationId }: { conversationId: string })
   const awaitingConfirmation = status === "pagamento_confirmado";
   const inCustody = status === "contato_liberado";
   const negotiating = ["conversando", "proposta_enviada", "proposta_aceita"].includes(status);
-  const closed = status === "concluido" || status === "reembolsado";
+  const closed = status === "concluido" || status === "reembolsado" || status === "cancelado";
+  const cancelable = [
+    "conversando",
+    "proposta_enviada",
+    "proposta_aceita",
+    "pagamento_confirmado",
+    "contato_liberado",
+  ].includes(status);
   const other = role === "profissional" ? conversation.clientName : professional.name;
 
   const price = conversation.agreedPrice ?? proposal?.amount ?? 0;
@@ -421,6 +429,12 @@ export default function ChatView({ conversationId }: { conversationId: string })
           <p>O valor foi devolvido. Esta contratação foi encerrada.</p>
         </div>
       )}
+      {status === "cancelado" && (
+        <div className="escrow-box">
+          <h2 className="section-title">Contratação cancelada</h2>
+          <p>Esta contratação foi cancelada. Se precisar, é só começar uma nova conversa.</p>
+        </div>
+      )}
 
       {/* ---- Negociação: proposta ⇄ contraproposta → aceite → pagamento ---- */}
       {negotiating && (
@@ -539,6 +553,25 @@ export default function ChatView({ conversationId }: { conversationId: string })
               </Link>
             </div>
           )}
+        </div>
+      )}
+
+      {cancelable && (role === "cliente" || role === "profissional") && (
+        <div className="cancel-row">
+          <button
+            type="button"
+            className="btn-cancel-link"
+            disabled={busy}
+            onClick={() => {
+              const withMoney = status === "pagamento_confirmado" || status === "contato_liberado";
+              const msg = withMoney
+                ? "Cancelar esta contratação? Como já houve pagamento, a Clique vai analisar o reembolso."
+                : "Cancelar esta contratação? Isso encerra a negociação.";
+              if (confirm(msg)) post("/cancelar");
+            }}
+          >
+            Cancelar contratação
+          </button>
         </div>
       )}
 

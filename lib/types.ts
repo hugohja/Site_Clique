@@ -331,7 +331,8 @@ export type ConversationStatus =
   | "contato_liberado"
   | "concluido"
   | "em_disputa"
-  | "reembolsado";
+  | "reembolsado"
+  | "cancelado";
 
 /** Estados em que o dinheiro já entrou (custódia ou depois) e o contato é revelado. */
 export const PAID_STATUSES: ConversationStatus[] = [

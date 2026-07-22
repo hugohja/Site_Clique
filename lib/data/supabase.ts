@@ -694,6 +694,23 @@ export const supabaseConversationRepository: ConversationRepository = {
     return fetchConversation(conversationId);
   },
 
+  async cancelConversation(conversationId: string, by: "cliente" | "profissional") {
+    const conv = await fetchConversation(conversationId);
+    if (!conv) return null;
+    const quem = by === "cliente" ? "cliente" : "profissional";
+    if (["conversando", "proposta_enviada", "proposta_aceita"].includes(conv.status)) {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "cancelado" });
+      await insertSystemMessage(conversationId, `Contratação cancelada pelo ${quem}.`);
+    } else if (["pagamento_confirmado", "contato_liberado"].includes(conv.status)) {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], { status: "em_disputa" });
+      await insertSystemMessage(
+        conversationId,
+        `Cancelamento solicitado pelo ${quem}. Em análise pela Clique para reembolso.`
+      );
+    }
+    return fetchConversation(conversationId);
+  },
+
   async setPaymentConfirmed(conversationId: string) {
     const conv = await fetchConversation(conversationId);
     if (!conv) return null;

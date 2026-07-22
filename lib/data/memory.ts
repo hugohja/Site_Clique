@@ -412,6 +412,22 @@ export const memoryConversationRepository: ConversationRepository = {
     return conversation;
   },
 
+  async cancelConversation(conversationId: string, by: "cliente" | "profissional") {
+    const conversation = conversations().find((c) => c.id === conversationId);
+    if (!conversation) return null;
+    const quem = by === "cliente" ? "cliente" : "profissional";
+    if (["conversando", "proposta_enviada", "proposta_aceita"].includes(conversation.status)) {
+      conversation.status = "cancelado";
+      conversation.messages.push(systemMessage(`Contratação cancelada pelo ${quem}.`));
+    } else if (["pagamento_confirmado", "contato_liberado"].includes(conversation.status)) {
+      conversation.status = "em_disputa";
+      conversation.messages.push(
+        systemMessage(`Cancelamento solicitado pelo ${quem}. Em análise pela Clique para reembolso.`)
+      );
+    }
+    return conversation;
+  },
+
   async setPaymentConfirmed(conversationId: string) {
     const conversation = conversations().find((c) => c.id === conversationId);
     if (!conversation) return null;
