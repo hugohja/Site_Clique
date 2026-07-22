@@ -17,6 +17,8 @@ export async function GET() {
   } else if (account.role === "profissional" && account.professionalId) {
     convs = await conversationRepository.listForProfessional(account.professionalId);
   }
+  // "Não lida" = a última mensagem é da OUTRA pessoa (não sua, não do sistema).
+  const otherRole = account.role === "cliente" ? "profissional" : "cliente";
   const conversations = await Promise.all(
     convs.map(async (c) => {
       let otherName = c.clientName;
@@ -34,11 +36,13 @@ export async function GET() {
         agreedPrice: c.agreedPrice,
         otherName,
         lastMessage: last?.text ?? "",
+        unread: last?.sender === otherRole,
         createdAt: c.createdAt,
       };
     })
   );
-  return NextResponse.json({ role: account.role, conversations });
+  const unreadCount = conversations.filter((c) => c.unread).length;
+  return NextResponse.json({ role: account.role, conversations, unreadCount });
 }
 
 export async function POST(request: NextRequest) {

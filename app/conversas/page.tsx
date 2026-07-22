@@ -13,6 +13,7 @@ interface Item {
   agreedPrice: number | null;
   otherName: string;
   lastMessage: string;
+  unread: boolean;
   createdAt: string;
 }
 
@@ -63,9 +64,16 @@ export default function ConversasPage() {
         ) : (
           <div className="inbox">
             {data.conversations.map((c) => (
-              <Link key={c.id} href={`/conversa/${c.id}`} className="inbox-item">
+              <Link
+                key={c.id}
+                href={`/conversa/${c.id}`}
+                className={`inbox-item${c.unread ? " unread" : ""}`}
+              >
                 <div className="inbox-top">
-                  <strong>{c.otherName}</strong>
+                  <strong>
+                    {c.unread && <span className="unread-dot" aria-hidden />}
+                    {c.otherName}
+                  </strong>
                   <span className={`status-badge mono status-${c.status}`}>
                     {LABEL[c.status] ?? c.status}
                   </span>
@@ -74,7 +82,12 @@ export default function ConversasPage() {
                   {c.eventType} · {c.eventDate}
                   {c.agreedPrice ? ` · R$ ${c.agreedPrice.toLocaleString("pt-BR")}` : ""}
                 </span>
-                {c.lastMessage && <span className="inbox-last">{c.lastMessage}</span>}
+                {c.lastMessage && (
+                  <span className="inbox-last">
+                    {c.unread && <strong className="unread-tag">nova · </strong>}
+                    {c.lastMessage}
+                  </span>
+                )}
               </Link>
             ))}
           </div>
