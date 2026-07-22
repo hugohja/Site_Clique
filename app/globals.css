@@ -321,6 +321,11 @@ h3 {
 .results {
   padding-block: 2rem;
 }
+.near-note {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+}
 
 /* ---- Landing: como funciona + CTA profissional ---- */
 .how {
