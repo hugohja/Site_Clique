@@ -21,3 +21,18 @@ export async function confirmarPagamento(conversationId: string): Promise<Conver
   if (!paid) return null;
   return conversationRepository.releaseContact(conversationId);
 }
+
+/**
+ * Cobrança MANUAL (PIX na chave da Clique): o cliente informa que pagou e a
+ * conversa vai pra "pagamento_confirmado" — aguardando a Clique CONFERIR o
+ * recebimento. O contato NÃO é liberado aqui; isso só acontece quando o admin
+ * confirma (releaseContact), evitando que alguém libere o contato sem pagar.
+ */
+export async function informarPagamento(conversationId: string): Promise<Conversation | null> {
+  return conversationRepository.setPaymentConfirmed(conversationId);
+}
+
+/** Admin confirma que o PIX caiu → libera o contato e gera o código de custódia. */
+export async function confirmarRecebimento(conversationId: string): Promise<Conversation | null> {
+  return conversationRepository.releaseContact(conversationId);
+}

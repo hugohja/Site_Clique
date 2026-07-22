@@ -8,6 +8,7 @@ import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supab
 import AdminActions from "@/components/AdminActions";
 import AdminDisputeActions from "@/components/AdminDisputeActions";
 import AdminPayoutActions from "@/components/AdminPayoutActions";
+import AdminPaymentActions from "@/components/AdminPaymentActions";
 import AdminBrowse from "@/components/AdminBrowse";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +38,11 @@ export default async function AdminPage() {
     );
   }
 
-  const [pros, clis, disputes, payouts, allPros, allClis] = await Promise.all([
+  const [pros, clis, disputes, pendingPayments, payouts, allPros, allClis] = await Promise.all([
     repository.listByStatus("em_analise"),
     clientRepository.listByStatus("em_analise"),
     conversationRepository.listDisputes(),
+    conversationRepository.listPendingPaymentConfirmations(),
     conversationRepository.listPendingPayouts(),
     repository.list(),
     clientRepository.list(),
@@ -48,6 +50,7 @@ export default async function AdminPage() {
   const proDocs = await Promise.all(pros.map((p) => docSrc(p.identity.documentPhotoUrl)));
   const cliDocs = await Promise.all(clis.map((c) => docSrc(c.identity.documentPhotoUrl)));
   const disputePros = await Promise.all(disputes.map((d) => repository.getById(d.professionalId)));
+  const paymentPros = await Promise.all(pendingPayments.map((p) => repository.getById(p.professionalId)));
   const payoutPros = await Promise.all(payouts.map((p) => repository.getById(p.professionalId)));
   const total = pros.length + clis.length;
 
@@ -63,6 +66,36 @@ export default async function AdminPage() {
         Confira o documento com foto e aprove os cadastros válidos. CPF e documento são
         confidenciais — use apenas para verificação.
       </p>
+
+      {pendingPayments.length > 0 && (
+        <section className="admin-section">
+          <h2 className="section-title">💰 Pagamentos a confirmar ({pendingPayments.length})</h2>
+          <p className="admin-lead">
+            O cliente informou que fez o PIX. Confira na conta da Clique se o valor caiu e confirme —
+            só então o contato é liberado.
+          </p>
+          <div className="admin-list">
+            {pendingPayments.map((p, i) => (
+              <article key={p.id} className="admin-card">
+                <div className="admin-person">
+                  <div>
+                    <h3>{p.clientName} → {paymentPros[i]?.name ?? "profissional"}</h3>
+                    <p className="admin-meta mono">
+                      {p.eventType} · {p.eventDate} · {p.eventLocation}
+                    </p>
+                    {p.proposal?.amount != null && (
+                      <p className="admin-meta mono">
+                        valor informado: <strong>R$ {p.proposal.amount.toLocaleString("pt-BR")}</strong>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <AdminPaymentActions conversationId={p.id} />
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {disputes.length > 0 && (
         <section className="admin-section">

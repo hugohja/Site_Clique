@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
-import { confirmarPagamento } from "@/lib/payments";
+import { informarPagamento } from "@/lib/payments";
 import { resolveConversationViewer } from "@/lib/conversationAuth";
 
 /**
- * Simulação de pagamento da fase atual. Não recebe valor: o pagamento é
- * SEMPRE pelo valor da proposta aceita registrada na conversa — sem proposta
- * aceita, não há o que pagar (o passo não pode ser pulado).
- *
- * Quando o gateway real entrar (fase 3), esta rota passa a criar a cobrança
- * e a liberação move pro webhook — ver lib/payments.ts.
+ * Cobrança MANUAL: o cliente informa que fez o PIX na chave da Clique. A
+ * conversa vai pra "pagamento_confirmado" (aguardando a Clique conferir o
+ * recebimento) — o contato NÃO é liberado aqui. Sempre pelo valor da proposta
+ * aceita registrada; sem proposta aceita, não há o que pagar.
  */
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +19,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Só o cliente confirma o pagamento." }, { status: 403 });
   }
   if (existing.status === "pagamento_confirmado" || existing.status === "contato_liberado") {
-    return NextResponse.json({ error: "Pagamento já confirmado nesta conversa." }, { status: 409 });
+    return NextResponse.json({ error: "Pagamento já informado nesta conversa." }, { status: 409 });
   }
   if (existing.status !== "proposta_aceita" || !existing.proposal?.acceptedAt) {
     return NextResponse.json(
@@ -30,6 +28,6 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     );
   }
 
-  const conversation = await confirmarPagamento(id);
+  const conversation = await informarPagamento(id);
   return NextResponse.json({ status: conversation?.status });
 }

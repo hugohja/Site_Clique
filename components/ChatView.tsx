@@ -149,6 +149,7 @@ export default function ChatView({ conversationId }: { conversationId: string })
   const { conversation, professional, contact, viewerRole: role } = data;
   const { status, proposal } = conversation;
   const paid = ["contato_liberado", "concluido", "em_disputa", "reembolsado"].includes(status);
+  const awaitingConfirmation = status === "pagamento_confirmado";
   const inCustody = status === "contato_liberado";
   const negotiating = ["conversando", "proposta_enviada", "proposta_aceita"].includes(status);
   const closed = status === "concluido" || status === "reembolsado";
@@ -294,6 +295,24 @@ export default function ChatView({ conversationId }: { conversationId: string })
               {busy ? "Validando…" : "Validar e concluir"}
             </button>
           </form>
+        </div>
+      )}
+
+      {awaitingConfirmation && (
+        <div className="escrow-box">
+          <h2 className="section-title">Pagamento em conferência</h2>
+          {role === "cliente" ? (
+            <p>
+              Você informou o PIX de <strong>{brl(price)}</strong>. A Clique está conferindo o
+              recebimento — assim que confirmar, o contato é liberado e você recebe o código de
+              custódia. Leva pouco tempo.
+            </p>
+          ) : (
+            <p>
+              O cliente informou o pagamento de <strong>{brl(price)}</strong>. A Clique está
+              conferindo o recebimento; quando confirmar, o contato é liberado.
+            </p>
+          )}
         </div>
       )}
 

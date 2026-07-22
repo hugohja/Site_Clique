@@ -723,6 +723,15 @@ export const supabaseConversationRepository: ConversationRepository = {
     return rows.map(toConversation);
   },
 
+  async listPendingPaymentConfirmations() {
+    const rows = await sbSelect<ConversationRow>("conversations", [
+      CONV_SELECT,
+      q.eq("status", "pagamento_confirmado"),
+      q.order("created_at.asc"),
+    ]);
+    return rows.map(toConversation);
+  },
+
   async listPendingPayouts() {
     const rows = await sbSelect<ConversationRow>("conversations", [
       CONV_SELECT,
