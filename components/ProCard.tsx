@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Professional } from "@/lib/types";
 import { formatExif, typeLabel } from "@/lib/format";
+import { isReservedLabel } from "@/lib/types";
 import { isTopRated } from "@/lib/ranking";
 
 export default function ProCard({ pro }: { pro: Professional }) {
@@ -22,11 +23,13 @@ export default function ProCard({ pro }: { pro: Professional }) {
         )}
         <span className="pro-city">{pro.city}</span>
         <span className="tag-row">
-          {pro.specialties.map((s) => (
-            <span key={s} className="tag">
-              {s}
-            </span>
-          ))}
+          {pro.specialties
+            .filter((s) => !isReservedLabel(s))
+            .map((s) => (
+              <span key={s} className="tag">
+                {s}
+              </span>
+            ))}
         </span>
         <span className="exif mono">
           {formatExif(pro)}

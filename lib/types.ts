@@ -39,9 +39,24 @@ export type EventType = string;
 
 export const MAX_SPECIALTIES = 12;
 
-/** Normaliza uma especialidade/evento digitado (trim + limite de tamanho). */
+/**
+ * Palavras reservadas que NÃO são evento/especialidade (papéis do sistema).
+ * Nunca entram como especialidade nem aparecem no filtro de eventos.
+ */
+const RESERVED_LABELS = new Set(["admin", "adm", "administrador", "administrator", "sistema"]);
+
+/** true se o texto é uma palavra reservada (comparação sem acento/caixa). */
+export function isReservedLabel(value: string): boolean {
+  return RESERVED_LABELS.has(value.trim().toLowerCase());
+}
+
+/**
+ * Normaliza uma especialidade/evento digitado (trim + limite de tamanho).
+ * Palavras reservadas (ex.: "admin") viram string vazia e são descartadas.
+ */
 export function cleanEventLabel(value: string): string {
-  return value.trim().replace(/\s+/g, " ").slice(0, 40);
+  const cleaned = value.trim().replace(/\s+/g, " ").slice(0, 40);
+  return isReservedLabel(cleaned) ? "" : cleaned;
 }
 
 /**

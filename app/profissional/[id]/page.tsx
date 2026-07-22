@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repository, reviewRepository } from "@/lib/data";
 import { formatRating, typeLabel } from "@/lib/format";
-import { cleanUnavailableDates, todayInBrazil, verificationLabel } from "@/lib/types";
+import { cleanUnavailableDates, isReservedLabel, todayInBrazil, verificationLabel } from "@/lib/types";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import ProfileCTA from "@/components/ProfileCTA";
 
@@ -94,11 +94,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <aside className="profile-aside">
           <h2 className="section-title">Especialidades</h2>
           <div className="tag-row">
-            {pro.specialties.map((s) => (
-              <span key={s} className="tag">
-                {s}
-              </span>
-            ))}
+            {pro.specialties
+              .filter((s) => !isReservedLabel(s))
+              .map((s) => (
+                <span key={s} className="tag">
+                  {s}
+                </span>
+              ))}
           </div>
           <h2 className="section-title">Sobre</h2>
           <p className="bio">{pro.bio}</p>
