@@ -8,11 +8,22 @@ import { isMercadoPagoConfigured, mpCreatePixCharge } from "@/lib/mercadopago";
  * cliente da conversa, com a proposta aceita, pode gerar. O contato NÃO é
  * liberado aqui — isso acontece no webhook, quando o MP confirma o pagamento.
  */
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   if (!isMercadoPagoConfigured()) {
     return NextResponse.json({ error: "PIX indisponível nesta configuração." }, { status: 501 });
+  }
+
+  // Tentativa: a mesma tentativa é idempotente (evita PIX duplicado em cliques
+  // repetidos); uma nova tentativa (após expirar) gera um PIX novo.
+  let attempt = 1;
+  try {
+    const body = (await request.json().catch(() => ({}))) as { attempt?: unknown };
+    const n = Number(body.attempt);
+    if (Number.isFinite(n) && n >= 1 && n <= 100) attempt = Math.floor(n);
+  } catch {
+    /* sem corpo — tentativa 1 */
   }
 
   const { conversation, role } = await resolveConversationViewer(id);
@@ -42,14 +53,17 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       description: `Clique · ${conversation.eventType} · ${pro?.name ?? "profissional"}`,
       payerEmail,
       externalReference: conversation.id,
-      // Uma cobrança por conversa: reusar a chave evita PIX duplicado em cliques repetidos.
-      idempotencyKey: `pix-${conversation.id}`,
+      // Idempotente por tentativa: cliques repetidos na mesma tentativa não
+      // duplicam; após expirar, o cliente pede outra tentativa (novo PIX).
+      idempotencyKey: `pix-${conversation.id}-${attempt}`,
+      expiresInMinutes: 30,
     });
     return NextResponse.json({
       qrCode: charge.qrCode,
       qrCodeBase64: charge.qrCodeBase64,
       ticketUrl: charge.ticketUrl,
       amount: charge.amount,
+      expiresAt: charge.expiresAt,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Falha ao criar a cobrança PIX.";
