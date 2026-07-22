@@ -115,6 +115,7 @@ interface ConversationRow {
   proposal_amount: number | null;
   proposal_proposed_at: string | null;
   proposal_accepted_at: string | null;
+  proposal_by: string | null;
   agreed_price: number | null;
   commission_rate: number;
   confirmation_code: string | null;
@@ -251,6 +252,8 @@ function toConversation(row: ConversationRow): Conversation {
       row.proposal_amount != null
         ? {
             amount: row.proposal_amount,
+            // Sem a coluna migrada, assume orçamento do profissional (comportamento antigo).
+            by: row.proposal_by === "cliente" ? "cliente" : "profissional",
             proposedAt: row.proposal_proposed_at ? iso(row.proposal_proposed_at) : now(),
             acceptedAt: row.proposal_accepted_at ? iso(row.proposal_accepted_at) : null,
           }
@@ -616,10 +619,10 @@ export const supabaseConversationRepository: ConversationRepository = {
     return fetchConversation(conversationId);
   },
 
-  async sendProposal(conversationId: string, amount: number) {
+  async sendProposal(conversationId: string, amount: number, by: "cliente" | "profissional") {
     const conv = await fetchConversation(conversationId);
     if (!conv) return null;
-    // Proposta só pode ser enviada/substituída antes do aceite.
+    // Proposta/contraproposta só antes do aceite.
     if (conv.status !== "conversando" && conv.status !== "proposta_enviada") return conv;
     await sbUpdate("conversations", [q.eq("id", conversationId)], {
       proposal_amount: amount,
@@ -627,7 +630,14 @@ export const supabaseConversationRepository: ConversationRepository = {
       proposal_accepted_at: null,
       status: "proposta_enviada",
     });
-    await insertSystemMessage(conversationId, `Proposta enviada: R$ ${brl(amount)}`);
+    // Coluna nova — best-effort pra não travar antes da migração.
+    try {
+      await sbUpdate("conversations", [q.eq("id", conversationId)], { proposal_by: by });
+    } catch {
+      /* proposal_by ainda não migrada — segue com o padrão (profissional) */
+    }
+    const label = by === "cliente" ? "Contraproposta do cliente" : "Proposta enviada";
+    await insertSystemMessage(conversationId, `${label}: R$ ${brl(amount)}`);
     return fetchConversation(conversationId);
   },
 
@@ -640,9 +650,10 @@ export const supabaseConversationRepository: ConversationRepository = {
       proposal_accepted_at: now(),
       status: "proposta_aceita",
     });
+    const acceptor = conv.proposal.by === "profissional" ? "cliente" : "profissional";
     await insertSystemMessage(
       conversationId,
-      `Proposta de R$ ${brl(conv.proposal.amount)} aceita pelo cliente — pagamento liberado`
+      `Proposta de R$ ${brl(conv.proposal.amount)} aceita pelo ${acceptor} — pagamento liberado`
     );
     return fetchConversation(conversationId);
   },

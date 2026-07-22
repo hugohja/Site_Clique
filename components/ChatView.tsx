@@ -159,6 +159,8 @@ export default function ChatView({ conversationId }: { conversationId: string })
   const price = conversation.agreedPrice ?? proposal?.amount ?? 0;
   const commission = commissionAmount(price, conversation.commissionRate);
   const payout = payoutAmount(price, conversation.commissionRate);
+  // Quem fez a proposta vigente espera resposta; o outro lado aceita/contrapropõe.
+  const isProposer = proposal ? proposal.by === role : false;
 
   return (
     <div className="container chat-page">
@@ -406,23 +408,24 @@ export default function ChatView({ conversationId }: { conversationId: string })
         </div>
       )}
 
-      {/* ---- Negociação: proposta → aceite → pagamento ---- */}
+      {/* ---- Negociação: proposta ⇄ contraproposta → aceite → pagamento ---- */}
       {negotiating && (
         <div className="deal-box">
           {proposal && (
             <div className={`proposal-strip ${proposal.acceptedAt ? "accepted" : "pending"}`}>
               <span className="mono"><span className="dim">proposta</span> {brl(proposal.amount)}</span>
               <span className="mono proposal-state">
-                {proposal.acceptedAt ? "aceita ✓" : "aguardando aceite do cliente"}
+                {proposal.acceptedAt
+                  ? "aceita ✓"
+                  : `por ${proposal.by === "profissional" ? professional.name : conversation.clientName}`}
               </span>
             </div>
           )}
 
-          {role === "profissional" && (status === "conversando" || status === "proposta_enviada") && (
+          {/* Primeiro orçamento — só o profissional abre, ainda conversando */}
+          {role === "profissional" && status === "conversando" && (
             <div className="deal-action">
-              <h2 className="section-title">
-                {status === "proposta_enviada" ? "Atualizar proposta" : "Enviar orçamento"}
-              </h2>
+              <h2 className="section-title">Enviar orçamento</h2>
               <p>
                 Mande o valor por aqui. O cliente aceita e paga dentro da plataforma — o dinheiro fica
                 em custódia até você concluir o serviço. É isso que garante o recebimento.
@@ -436,26 +439,9 @@ export default function ChatView({ conversationId }: { conversationId: string })
                   aria-label="Valor do orçamento em reais"
                 />
                 <button type="submit" className="btn" disabled={busy}>
-                  {busy ? "Enviando…" : status === "proposta_enviada" ? "Reenviar" : "Enviar orçamento"}
+                  {busy ? "Enviando…" : "Enviar orçamento"}
                 </button>
               </form>
-            </div>
-          )}
-
-          {role === "profissional" && status === "proposta_aceita" && (
-            <p className="deal-wait mono">Proposta aceita. Aguardando o cliente pagar.</p>
-          )}
-
-          {role === "cliente" && status === "proposta_enviada" && proposal && (
-            <div className="deal-action">
-              <h2 className="section-title">Orçamento recebido</h2>
-              <p>
-                {professional.name} propôs <strong>{brl(proposal.amount)}</strong>. Aceite para liberar
-                o pagamento (o contato aparece depois que você paga).
-              </p>
-              <button type="button" className="btn" disabled={busy} onClick={() => post("/proposta/aceitar")}>
-                {busy ? "Registrando…" : `Aceitar ${brl(proposal.amount)}`}
-              </button>
             </div>
           )}
 
@@ -463,14 +449,76 @@ export default function ChatView({ conversationId }: { conversationId: string })
             <p className="deal-wait mono">Aguardando {professional.name} enviar o orçamento.</p>
           )}
 
+          {/* Sua vez de responder: você NÃO fez a proposta atual → aceita ou contrapropõe */}
+          {status === "proposta_enviada" && proposal && !isProposer && (
+            <div className="deal-action">
+              <h2 className="section-title">
+                {proposal.by === "profissional" ? "Orçamento recebido" : "Contraproposta recebida"}
+              </h2>
+              <p>
+                {proposal.by === "profissional" ? professional.name : conversation.clientName} propôs{" "}
+                <strong>{brl(proposal.amount)}</strong>. Aceite, ou responda com outro valor.
+                {role === "cliente" ? " O contato aparece depois que você paga." : ""}
+              </p>
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={() => post("/proposta/aceitar")}
+              >
+                {busy ? "Registrando…" : `Aceitar ${brl(proposal.amount)}`}
+              </button>
+              <form className="deal-form deal-counter" onSubmit={sendProposal}>
+                <input
+                  value={proposalValue}
+                  onChange={(e) => setProposalValue(maskCurrency(e.target.value).display)}
+                  inputMode="numeric"
+                  placeholder="Contraproposta R$ 0,00"
+                  aria-label="Valor da contraproposta em reais"
+                />
+                <button type="submit" className="btn btn-ghost" disabled={busy}>
+                  {busy ? "Enviando…" : "Contrapropor"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Você fez a proposta atual — aguardando a resposta do outro lado */}
+          {status === "proposta_enviada" && proposal && isProposer && (
+            <div className="deal-action">
+              <p className="deal-wait mono">
+                Proposta de {brl(proposal.amount)} enviada. Aguardando a resposta de{" "}
+                {role === "profissional" ? conversation.clientName : professional.name}.
+              </p>
+              <details className="deal-update">
+                <summary className="mono">Alterar minha proposta</summary>
+                <form className="deal-form" onSubmit={sendProposal}>
+                  <input
+                    value={proposalValue}
+                    onChange={(e) => setProposalValue(maskCurrency(e.target.value).display)}
+                    inputMode="numeric"
+                    placeholder="R$ 0,00"
+                    aria-label="Novo valor da proposta em reais"
+                  />
+                  <button type="submit" className="btn btn-ghost" disabled={busy}>
+                    {busy ? "Enviando…" : "Atualizar"}
+                  </button>
+                </form>
+              </details>
+            </div>
+          )}
+
+          {role === "profissional" && status === "proposta_aceita" && (
+            <p className="deal-wait mono">Proposta aceita. Aguardando o cliente pagar.</p>
+          )}
+
           {role === "cliente" && status === "proposta_aceita" && proposal && (
             <div className="deal-action pay">
               <h2 className="section-title">Pagamento em custódia</h2>
               <p>
-                Você aceitou <strong>{brl(proposal.amount)}</strong>. Ao pagar, a Clique <strong>segura
+                Você fechou <strong>{brl(proposal.amount)}</strong>. Ao pagar, a Clique <strong>segura
                 o valor</strong> e libera o contato. O dinheiro só vai pro profissional quando você
-                confirmar (com o código) que ele compareceu.{" "}
-                <span className="mono">(fase de teste: pagamento simulado)</span>
+                confirmar (com o código) que ele compareceu.
               </p>
               <Link href={`/conversa/${conversationId}/pagamento`} className="btn btn-coral">
                 {`Pagar ${brl(proposal.amount)} em custódia`}

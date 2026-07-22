@@ -361,16 +361,17 @@ export const memoryConversationRepository: ConversationRepository = {
     return conversation;
   },
 
-  async sendProposal(conversationId: string, amount: number) {
+  async sendProposal(conversationId: string, amount: number, by: "cliente" | "profissional") {
     const conversation = conversations().find((c) => c.id === conversationId);
     if (!conversation) return null;
-    // Proposta só pode ser enviada/substituída antes do aceite.
+    // Proposta/contraproposta só antes do aceite.
     if (conversation.status !== "conversando" && conversation.status !== "proposta_enviada") {
       return conversation;
     }
-    conversation.proposal = { amount, proposedAt: new Date().toISOString(), acceptedAt: null };
+    conversation.proposal = { amount, by, proposedAt: new Date().toISOString(), acceptedAt: null };
     conversation.status = "proposta_enviada";
-    conversation.messages.push(systemMessage(`Proposta enviada: R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`));
+    const label = by === "cliente" ? "Contraproposta do cliente" : "Proposta enviada";
+    conversation.messages.push(systemMessage(`${label}: R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`));
     return conversation;
   },
 
@@ -383,9 +384,11 @@ export const memoryConversationRepository: ConversationRepository = {
     }
     conversation.proposal.acceptedAt = new Date().toISOString();
     conversation.status = "proposta_aceita";
+    // Quem aceita é sempre o lado oposto ao que fez a proposta vigente.
+    const acceptor = conversation.proposal.by === "profissional" ? "cliente" : "profissional";
     conversation.messages.push(
       systemMessage(
-        `Proposta de R$ ${conversation.proposal.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} aceita pelo cliente — pagamento liberado`
+        `Proposta de R$ ${conversation.proposal.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} aceita pelo ${acceptor} — pagamento liberado`
       )
     );
     return conversation;

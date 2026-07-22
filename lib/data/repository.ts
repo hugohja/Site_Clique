@@ -95,11 +95,16 @@ export interface ConversationRepository {
   getById(id: string): Promise<Conversation | null>;
   addMessage(conversationId: string, message: ChatMessage): Promise<Conversation | null>;
   /**
-   * Profissional envia (ou substitui) a proposta de valor estruturada.
+   * Envia (ou substitui) a proposta de valor estruturada. `by` é quem está
+   * propondo — profissional (orçamento inicial) ou cliente (contraproposta).
    * Só permitido antes do aceite (conversando / proposta_enviada).
    */
-  sendProposal(conversationId: string, amount: number): Promise<Conversation | null>;
-  /** Cliente aceita a proposta vigente dentro da plataforma (→ proposta_aceita). */
+  sendProposal(
+    conversationId: string,
+    amount: number,
+    by: "cliente" | "profissional"
+  ): Promise<Conversation | null>;
+  /** O lado que NÃO fez a proposta vigente aceita (→ proposta_aceita). */
   acceptProposal(conversationId: string): Promise<Conversation | null>;
   /**
    * Registra o pagamento SEMPRE pelo valor da proposta aceita registrada —

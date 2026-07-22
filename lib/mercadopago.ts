@@ -104,3 +104,28 @@ export async function mpGetPayment(id: string): Promise<MpPayment> {
     amount: Number(body.transaction_amount ?? 0),
   };
 }
+
+/**
+ * Busca o pagamento de uma cobrança pelo external_reference (id da conversa).
+ * Usado pelo checkout pra confirmar "na hora", sem depender só do webhook:
+ * se houver um pagamento aprovado, ele é retornado; senão, o mais recente.
+ * Retorna null quando ainda não existe pagamento pra essa referência.
+ */
+export async function mpSearchPaymentByReference(
+  externalReference: string
+): Promise<MpPayment | null> {
+  const body = await mpFetch(
+    `/v1/payments/search?sort=date_created&criteria=desc&external_reference=${encodeURIComponent(externalReference)}`,
+    { method: "GET" }
+  );
+  const results = Array.isArray(body.results) ? (body.results as Record<string, unknown>[]) : [];
+  if (results.length === 0) return null;
+  const approved = results.find((p) => String(p.status) === "approved");
+  const chosen = approved ?? results[0];
+  return {
+    id: String(chosen.id ?? ""),
+    status: String(chosen.status ?? ""),
+    externalReference: String(chosen.external_reference ?? externalReference),
+    amount: Number(chosen.transaction_amount ?? 0),
+  };
+}

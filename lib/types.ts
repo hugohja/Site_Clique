@@ -306,10 +306,16 @@ export interface ChatMessage {
 
 /** Proposta de valor estruturada — o único caminho pra fechar preço. */
 export interface Proposal {
-  /** Valor proposto pelo profissional, em reais. */
+  /** Valor da proposta vigente, em reais. */
   amount: number;
+  /**
+   * Quem fez a proposta vigente. O profissional abre o orçamento; o cliente
+   * pode responder com uma contraproposta, e assim vai até um dos dois aceitar.
+   * O aceite é sempre do OUTRO lado (ninguém aceita a própria proposta).
+   */
+  by: "cliente" | "profissional";
   proposedAt: string;
-  /** Preenchido quando o cliente aceita dentro da plataforma. */
+  /** Preenchido quando o outro lado aceita dentro da plataforma. */
   acceptedAt: string | null;
 }
 
