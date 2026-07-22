@@ -54,6 +54,8 @@ export interface ProfessionalRepository {
   registerNoShow(id: string): Promise<Professional | null>;
   /** Atualiza a nota média e a contagem de avaliações (recalculadas a cada review). */
   updateRating(id: string, rating: number, reviewCount: number): Promise<Professional | null>;
+  /** Já existe uma conta PROFISSIONAL com este CPF? (só dígitos) */
+  existsByCpf(cpf: string): Promise<boolean>;
 }
 
 export interface ClientRepository {
@@ -69,6 +71,8 @@ export interface ClientRepository {
   ): Promise<Client | null>;
   setVerificationStatus(id: string, status: VerificationStatus): Promise<Client | null>;
   remove(id: string): Promise<void>;
+  /** Já existe uma conta CLIENTE com este CPF? (só dígitos) */
+  existsByCpf(cpf: string): Promise<boolean>;
 }
 
 export interface AccountRepository {

@@ -61,6 +61,10 @@ create table if not exists professional_identities (
   status            text not null default 'em_analise' check (status in ('em_analise','verificado')),
   submitted_at      timestamptz not null default now()
 );
+-- Um CPF só pode ter uma conta profissional (a mesma pessoa ainda pode ter uma
+-- conta de cliente com o mesmo CPF, pois é outra tabela).
+create unique index if not exists professional_identities_cpf_key
+  on professional_identities (cpf);
 
 -- ---------- Clientes ----------
 create table if not exists clients (
@@ -83,6 +87,9 @@ create table if not exists client_identities (
   status            text not null default 'em_analise' check (status in ('em_analise','verificado')),
   submitted_at      timestamptz not null default now()
 );
+-- Um CPF só pode ter uma conta de cliente (mesma regra da tabela profissional).
+create unique index if not exists client_identities_cpf_key
+  on client_identities (cpf);
 
 -- ---------- Contas (login) ----------
 create table if not exists accounts (

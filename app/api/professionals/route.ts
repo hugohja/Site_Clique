@@ -77,6 +77,12 @@ export async function POST(request: NextRequest) {
     errors.push("Já existe uma conta com esse e-mail.");
   }
 
+  // Um CPF só pode ter UMA conta profissional (mas a mesma pessoa pode ter,
+  // além dela, uma conta de cliente — por isso só checamos o mesmo tipo).
+  if (cpf.length === 11 && (await repository.existsByCpf(cpf))) {
+    errors.push("Já existe uma conta profissional com este CPF.");
+  }
+
   let profilePhotoUrl = "";
   const profilePhoto = form.get("profilePhoto");
   if (!isImageFile(profilePhoto)) errors.push("A foto de perfil é obrigatória.");
