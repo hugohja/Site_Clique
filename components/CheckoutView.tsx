@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Conversation, PublicProfessional } from "@/lib/types";
-import { typeLabel } from "@/lib/format";
+import { formatBRL, typeLabel } from "@/lib/format";
 
 interface Payload {
   viewerRole: "cliente" | "profissional" | "admin";
@@ -12,9 +12,7 @@ interface Payload {
   professional: PublicProfessional;
 }
 
-function brl(value: number) {
-  return `R$ ${value.toLocaleString("pt-BR")}`;
-}
+const brl = formatBRL;
 
 /**
  * Checkout da custódia (fase de teste: pagamento SIMULADO). Só o cliente da

@@ -23,6 +23,23 @@ export function maskCpf(raw: string): string {
     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
 }
 
+/** Valor em reais no formato brasileiro com centavos: R$ 2.000,00. */
+export function formatBRL(value: number): string {
+  return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * Máscara de moeda para input: recebe o texto digitado, mantém só dígitos
+ * (tratados como centavos) e devolve o valor em reais + o texto formatado.
+ * Ex.: "200000" → { reais: 2000, display: "R$ 2.000,00" }.
+ */
+export function maskCurrency(raw: string): { reais: number; display: string } {
+  const digits = raw.replace(/\D/g, "").slice(0, 11); // teto ~R$ 999 milhões
+  const cents = digits ? parseInt(digits, 10) : 0;
+  const reais = cents / 100;
+  return { reais, display: formatBRL(reais) };
+}
+
 // Aceitam qualquer objeto com esses campos (Professional ou PublicProfessional).
 export function formatRating(pro: { rating: number; reviewCount: number }): string {
   return pro.reviewCount > 0 ? `★ ${pro.rating.toFixed(1)}` : "★ novo";

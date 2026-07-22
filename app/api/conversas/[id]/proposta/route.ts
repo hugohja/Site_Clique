@@ -31,6 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
-  const updated = await conversationRepository.sendProposal(id, Math.round(amount));
+  // Snap aos centavos (evita 2000.499999); o valor é sempre positivo já validado.
+  const updated = await conversationRepository.sendProposal(id, Math.round(amount * 100) / 100);
   return NextResponse.json({ status: updated?.status, proposal: updated?.proposal });
 }

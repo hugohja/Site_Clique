@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Conversation, PublicProfessional } from "@/lib/types";
 import { commissionAmount, payoutAmount } from "@/lib/types";
-import { typeLabel } from "@/lib/format";
+import { formatBRL, maskCurrency, typeLabel } from "@/lib/format";
 
 interface ConversationPayload {
   viewerRole: "cliente" | "profissional" | "admin";
@@ -24,9 +24,7 @@ const STATUS_LABEL: Record<Conversation["status"], string> = {
   reembolsado: "reembolsado",
 };
 
-function brl(value: number) {
-  return `R$ ${value.toLocaleString("pt-BR")}`;
-}
+const brl = formatBRL;
 
 /**
  * Chat interno + custódia (escrow). O papel de quem vê vem da SESSÃO (o servidor
@@ -112,12 +110,12 @@ export default function ChatView({ conversationId }: { conversationId: string })
 
   async function sendProposal(event: React.FormEvent) {
     event.preventDefault();
-    const value = Number(proposalValue.replace(",", "."));
-    if (!Number.isFinite(value) || value <= 0) {
+    const { reais } = maskCurrency(proposalValue);
+    if (!Number.isFinite(reais) || reais <= 0) {
       setActionError("Informe um valor válido pra proposta.");
       return;
     }
-    if (await post("/proposta", { amount: value })) setProposalValue("");
+    if (await post("/proposta", { amount: reais })) setProposalValue("");
   }
 
   if (notFound || denied) {
@@ -364,9 +362,9 @@ export default function ChatView({ conversationId }: { conversationId: string })
               <form className="deal-form" onSubmit={sendProposal}>
                 <input
                   value={proposalValue}
-                  onChange={(e) => setProposalValue(e.target.value)}
-                  inputMode="decimal"
-                  placeholder="Valor do orçamento (R$)"
+                  onChange={(e) => setProposalValue(maskCurrency(e.target.value).display)}
+                  inputMode="numeric"
+                  placeholder="R$ 0,00"
                   aria-label="Valor do orçamento em reais"
                 />
                 <button type="submit" className="btn" disabled={busy}>

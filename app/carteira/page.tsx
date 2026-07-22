@@ -2,13 +2,12 @@ import Link from "next/link";
 import { accountRepository, conversationRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { commissionAmount, payoutAmount, PAID_STATUSES, type Conversation } from "@/lib/types";
+import { formatBRL } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Carteira — Clique" };
 
-function brl(value: number) {
-  return `R$ ${value.toLocaleString("pt-BR")}`;
-}
+const brl = formatBRL;
 
 const STATUS_LABEL: Partial<Record<Conversation["status"], string>> = {
   contato_liberado: "em custódia",
