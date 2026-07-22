@@ -152,6 +152,8 @@ export interface ConversationRepository {
   listPendingPaymentConfirmations(): Promise<Conversation[]>;
   /** Admin: concluídas cujo repasse ao profissional ainda não foi marcado como feito. */
   listPendingPayouts(): Promise<Conversation[]>;
+  /** Admin: todas as conversas (métricas do painel). */
+  listAll(): Promise<Conversation[]>;
   /** Admin marca o repasse (PIX manual) como feito — grava paidOutAt. */
   markPaidOut(conversationId: string): Promise<Conversation | null>;
   /** Marca a conversa como lida por um dos lados (ao abrir) — zera o "não lida". */

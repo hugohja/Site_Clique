@@ -3,7 +3,7 @@ import { accountRepository, clientRepository, conversationRepository, repository
 import { currentAccount } from "@/lib/auth";
 import { isAdminAccount } from "@/lib/admin";
 import { formatBRL, maskCpf, typeLabel } from "@/lib/format";
-import { DOCUMENT_TYPES, payoutAmount } from "@/lib/types";
+import { DOCUMENT_TYPES, commissionAmount, payoutAmount } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
 import AdminDisputeActions from "@/components/AdminDisputeActions";
@@ -38,15 +38,46 @@ export default async function AdminPage() {
     );
   }
 
-  const [pros, clis, disputes, pendingPayments, payouts, allPros, allClis] = await Promise.all([
-    repository.listByStatus("em_analise"),
-    clientRepository.listByStatus("em_analise"),
-    conversationRepository.listDisputes(),
-    conversationRepository.listPendingPaymentConfirmations(),
-    conversationRepository.listPendingPayouts(),
-    repository.list(),
-    clientRepository.list(),
-  ]);
+  const [pros, clis, disputes, pendingPayments, payouts, allPros, allClis, allConvs] =
+    await Promise.all([
+      repository.listByStatus("em_analise"),
+      clientRepository.listByStatus("em_analise"),
+      conversationRepository.listDisputes(),
+      conversationRepository.listPendingPaymentConfirmations(),
+      conversationRepository.listPendingPayouts(),
+      repository.list(),
+      clientRepository.list(),
+      conversationRepository.listAll(),
+    ]);
+
+  // Métricas do negócio (a partir de todas as conversas).
+  const m = {
+    concluidos: 0,
+    gmv: 0, // faturamento bruto (soma dos serviços concluídos)
+    receita: 0, // comissão da Clique (nossa receita)
+    custodia: 0, // dinheiro parado em custódia (liberado/disputa)
+    aRepassar: 0, // concluído, repasse ainda não feito
+    reembolsado: 0,
+    cancelados: 0,
+    ativos: 0, // negociações/pagamentos em andamento
+  };
+  for (const c of allConvs) {
+    const price = c.agreedPrice ?? 0;
+    if (c.status === "concluido") {
+      m.concluidos += 1;
+      m.gmv += price;
+      m.receita += commissionAmount(price, c.commissionRate);
+      if (!c.paidOutAt) m.aRepassar += payoutAmount(price, c.commissionRate);
+    } else if (c.status === "contato_liberado" || c.status === "em_disputa") {
+      m.custodia += price;
+    } else if (c.status === "reembolsado") {
+      m.reembolsado += price;
+    } else if (c.status === "cancelado") {
+      m.cancelados += 1;
+    } else {
+      m.ativos += 1; // conversando, proposta, pagamento informado
+    }
+  }
   const proDocs = await Promise.all(pros.map((p) => docSrc(p.identity.documentPhotoUrl)));
   const cliDocs = await Promise.all(clis.map((c) => docSrc(c.identity.documentPhotoUrl)));
   const disputePros = await Promise.all(disputes.map((d) => repository.getById(d.professionalId)));
@@ -66,6 +97,52 @@ export default async function AdminPage() {
         Confira o documento com foto e aprove os cadastros válidos. CPF e documento são
         confidenciais — use apenas para verificação.
       </p>
+
+      <section className="admin-section">
+        <h2 className="section-title">📊 Visão geral</h2>
+        <div className="admin-metrics">
+          <div className="metric">
+            <span className="metric-label mono">receita da Clique</span>
+            <strong className="metric-value">{formatBRL(m.receita)}</strong>
+            <span className="metric-note mono">comissão de {m.concluidos} serviço{m.concluidos === 1 ? "" : "s"}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">faturamento (GMV)</span>
+            <strong className="metric-value">{formatBRL(m.gmv)}</strong>
+            <span className="metric-note mono">total movimentado nos concluídos</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">em custódia</span>
+            <strong className="metric-value">{formatBRL(m.custodia)}</strong>
+            <span className="metric-note mono">pago, aguardando o evento</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">a repassar</span>
+            <strong className="metric-value">{formatBRL(m.aRepassar)}</strong>
+            <span className="metric-note mono">{payouts.length} repasse{payouts.length === 1 ? "" : "s"} pendente{payouts.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">profissionais</span>
+            <strong className="metric-value">{allPros.length}</strong>
+            <span className="metric-note mono">{allClis.length} clientes</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">serviços concluídos</span>
+            <strong className="metric-value">{m.concluidos}</strong>
+            <span className="metric-note mono">{m.ativos} em andamento</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">reembolsado</span>
+            <strong className="metric-value">{formatBRL(m.reembolsado)}</strong>
+            <span className="metric-note mono">{disputes.length} em disputa</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label mono">cancelados</span>
+            <strong className="metric-value">{m.cancelados}</strong>
+            <span className="metric-note mono">contratações desfeitas</span>
+          </div>
+        </div>
+      </section>
 
       {pendingPayments.length > 0 && (
         <section className="admin-section">

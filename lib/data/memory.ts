@@ -530,6 +530,10 @@ export const memoryConversationRepository: ConversationRepository = {
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   },
 
+  async listAll() {
+    return [...conversations()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
   async markPaidOut(conversationId: string) {
     const conversation = conversations().find((c) => c.id === conversationId);
     if (!conversation) return null;
