@@ -84,6 +84,26 @@ export async function notifyProposal(conv: Conversation, baseUrl: string): Promi
   }
 }
 
+/** E-mail com o link para redefinir a senha. */
+export async function notifyPasswordReset(to: string, link: string): Promise<void> {
+  if (!isEmailConfigured() || !to) return;
+  try {
+    const { html, text } = renderEmail({
+      heading: "Redefinir sua senha",
+      lines: [
+        "Recebemos um pedido para redefinir a senha da sua conta no Clique.",
+        "Clique no botão abaixo para escolher uma nova senha. O link vale por 1 hora.",
+        "Se não foi você, é só ignorar este e-mail — sua senha continua a mesma.",
+      ],
+      cta: "Redefinir senha",
+      ctaUrl: link,
+    });
+    await sendEmail({ to, subject: "Redefinir sua senha — Clique", html, text });
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** E-mail de boas-vindas/confirmação quando a conta é criada. */
 export async function notifyWelcome(
   input: { to: string; name: string; role: "profissional" | "cliente" },

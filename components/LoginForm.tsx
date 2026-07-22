@@ -56,6 +56,11 @@ export default function LoginForm() {
         {sending ? "Entrando…" : "Entrar"}
       </button>
       <p className="form-hint">
+        <a href="/esqueci-senha" style={{ textDecoration: "underline" }}>
+          Esqueci minha senha
+        </a>
+      </p>
+      <p className="form-hint">
         Não tem conta?{" "}
         <a href="/sou-cliente" style={{ textDecoration: "underline" }}>
           Criar conta de cliente
