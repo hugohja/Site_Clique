@@ -4,6 +4,7 @@ import NovaConversaForm from "@/components/NovaConversaForm";
 import { accountRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { typeLabel } from "@/lib/format";
+import { cleanUnavailableDates, todayInBrazil } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,10 @@ export default async function ConversarPage({ params }: { params: Promise<{ id: 
         seu evento e mande a primeira mensagem. A conversa acontece aqui no Clique — o contato
         direto é liberado depois da confirmação do pagamento.
       </p>
-      <NovaConversaForm professionalId={pro.id} />
+      <NovaConversaForm
+        professionalId={pro.id}
+        unavailableDates={cleanUnavailableDates(pro.unavailableDates ?? [], todayInBrazil())}
+      />
     </div>
   );
 }

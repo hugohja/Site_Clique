@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repository, reviewRepository } from "@/lib/data";
 import { formatRating, typeLabel } from "@/lib/format";
-import { verificationLabel } from "@/lib/types";
+import { cleanUnavailableDates, todayInBrazil, verificationLabel } from "@/lib/types";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import ProfileCTA from "@/components/ProfileCTA";
 
@@ -16,6 +16,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // Capa primeiro, resto na ordem salva.
   const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
   const reviews = await reviewRepository.listByProfessional(pro.id);
+  const busyDates = cleanUnavailableDates(pro.unavailableDates ?? [], todayInBrazil());
+  const fmtDate = (iso: string) => {
+    const [y, m, d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  };
 
   return (
     <>
@@ -97,6 +102,22 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </div>
           <h2 className="section-title">Sobre</h2>
           <p className="bio">{pro.bio}</p>
+
+          {busyDates.length > 0 && (
+            <>
+              <h2 className="section-title">Datas indisponíveis</h2>
+              <div className="busy-dates">
+                {busyDates.map((d) => (
+                  <span key={d} className="busy-date mono">
+                    {fmtDate(d)}
+                  </span>
+                ))}
+              </div>
+              <p className="bio" style={{ color: "var(--text-dim)", fontSize: "0.82rem" }}>
+                Nessas datas o profissional já está ocupado — escolha outro dia ao iniciar a conversa.
+              </p>
+            </>
+          )}
 
           <h2 className="section-title">Avaliações ({reviews.length})</h2>
           {reviews.length === 0 ? (

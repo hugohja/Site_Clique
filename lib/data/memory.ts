@@ -144,6 +144,7 @@ export const memoryRepository: ProfessionalRepository = {
       noShowCount: 0,
       responseTimeHours: null,
       portfolio,
+      unavailableDates: [],
       identity: buildIdentity(input),
       createdAt: new Date().toISOString(),
     };
@@ -215,6 +216,13 @@ export const memoryRepository: ProfessionalRepository = {
   async existsByCpf(cpf: string) {
     const digits = cpf.replace(/\D/g, "");
     return digits.length > 0 && store().some((p) => p.identity.cpf === digits);
+  },
+
+  async setUnavailableDates(id: string, dates: string[]) {
+    const pro = store().find((p) => p.id === id);
+    if (!pro) return null;
+    pro.unavailableDates = dates;
+    return pro;
   },
 };
 

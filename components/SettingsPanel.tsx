@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProfileEditor from "@/components/ProfileEditor";
 import PayoutKeyEditor from "@/components/PayoutKeyEditor";
+import AgendaEditor from "@/components/AgendaEditor";
 
 interface Me {
   account: { role: "profissional" | "cliente"; email: string; professionalId: string | null } | null;
@@ -96,6 +97,10 @@ export default function SettingsPanel() {
           <div className="settings-card">
             <h2>Recebimento (PIX)</h2>
             <PayoutKeyEditor />
+          </div>
+          <div className="settings-card">
+            <h2>Agenda de disponibilidade</h2>
+            <AgendaEditor />
           </div>
         </>
       )}
