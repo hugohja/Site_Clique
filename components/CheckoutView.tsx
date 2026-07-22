@@ -57,23 +57,28 @@ export default function CheckoutView({ conversationId }: { conversationId: strin
       .catch(() => setPixEnabled(false));
   }, [load]);
 
-  // Com PIX real, o pagamento é externo: fica esperando o webhook liberar o
-  // contato. Enquanto a cobrança está aberta, verifica o status da conversa.
+  // PIX real: o pagamento é externo. Consultamos o Mercado Pago direto (pelo id
+  // da conversa) enquanto o cliente está no checkout — assim, no instante em que
+  // o PIX é aprovado, o contato é liberado e a tela avança sozinha, sem depender
+  // do webhook. Roda mesmo antes de gerar o QR e sobrevive a um reload da página.
+  const convStatus = data?.conversation.status;
   useEffect(() => {
-    if (!pixCharge) return;
+    if (!pixEnabled) return;
+    if (data?.viewerRole !== "cliente" || convStatus !== "proposta_aceita") return;
     const timer = setInterval(async () => {
-      const res = await fetch(`/api/conversas/${conversationId}`, { cache: "no-store" });
+      const res = await fetch(`/api/conversas/${conversationId}/pagamento/pix/status`, {
+        cache: "no-store",
+      });
       if (!res.ok) return;
-      const body = await res.json();
-      const status = body?.conversation?.status;
-      if (status && status !== "proposta_aceita") {
+      const body = await res.json().catch(() => ({}));
+      if (body?.paid) {
         clearInterval(timer);
         router.push(`/conversa/${conversationId}`);
         router.refresh();
       }
     }, 4000);
     return () => clearInterval(timer);
-  }, [pixCharge, conversationId, router]);
+  }, [pixEnabled, data?.viewerRole, convStatus, conversationId, router]);
 
   // Simulação (sem Mercado Pago): confirma na hora e volta pra conversa.
   async function paySimulado() {

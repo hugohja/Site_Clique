@@ -1228,6 +1228,44 @@ h3 {
   padding: 0.7rem 0.9rem;
 }
 
+/* Contraproposta: aceitar em cima, responder com outro valor logo abaixo. */
+.deal-counter {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--border);
+}
+
+.deal-update {
+  margin-top: 0.7rem;
+}
+
+.deal-update > summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  list-style: none;
+}
+
+.deal-update > summary::-webkit-details-marker {
+  display: none;
+}
+
+.deal-update > summary::before {
+  content: "＋ ";
+}
+
+.deal-update[open] > summary::before {
+  content: "− ";
+}
+
+.deal-update > summary:hover {
+  color: var(--text);
+}
+
+.deal-update .deal-form {
+  margin-top: 0.7rem;
+}
+
 /* ---- Avatar no perfil + fotos reais no portfólio ---- */
 
 .profile-identity {

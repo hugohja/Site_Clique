@@ -127,6 +127,7 @@ create table if not exists conversations (
   proposal_amount      integer,
   proposal_proposed_at timestamptz,
   proposal_accepted_at timestamptz,
+  proposal_by          text, -- quem fez a proposta vigente ('profissional' | 'cliente')
   agreed_price         integer,
   commission_rate      real not null,
   confirmation_code    text, -- código do evento (custódia); só o cliente vê
@@ -144,6 +145,7 @@ create table if not exists conversations (
 -- alter table conversations add column if not exists client_last_read_at timestamptz;
 -- alter table conversations add column if not exists pro_last_read_at timestamptz;
 -- alter table conversations add column if not exists event_time text;
+-- alter table conversations add column if not exists proposal_by text;
 create index if not exists conversations_pro_idx on conversations (professional_id);
 create index if not exists conversations_client_idx on conversations (client_id);
 
