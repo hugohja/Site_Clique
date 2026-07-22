@@ -350,7 +350,7 @@ export const memoryConversationRepository: ConversationRepository = {
     }
     conversation.proposal = { amount, proposedAt: new Date().toISOString(), acceptedAt: null };
     conversation.status = "proposta_enviada";
-    conversation.messages.push(systemMessage(`Proposta enviada: R$ ${amount.toLocaleString("pt-BR")}`));
+    conversation.messages.push(systemMessage(`Proposta enviada: R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`));
     return conversation;
   },
 
@@ -365,7 +365,7 @@ export const memoryConversationRepository: ConversationRepository = {
     conversation.status = "proposta_aceita";
     conversation.messages.push(
       systemMessage(
-        `Proposta de R$ ${conversation.proposal.amount.toLocaleString("pt-BR")} aceita pelo cliente — pagamento liberado`
+        `Proposta de R$ ${conversation.proposal.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} aceita pelo cliente — pagamento liberado`
       )
     );
     return conversation;
@@ -381,7 +381,7 @@ export const memoryConversationRepository: ConversationRepository = {
     conversation.status = "pagamento_confirmado";
     conversation.agreedPrice = conversation.proposal.amount;
     conversation.messages.push(
-      systemMessage(`Pagamento de R$ ${conversation.proposal.amount.toLocaleString("pt-BR")} confirmado`)
+      systemMessage(`Pagamento de R$ ${conversation.proposal.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} confirmado`)
     );
     return conversation;
   },

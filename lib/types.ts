@@ -249,13 +249,13 @@ export function toPublicClient(client: Client): PublicClient {
 /** Comissão da plataforma vigente (12%), gravada na conversa no fechamento. */
 export const COMMISSION_RATE = 0.12;
 
-/** Comissão da plataforma sobre um valor fechado (arredondada). */
+/** Comissão da plataforma sobre um valor fechado (arredondada aos centavos). */
 export function commissionAmount(price: number, rate: number): number {
-  return Math.round(price * rate);
+  return Math.round(price * rate * 100) / 100;
 }
-/** Quanto o profissional recebe (valor menos a comissão). */
+/** Quanto o profissional recebe (valor menos a comissão, em centavos exatos). */
 export function payoutAmount(price: number, rate: number): number {
-  return price - commissionAmount(price, rate);
+  return Math.round((price - commissionAmount(price, rate)) * 100) / 100;
 }
 
 /**

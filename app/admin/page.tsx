@@ -2,7 +2,7 @@ import Link from "next/link";
 import { accountRepository, clientRepository, conversationRepository, repository } from "@/lib/data";
 import { currentAccount } from "@/lib/auth";
 import { isAdminAccount } from "@/lib/admin";
-import { maskCpf, typeLabel } from "@/lib/format";
+import { formatBRL, maskCpf, typeLabel } from "@/lib/format";
 import { DOCUMENT_TYPES, payoutAmount } from "@/lib/types";
 import { DOCUMENTS_BUCKET, isSupabaseConfigured, sbSignedUrl } from "@/lib/supabase";
 import AdminActions from "@/components/AdminActions";
@@ -85,7 +85,7 @@ export default async function AdminPage() {
                     </p>
                     {p.proposal?.amount != null && (
                       <p className="admin-meta mono">
-                        valor informado: <strong>R$ {p.proposal.amount.toLocaleString("pt-BR")}</strong>
+                        valor informado: <strong>{formatBRL(p.proposal.amount)}</strong>
                       </p>
                     )}
                   </div>
@@ -112,7 +112,7 @@ export default async function AdminPage() {
                     <p className="admin-meta mono">local: {d.eventLocation}</p>
                     {d.agreedPrice != null && (
                       <p className="admin-meta mono">
-                        valor em custódia: R$ {d.agreedPrice.toLocaleString("pt-BR")}
+                        valor em custódia: {formatBRL(d.agreedPrice)}
                       </p>
                     )}
                   </div>
@@ -145,8 +145,7 @@ export default async function AdminPage() {
                         cliente: {p.clientName} · {p.eventType} · {p.eventDate}
                       </p>
                       <p className="admin-meta mono">
-                        repassar: <strong>R$ {payout.toLocaleString("pt-BR")}</strong> (de R${" "}
-                        {price.toLocaleString("pt-BR")})
+                        repassar: <strong>{formatBRL(payout)}</strong> (de {formatBRL(price)})
                       </p>
                       <p className="admin-meta mono">
                         chave PIX:{" "}

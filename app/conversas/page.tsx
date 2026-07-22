@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatBRL } from "@/lib/format";
 
 interface Item {
   id: string;
@@ -80,7 +81,7 @@ export default function ConversasPage() {
                 </div>
                 <span className="inbox-meta mono">
                   {c.eventType} · {c.eventDate}
-                  {c.agreedPrice ? ` · R$ ${c.agreedPrice.toLocaleString("pt-BR")}` : ""}
+                  {c.agreedPrice ? ` · ${formatBRL(c.agreedPrice)}` : ""}
                 </span>
                 {c.lastMessage && (
                   <span className="inbox-last">

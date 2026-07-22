@@ -550,7 +550,7 @@ async function fetchConversation(id: string): Promise<Conversation | null> {
   return rows[0] ? toConversation(rows[0]) : null;
 }
 
-const brl = (n: number) => n.toLocaleString("pt-BR");
+const brl = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const supabaseConversationRepository: ConversationRepository = {
   async create(input) {
