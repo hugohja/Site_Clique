@@ -22,9 +22,10 @@ function mmss(total: number): string {
 }
 
 /**
- * Checkout da custódia (fase de teste: pagamento SIMULADO). Só o cliente da
- * conversa, com a proposta aceita, pode pagar. Ao confirmar, chama a rota de
- * pagamento (que segura o valor e libera o contato) e volta pra conversa.
+ * Checkout da custódia. Só o cliente da conversa, com a proposta aceita, pode
+ * pagar. Com Mercado Pago configurado, gera o PIX real; senão, cobrança manual
+ * na chave da Clique. Ao confirmar, o valor fica em custódia e o contato é
+ * liberado.
  */
 interface PixCharge {
   qrCode: string;

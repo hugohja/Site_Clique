@@ -78,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>{children}</main>
         <footer className="site-footer">
           <div className="container footer-inner">
-            <span className="mono footer-meta">CLIQUE · BRASIL · protótipo</span>
+            <span className="mono footer-meta">© {new Date().getFullYear()} Clique · Brasil</span>
             <span className="footer-note">
               Fotógrafos, filmmakers e editores de foto e vídeo. Converse e feche pelo Clique.
             </span>
