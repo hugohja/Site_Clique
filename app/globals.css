@@ -419,6 +419,14 @@ h3 {
 .btn-contact:hover {
   filter: brightness(1.08);
 }
+/* Placeholder enquanto o ProfileCTA carrega a sessão (evita piscar botão errado). */
+.btn-contact-ghost {
+  background: var(--surface-2);
+  color: transparent;
+  pointer-events: none;
+  min-width: 9rem;
+  justify-content: center;
+}
 
 .stats-strip {
   display: flex;

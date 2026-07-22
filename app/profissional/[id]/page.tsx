@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { accountRepository, repository } from "@/lib/data";
-import { currentAccount } from "@/lib/auth";
-import { isAdminAccount } from "@/lib/admin";
+import { repository } from "@/lib/data";
 import { formatRating, typeLabel } from "@/lib/format";
 import { verificationLabel } from "@/lib/types";
 import PortfolioGallery from "@/components/PortfolioGallery";
+import ProfileCTA from "@/components/ProfileCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +13,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const pro = await repository.getById(id);
   if (!pro) notFound();
 
-  const account = await currentAccount((accId) => accountRepository.getById(accId));
-  const isOwner = account?.role === "profissional" && account.professionalId === pro.id;
-  const isAdmin = isAdminAccount(account);
   // Capa primeiro, resto na ordem salva.
   const portfolio = [...pro.portfolio].sort((a, b) => Number(b.cover) - Number(a.cover));
 
@@ -49,20 +45,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 </span>
               </div>
             </div>
-            {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado. */}
-            {isOwner ? (
-              <Link href="/configuracoes" className="btn-contact">
-                Configurações
-              </Link>
-            ) : isAdmin ? (
-              <Link href={`/admin/profissional/${pro.id}`} className="btn-contact">
-                Editar (admin)
-              </Link>
-            ) : (
-              <Link href={`/profissional/${pro.id}/conversar`} className="btn-contact">
-                Iniciar conversa
-              </Link>
-            )}
+            {/* Contato direto nunca aparece aqui — só via chat com pagamento confirmado.
+                O botão é decidido no cliente (ProfileCTA) pela sessão real, pra o dono
+                nunca ver "Iniciar conversa" no próprio perfil mesmo com página cacheada. */}
+            <ProfileCTA professionalId={pro.id} />
           </div>
           <div className="stats-strip mono">
             <span>
