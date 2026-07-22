@@ -141,7 +141,7 @@ create table if not exists conversations (
   event_time           text, -- horário do evento (HH:MM)
   event_location       text not null,
   status               text not null default 'conversando'
-                         check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado')),
+                         check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado','cancelado')),
   proposal_amount      integer,
   proposal_proposed_at timestamptz,
   proposal_accepted_at timestamptz,
@@ -157,7 +157,7 @@ create table if not exists conversations (
 -- Banco já existente? rode (atualiza o check de status e adiciona a coluna):
 -- alter table conversations drop constraint if exists conversations_status_check;
 -- alter table conversations add constraint conversations_status_check
---   check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado'));
+--   check (status in ('conversando','proposta_enviada','proposta_aceita','pagamento_confirmado','contato_liberado','concluido','em_disputa','reembolsado','cancelado'));
 -- alter table conversations add column if not exists confirmation_code text;
 -- alter table conversations add column if not exists paid_out_at timestamptz;
 -- alter table conversations add column if not exists client_last_read_at timestamptz;

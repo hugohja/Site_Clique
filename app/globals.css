@@ -1009,9 +1009,31 @@ h3 {
   border-color: #d9822b;
   color: #d9822b;
 }
-.status-badge.status-reembolsado {
+.status-badge.status-reembolsado,
+.status-badge.status-cancelado {
   border-color: var(--border);
   color: var(--text-dim);
+}
+
+.cancel-row {
+  margin-top: 1rem;
+  text-align: center;
+}
+.btn-cancel-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.btn-cancel-link:hover {
+  color: var(--coral);
+}
+.btn-cancel-link:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ---- custódia (escrow) ---- */

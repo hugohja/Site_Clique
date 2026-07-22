@@ -116,6 +116,15 @@ export interface ConversationRepository {
   /** O lado que NÃO fez a proposta vigente aceita (→ proposta_aceita). */
   acceptProposal(conversationId: string): Promise<Conversation | null>;
   /**
+   * Cancela a contratação antes do evento. Antes do pagamento → "cancelado".
+   * Com pagamento envolvido (pagamento_confirmado / contato_liberado) → vira
+   * disputa para a Clique reembolsar. `by` é quem cancelou.
+   */
+  cancelConversation(
+    conversationId: string,
+    by: "cliente" | "profissional"
+  ): Promise<Conversation | null>;
+  /**
    * Registra o pagamento SEMPRE pelo valor da proposta aceita registrada —
    * não recebe valor de fora. Só permitido em proposta_aceita.
    */
