@@ -5,6 +5,7 @@ import { censorContactAttempts } from "@/lib/moderation";
 import { cleanEventLabel, eventDateTimeError, hasUnread, type Conversation } from "@/lib/types";
 import { currentAccount } from "@/lib/auth";
 import { notifyNewConversation } from "@/lib/notify";
+import { isAdminEmail } from "@/lib/admin";
 
 /** Inbox: conversas do usuário logado (cliente ou profissional). */
 export async function GET() {
@@ -84,8 +85,9 @@ export async function POST(request: NextRequest) {
   if (firstMessage.length < 5) errors.push("Escreva uma mensagem inicial.");
 
   const professional = await repository.getById(professionalId);
-  if (!professional) errors.push("Profissional não encontrado.");
-  else if (professional.unavailableDates?.includes(eventDate)) {
+  if (!professional || isAdminEmail(professional.email)) {
+    errors.push("Profissional não encontrado.");
+  } else if (professional.unavailableDates?.includes(eventDate)) {
     errors.push("O profissional marcou essa data como indisponível. Escolha outra data.");
   }
 
