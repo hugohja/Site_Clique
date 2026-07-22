@@ -3,7 +3,11 @@ import { Inter, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
 import HeaderNav from "@/components/HeaderNav";
 import PwaRegister from "@/components/PwaRegister";
+import { siteUrl } from "@/lib/siteUrl";
 import "./globals.css";
+
+const DESCRIPTION =
+  "Encontre fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio, converse pelo chat do Clique e feche com segurança.";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const plexMono = IBM_Plex_Mono({
@@ -13,9 +17,23 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clique — fotógrafos, filmmakers e editores para o seu evento",
-  description:
-    "Encontre fotógrafos, filmmakers e editores freelancers em todo o Brasil. Veja o portfólio, converse pelo chat do Clique e feche com segurança.",
+  metadataBase: new URL(siteUrl()),
+  title: {
+    default: "Clique — fotógrafos, filmmakers e editores para o seu evento",
+    template: "%s · Clique",
+  },
+  description: DESCRIPTION,
+  applicationName: "Clique",
+  keywords: [
+    "fotógrafo",
+    "filmmaker",
+    "editor de vídeo",
+    "fotografia de evento",
+    "casamento",
+    "freelancer",
+    "contratar fotógrafo",
+    "Brasil",
+  ],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -25,6 +43,19 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/icon-192.png" }],
     apple: "/icon-192.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Clique",
+    title: "Clique — fotógrafos, filmmakers e editores para o seu evento",
+    description: DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Clique — fotógrafos, filmmakers e editores para o seu evento",
+    description: DESCRIPTION,
   },
 };
 

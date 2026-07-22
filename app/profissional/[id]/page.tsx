@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repository, reviewRepository } from "@/lib/data";
@@ -8,6 +9,38 @@ import PortfolioGallery from "@/components/PortfolioGallery";
 import ProfileCTA from "@/components/ProfileCTA";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const pro = await repository.getById(id);
+  if (!pro || isAdminEmail(pro.email)) return { title: "Perfil não encontrado" };
+
+  const title = `${pro.name} — ${typeLabel(pro.type)} em ${pro.city}`;
+  const specialties = pro.specialties.filter((s) => !isReservedLabel(s)).slice(0, 4).join(", ");
+  const description = specialties
+    ? `${typeLabel(pro.type)} em ${pro.city}. Especialidades: ${specialties}. Veja o portfólio e converse pelo Clique.`
+    : `${typeLabel(pro.type)} em ${pro.city}. Veja o portfólio e converse pelo Clique.`;
+  // Só usa a foto como imagem de link se for URL http (produção); data URL não serve.
+  const image = pro.profilePhotoUrl?.startsWith("http") ? [pro.profilePhotoUrl] : undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/profissional/${pro.id}` },
+    openGraph: {
+      type: "profile",
+      title,
+      description,
+      url: `/profissional/${pro.id}`,
+      images: image,
+    },
+    twitter: { card: image ? "summary_large_image" : "summary", title, description, images: image },
+  };
+}
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
