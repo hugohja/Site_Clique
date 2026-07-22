@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DOCUMENT_TYPES, GENDERS } from "@/lib/types";
 import { maskCpf, maskPhone } from "@/lib/format";
 import FileField from "@/components/FileField";
+import FancySelect from "@/components/FancySelect";
 
 /**
  * Bloco de identidade + verificação compartilhado pelo cadastro de profissional
@@ -14,6 +15,8 @@ import FileField from "@/components/FileField";
 export default function IdentityFields({ profilePhotoRequired = true }: { profilePhotoRequired?: boolean }) {
   const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [gender, setGender] = useState("");
+  const [documentType, setDocumentType] = useState("");
 
   return (
     <>
@@ -51,16 +54,14 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
       <div className="field-row">
         <div className="field">
           <label htmlFor="gender">Gênero</label>
-          <select id="gender" name="gender" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {GENDERS.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
-              </option>
-            ))}
-          </select>
+          <FancySelect
+            id="gender"
+            name="gender"
+            ariaLabel="Gênero"
+            value={gender}
+            onChange={setGender}
+            options={[{ value: "", label: "Selecione" }, ...GENDERS.map((g) => ({ value: g.value, label: g.label }))]}
+          />
         </div>
         <div className="field">
           <label htmlFor="birthDate">Data de nascimento</label>
@@ -81,16 +82,17 @@ export default function IdentityFields({ profilePhotoRequired = true }: { profil
       <div className="field-row">
         <div className="field">
           <label htmlFor="documentType">Tipo de documento</label>
-          <select id="documentType" name="documentType" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {DOCUMENT_TYPES.map((d) => (
-              <option key={d.value} value={d.value}>
-                {d.label}
-              </option>
-            ))}
-          </select>
+          <FancySelect
+            id="documentType"
+            name="documentType"
+            ariaLabel="Tipo de documento"
+            value={documentType}
+            onChange={setDocumentType}
+            options={[
+              { value: "", label: "Selecione" },
+              ...DOCUMENT_TYPES.map((d) => ({ value: d.value, label: d.label })),
+            ]}
+          />
         </div>
         <div className="field">
           <label htmlFor="documentPhoto">Foto do documento (obrigatória)</label>

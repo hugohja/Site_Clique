@@ -6,6 +6,7 @@ import { EVENT_TYPES, MIN_PORTFOLIO_PHOTOS, PROFESSIONAL_TYPES, isValidCity } fr
 import { isStrongPassword } from "@/lib/password";
 import { resizeImage } from "@/lib/image-resize";
 import CityField from "@/components/CityField";
+import FancySelect from "@/components/FancySelect";
 import CredentialFields from "@/components/CredentialFields";
 import IdentityFields from "@/components/IdentityFields";
 import PortfolioEditor, { type PortfolioEntry } from "@/components/PortfolioEditor";
@@ -15,6 +16,7 @@ export default function CadastroForm() {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [city, setCity] = useState("");
+  const [proType, setProType] = useState("");
   const [outras, setOutras] = useState("");
   const [portfolio, setPortfolio] = useState<PortfolioEntry[]>([]);
 
@@ -101,16 +103,17 @@ export default function CadastroForm() {
         </div>
         <div className="field">
           <label htmlFor="type">Você é</label>
-          <select id="type" name="type" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {PROFESSIONAL_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+          <FancySelect
+            id="type"
+            name="type"
+            ariaLabel="Tipo de profissional"
+            value={proType}
+            onChange={setProType}
+            options={[
+              { value: "", label: "Selecione" },
+              ...PROFESSIONAL_TYPES.map((t) => ({ value: t.value, label: t.label })),
+            ]}
+          />
         </div>
       </div>
 

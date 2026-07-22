@@ -17,11 +17,16 @@ export default function FancySelect({
   onChange,
   options,
   ariaLabel,
+  name,
+  id,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: FancyOption[];
   ariaLabel: string;
+  /** Se informado, espelha o valor num input oculto pro envio via formulário. */
+  name?: string;
+  id?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -86,8 +91,10 @@ export default function FancySelect({
 
   return (
     <div className={`fs ${open ? "open" : ""}`} ref={ref}>
+      {name && <input type="hidden" name={name} value={value} />}
       <button
         type="button"
+        id={id}
         className="fs-btn"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -95,7 +102,7 @@ export default function FancySelect({
         onClick={() => setOpen((o) => !o)}
         onKeyDown={onKeyDown}
       >
-        <span className="fs-value">{current?.label ?? ""}</span>
+        <span className={`fs-value ${value === "" ? "placeholder" : ""}`}>{current?.label ?? ""}</span>
         <span className="fs-arrow" aria-hidden>
           <svg width="11" height="7" viewBox="0 0 11 7" fill="none">
             <path d="M1 1l4.5 4.5L10 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
