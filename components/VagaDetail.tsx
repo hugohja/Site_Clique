@@ -1,59 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatBRL, maskCurrency, typeLabel } from "@/lib/format";
-import type { ProfessionalType } from "@/lib/types";
+import type { OpportunityView } from "@/lib/opportunityView";
 
-interface Opp {
-  id: string;
-  clientName: string;
-  eventType: string;
-  eventDate: string;
-  eventTime: string;
-  eventLocation: string;
-  description: string;
-  slots: number;
-  budgetMin: number | null;
-  budgetMax: number | null;
-  status: "aberta" | "encerrada";
-}
-interface AppItem {
-  id: string;
-  professionalId: string;
-  professionalName: string;
-  message: string;
-  proposedAmount: number | null;
-  status: "pendente" | "escolhida" | "recusada";
-  createdAt: string;
-  pro: { city: string; type: string; rating: number; reviewCount: number; profilePhotoUrl: string; verified: boolean } | null;
-}
-interface Payload {
-  opportunity: Opp;
-  viewerRole: "dono" | "profissional" | "outro";
-  applications: AppItem[];
-  myApplication: { id: string; message: string; proposedAmount: number | null; status: string } | null;
-}
-
-export default function VagaDetail({ id }: { id: string }) {
+/**
+ * Detalhe da vaga. Recebe os dados já renderizados no servidor (initial) —
+ * sem waterfall de fetch no cliente — e cuida só das ações interativas
+ * (candidatar / escolher). Após uma ação, router.refresh() re-renderiza o
+ * server component e os dados atualizados chegam por prop.
+ */
+export default function VagaDetail({ id, initial }: { id: string; initial: OpportunityView }) {
   const router = useRouter();
-  const [data, setData] = useState<Payload | null>(null);
-  const [notFound, setNotFound] = useState(false);
   const [message, setMessage] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    const res = await fetch(`/api/oportunidades/${id}`, { cache: "no-store" });
-    if (res.status === 404) return setNotFound(true);
-    if (res.ok) setData(await res.json());
-  }, [id]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   async function apply(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +38,7 @@ export default function VagaDetail({ id }: { id: string }) {
         setError(body.error ?? "Não foi possível se candidatar.");
         return;
       }
-      await load();
+      router.refresh();
     } catch {
       setError("Falha de conexão.");
     } finally {
@@ -105,20 +69,7 @@ export default function VagaDetail({ id }: { id: string }) {
     }
   }
 
-  if (notFound) {
-    return (
-      <div className="empty-state" style={{ marginTop: "1.5rem" }}>
-        <span className="mono">404_VAGA</span>
-        Vaga não encontrada.{" "}
-        <Link href="/oportunidades" style={{ textDecoration: "underline" }}>
-          ver vagas
-        </Link>
-      </div>
-    );
-  }
-  if (!data) return <p className="mono" style={{ color: "var(--text-dim)" }}>carregando…</p>;
-
-  const { opportunity: o, viewerRole, applications, myApplication } = data;
+  const { opportunity: o, viewerRole, applications, myApplication } = initial;
   const range =
     o.budgetMin != null && o.budgetMax != null
       ? `${formatBRL(o.budgetMin)}–${formatBRL(o.budgetMax)}`
@@ -216,7 +167,7 @@ export default function VagaDetail({ id }: { id: string }) {
                       )}
                     </div>
                     {a.pro && (
-                      <span className="mono dim">{typeLabel(a.pro.type as ProfessionalType)} · {a.pro.city}</span>
+                      <span className="mono dim">{typeLabel(a.pro.type)} · {a.pro.city}</span>
                     )}
                     <p className="cand-msg">{a.message}</p>
                     {a.proposedAmount ? (

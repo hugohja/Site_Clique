@@ -20,9 +20,12 @@ function faixa(min: number | null, max: number | null): string | null {
 export default async function OportunidadesPage() {
   const account = await currentAccount((id) => accountRepository.getById(id));
   const isClient = account?.role === "cliente";
-  const opps = await opportunityRepository.listOpen();
-  const myOpps =
-    isClient && account?.clientId ? await opportunityRepository.listForClient(account.clientId) : [];
+  const clientId = isClient ? account?.clientId : null;
+  // Busca as duas listas em paralelo — sem encadear uma espera na outra.
+  const [opps, myOpps] = await Promise.all([
+    opportunityRepository.listOpen(),
+    clientId ? opportunityRepository.listForClient(clientId) : Promise.resolve([]),
+  ]);
 
   return (
     <div className="container" style={{ paddingBlock: "2rem" }}>
