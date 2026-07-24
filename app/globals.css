@@ -2732,6 +2732,146 @@ h3 {
   flex-wrap: wrap;
 }
 
+/* ---- Vagas de evento (oportunidades) ---- */
+.opps-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.opps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}
+.opp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.opp-card:hover {
+  border-color: color-mix(in srgb, var(--amber) 50%, var(--border));
+  transform: translateY(-1px);
+}
+.opp-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.opp-type {
+  color: var(--coral);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.opp-slots {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.opp-when {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.opp-desc {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.opp-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.opp-budget {
+  color: var(--amber);
+  font-weight: 600;
+}
+.opp-detail-head {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--coral);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.3rem;
+  background: var(--surface);
+}
+
+/* Candidaturas (visão da empresa) */
+.cand-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.cand-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.cand-card.chosen {
+  border-color: #24a148;
+  background: color-mix(in srgb, #24a148 8%, var(--surface));
+}
+.cand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 200px;
+}
+.cand-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.cand-name {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+.cand-name:hover {
+  text-decoration: underline;
+}
+.cand-msg {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.cand-value {
+  font-size: 0.82rem;
+  color: var(--amber);
+  font-weight: 600;
+}
+.cand-action {
+  flex-shrink: 0;
+}
+
 /* ---- Métricas do painel admin ---- */
 .admin-metrics {
   display: grid;
