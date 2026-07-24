@@ -1,22 +1,28 @@
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type {
   AccountRepository,
+  ApplicationRepository,
   ClientRepository,
   ConversationRepository,
+  OpportunityRepository,
   ProfessionalRepository,
   ReviewRepository,
 } from "./repository";
 import {
   memoryAccountRepository,
+  memoryApplicationRepository,
   memoryClientRepository,
   memoryConversationRepository,
+  memoryOpportunityRepository,
   memoryRepository,
   memoryReviewRepository,
 } from "./memory";
 import {
   supabaseAccountRepository,
+  supabaseApplicationRepository,
   supabaseClientRepository,
   supabaseConversationRepository,
+  supabaseOpportunityRepository,
   supabaseRepository,
   supabaseReviewRepository,
 } from "./supabase";
@@ -45,11 +51,19 @@ export const accountRepository: AccountRepository = useSupabase
 export const reviewRepository: ReviewRepository = useSupabase
   ? supabaseReviewRepository
   : memoryReviewRepository;
+export const opportunityRepository: OpportunityRepository = useSupabase
+  ? supabaseOpportunityRepository
+  : memoryOpportunityRepository;
+export const applicationRepository: ApplicationRepository = useSupabase
+  ? supabaseApplicationRepository
+  : memoryApplicationRepository;
 
 export type {
   AccountRepository,
+  ApplicationRepository,
   ClientRepository,
   ConversationRepository,
+  OpportunityRepository,
   ProfessionalFilters,
   ProfessionalRepository,
   ReviewRepository,

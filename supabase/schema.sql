@@ -191,6 +191,40 @@ create table if not exists reviews (
 create index if not exists reviews_pro_idx on reviews (professional_id);
 -- unique(conversation_id) garante uma avaliação por conversa.
 
+-- ---------- Oportunidades / Vagas de evento ----------
+-- Empresa (conta de cliente) publica um evento; profissionais se candidatam.
+create table if not exists opportunities (
+  id             uuid primary key default gen_random_uuid(),
+  client_id      text not null references clients (id) on delete cascade,
+  client_name    text not null,
+  event_type     text not null,
+  event_date     text not null,
+  event_time     text,
+  event_location text not null,
+  description    text not null default '',
+  slots          integer not null default 1,
+  budget_min     integer,
+  budget_max     integer,
+  status         text not null default 'aberta' check (status in ('aberta','encerrada')),
+  created_at     timestamptz not null default now()
+);
+create index if not exists opportunities_status_idx on opportunities (status);
+create index if not exists opportunities_client_idx on opportunities (client_id);
+
+create table if not exists applications (
+  id                uuid primary key default gen_random_uuid(),
+  opportunity_id    uuid not null references opportunities (id) on delete cascade,
+  professional_id   text not null references professionals (id) on delete cascade,
+  professional_name text not null,
+  message           text not null default '',
+  proposed_amount   integer,
+  status            text not null default 'pendente' check (status in ('pendente','escolhida','recusada')),
+  created_at        timestamptz not null default now(),
+  unique (opportunity_id, professional_id)
+);
+create index if not exists applications_opp_idx on applications (opportunity_id);
+create index if not exists applications_pro_idx on applications (professional_id);
+
 -- ---------- RLS: ligado, sem política pública ----------
 -- A service_role key (usada pelo servidor) ignora RLS. A anon key não passa.
 alter table professionals          enable row level security;
@@ -202,6 +236,8 @@ alter table accounts               enable row level security;
 alter table sessions               enable row level security;
 alter table conversations          enable row level security;
 alter table messages               enable row level security;
+alter table opportunities          enable row level security;
+alter table applications           enable row level security;
 alter table reviews                enable row level security;
 
 -- ---------- Storage ----------

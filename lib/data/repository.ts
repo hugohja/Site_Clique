@@ -1,11 +1,16 @@
 import type {
   Account,
+  Application,
+  ApplicationInput,
+  ApplicationStatus,
   ChatMessage,
   Client,
   ClientInput,
   Conversation,
   ConversationInput,
   EventType,
+  Opportunity,
+  OpportunityInput,
   Professional,
   ProfessionalInput,
   ProfessionalType,
@@ -166,4 +171,26 @@ export interface ReviewRepository {
   listByProfessional(professionalId: string): Promise<Review[]>;
   /** A avaliação de uma conversa, se já existir (impede avaliar duas vezes). */
   getByConversation(conversationId: string): Promise<Review | null>;
+}
+
+export interface OpportunityRepository {
+  create(input: OpportunityInput): Promise<Opportunity>;
+  getById(id: string): Promise<Opportunity | null>;
+  /** Vagas abertas (pros veem pra se candidatar). */
+  listOpen(): Promise<Opportunity[]>;
+  /** Vagas publicadas por um cliente/empresa. */
+  listForClient(clientId: string): Promise<Opportunity[]>;
+  /** Encerra a vaga (não aceita mais candidaturas). */
+  close(id: string): Promise<Opportunity | null>;
+}
+
+export interface ApplicationRepository {
+  create(input: ApplicationInput): Promise<Application>;
+  /** Candidaturas de uma vaga (mais recentes primeiro). */
+  listForOpportunity(opportunityId: string): Promise<Application[]>;
+  /** Candidatura de um profissional numa vaga (impede candidatar duas vezes). */
+  getByPro(opportunityId: string, professionalId: string): Promise<Application | null>;
+  /** Todas as candidaturas de um profissional (as vagas dele). */
+  listForProfessional(professionalId: string): Promise<Application[]>;
+  setStatus(id: string, status: ApplicationStatus): Promise<Application | null>;
 }

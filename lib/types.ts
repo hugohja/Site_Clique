@@ -440,6 +440,74 @@ export function cleanRating(n: number): number {
   return Math.min(5, Math.max(1, Math.round(n)));
 }
 
+/**
+ * Oportunidade/Vaga: uma empresa (conta de cliente) anuncia um evento e os
+ * profissionais se candidatam. Ao escolher um candidato, abre a conversa normal
+ * com custódia — o fechamento continua dentro da Clique.
+ */
+export type OpportunityStatus = "aberta" | "encerrada";
+
+export interface Opportunity {
+  id: string;
+  clientId: string;
+  clientName: string;
+  eventType: EventType;
+  eventDate: string;
+  eventTime: string;
+  eventLocation: string;
+  description: string;
+  /** Quantas vagas (profissionais) o evento precisa. */
+  slots: number;
+  /** Faixa de cachê por vaga (opcional), em reais. */
+  budgetMin: number | null;
+  budgetMax: number | null;
+  status: OpportunityStatus;
+  createdAt: string;
+}
+
+export type OpportunityInput = Pick<
+  Opportunity,
+  | "clientId"
+  | "clientName"
+  | "eventType"
+  | "eventDate"
+  | "eventTime"
+  | "eventLocation"
+  | "description"
+  | "slots"
+  | "budgetMin"
+  | "budgetMax"
+>;
+
+export type ApplicationStatus = "pendente" | "escolhida" | "recusada";
+
+/** Candidatura de um profissional a uma oportunidade. Uma por (vaga, profissional). */
+export interface Application {
+  id: string;
+  opportunityId: string;
+  professionalId: string;
+  professionalName: string;
+  message: string;
+  /** Valor que o profissional cobra (opcional); vira a proposta ao ser escolhido. */
+  proposedAmount: number | null;
+  status: ApplicationStatus;
+  createdAt: string;
+}
+
+export type ApplicationInput = Pick<
+  Application,
+  "opportunityId" | "professionalId" | "professionalName" | "message" | "proposedAmount"
+>;
+
+/** Máximo de vagas por oportunidade (evita número absurdo). */
+export const MAX_SLOTS = 20;
+
+/** Normaliza o nº de vagas pro intervalo 1–MAX_SLOTS. */
+export function cleanSlots(n: number): number {
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(MAX_SLOTS, Math.max(1, Math.round(n)));
+}
+
 /** Antecedência mínima para eventos no mesmo dia (2 horas). */
 export const MIN_EVENT_LEAD_HOURS = 2;
 

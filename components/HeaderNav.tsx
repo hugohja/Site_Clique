@@ -81,6 +81,9 @@ export default function HeaderNav() {
         <Link href="/" className="nav-link">
           Buscar
         </Link>
+        <Link href="/oportunidades" className="nav-link">
+          Vagas
+        </Link>
         <Link href="/entrar" className="nav-link">
           Entrar
         </Link>
@@ -101,6 +104,9 @@ export default function HeaderNav() {
     <nav className="header-nav">
       <Link href="/" className="nav-link">
         Buscar
+      </Link>
+      <Link href="/oportunidades" className="nav-link">
+        Vagas
       </Link>
       <Link href="/conversas" className="nav-link nav-link-badge">
         Conversas

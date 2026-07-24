@@ -1,6 +1,9 @@
 import { randomInt, randomUUID } from "node:crypto";
 import type {
   Account,
+  Application,
+  ApplicationInput,
+  ApplicationStatus,
   ChatMessage,
   Client,
   ClientInput,
@@ -9,6 +12,9 @@ import type {
   DocumentType,
   Gender,
   IdentityRecord,
+  Opportunity,
+  OpportunityInput,
+  OpportunityStatus,
   PortfolioItem,
   Professional,
   ProfessionalInput,
@@ -22,8 +28,10 @@ import { rankProfessionals } from "@/lib/ranking";
 import { q, sbDelete, sbInsert, sbSelect, sbUpdate } from "@/lib/supabase";
 import type {
   AccountRepository,
+  ApplicationRepository,
   ClientRepository,
   ConversationRepository,
+  OpportunityRepository,
   ProfessionalFilters,
   ProfessionalRepository,
   ReviewRepository,
@@ -922,5 +930,168 @@ export const supabaseReviewRepository: ReviewRepository = {
     } catch {
       return null;
     }
+  },
+};
+
+// ---- Oportunidades / Candidaturas ----
+
+interface OpportunityRow {
+  id: string;
+  client_id: string;
+  client_name: string;
+  event_type: string;
+  event_date: string;
+  event_time: string | null;
+  event_location: string;
+  description: string;
+  slots: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  status: OpportunityStatus;
+  created_at: string;
+}
+
+function toOpportunity(row: OpportunityRow): Opportunity {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    eventType: row.event_type,
+    eventDate: row.event_date,
+    eventTime: row.event_time ?? "",
+    eventLocation: row.event_location,
+    description: row.description,
+    slots: row.slots ?? 1,
+    budgetMin: row.budget_min ?? null,
+    budgetMax: row.budget_max ?? null,
+    status: row.status,
+    createdAt: iso(row.created_at),
+  };
+}
+
+interface ApplicationRow {
+  id: string;
+  opportunity_id: string;
+  professional_id: string;
+  professional_name: string;
+  message: string;
+  proposed_amount: number | null;
+  status: ApplicationStatus;
+  created_at: string;
+}
+
+function toApplication(row: ApplicationRow): Application {
+  return {
+    id: row.id,
+    opportunityId: row.opportunity_id,
+    professionalId: row.professional_id,
+    professionalName: row.professional_name,
+    message: row.message,
+    proposedAmount: row.proposed_amount ?? null,
+    status: row.status,
+    createdAt: iso(row.created_at),
+  };
+}
+
+export const supabaseOpportunityRepository: OpportunityRepository = {
+  async create(input: OpportunityInput) {
+    const id = randomUUID();
+    await sbInsert("opportunities", {
+      id,
+      client_id: input.clientId,
+      client_name: input.clientName,
+      event_type: input.eventType,
+      event_date: input.eventDate,
+      event_time: input.eventTime,
+      event_location: input.eventLocation,
+      description: input.description,
+      slots: input.slots,
+      budget_min: input.budgetMin,
+      budget_max: input.budgetMax,
+      status: "aberta",
+    });
+    const rows = await sbSelect<OpportunityRow>("opportunities", [q.select("*"), q.eq("id", id), q.limit(1)]);
+    if (!rows[0]) throw new Error("Falha ao publicar a vaga.");
+    return toOpportunity(rows[0]);
+  },
+
+  async getById(id: string) {
+    const rows = await sbSelect<OpportunityRow>("opportunities", [q.select("*"), q.eq("id", id), q.limit(1)]);
+    return rows[0] ? toOpportunity(rows[0]) : null;
+  },
+
+  async listOpen() {
+    const rows = await sbSelect<OpportunityRow>("opportunities", [
+      q.select("*"),
+      q.eq("status", "aberta"),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toOpportunity);
+  },
+
+  async listForClient(clientId: string) {
+    const rows = await sbSelect<OpportunityRow>("opportunities", [
+      q.select("*"),
+      q.eq("client_id", clientId),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toOpportunity);
+  },
+
+  async close(id: string) {
+    await sbUpdate("opportunities", [q.eq("id", id)], { status: "encerrada" });
+    return this.getById(id);
+  },
+};
+
+export const supabaseApplicationRepository: ApplicationRepository = {
+  async create(input: ApplicationInput) {
+    const id = randomUUID();
+    await sbInsert("applications", {
+      id,
+      opportunity_id: input.opportunityId,
+      professional_id: input.professionalId,
+      professional_name: input.professionalName,
+      message: input.message,
+      proposed_amount: input.proposedAmount,
+      status: "pendente",
+    });
+    const rows = await sbSelect<ApplicationRow>("applications", [q.select("*"), q.eq("id", id), q.limit(1)]);
+    if (!rows[0]) throw new Error("Falha ao registrar a candidatura.");
+    return toApplication(rows[0]);
+  },
+
+  async listForOpportunity(opportunityId: string) {
+    const rows = await sbSelect<ApplicationRow>("applications", [
+      q.select("*"),
+      q.eq("opportunity_id", opportunityId),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toApplication);
+  },
+
+  async getByPro(opportunityId: string, professionalId: string) {
+    const rows = await sbSelect<ApplicationRow>("applications", [
+      q.select("*"),
+      q.eq("opportunity_id", opportunityId),
+      q.eq("professional_id", professionalId),
+      q.limit(1),
+    ]);
+    return rows[0] ? toApplication(rows[0]) : null;
+  },
+
+  async listForProfessional(professionalId: string) {
+    const rows = await sbSelect<ApplicationRow>("applications", [
+      q.select("*"),
+      q.eq("professional_id", professionalId),
+      q.order("created_at.desc"),
+    ]);
+    return rows.map(toApplication);
+  },
+
+  async setStatus(id: string, status: ApplicationStatus) {
+    await sbUpdate("applications", [q.eq("id", id)], { status });
+    const rows = await sbSelect<ApplicationRow>("applications", [q.select("*"), q.eq("id", id), q.limit(1)]);
+    return rows[0] ? toApplication(rows[0]) : null;
   },
 };

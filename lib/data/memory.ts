@@ -1,12 +1,17 @@
 import { randomInt, randomUUID } from "node:crypto";
 import type {
   Account,
+  Application,
+  ApplicationInput,
+  ApplicationStatus,
   ChatMessage,
   Client,
   ClientInput,
   Conversation,
   ConversationInput,
   IdentityRecord,
+  Opportunity,
+  OpportunityInput,
   PortfolioItem,
   Professional,
   ProfessionalInput,
@@ -19,8 +24,10 @@ import { rankProfessionals } from "@/lib/ranking";
 import { SEED_PROFESSIONALS } from "./seed";
 import type {
   AccountRepository,
+  ApplicationRepository,
   ClientRepository,
   ConversationRepository,
+  OpportunityRepository,
   ProfessionalFilters,
   ProfessionalRepository,
   ReviewRepository,
@@ -40,6 +47,8 @@ const g = globalThis as unknown as {
   __clicaConversations?: Conversation[];
   __clicaAccounts?: Account[];
   __clicaReviews?: Review[];
+  __clicaOpportunities?: Opportunity[];
+  __clicaApplications?: Application[];
 };
 
 function store(): Professional[] {
@@ -67,6 +76,16 @@ function conversations(): Conversation[] {
 function reviews(): Review[] {
   if (!g.__clicaReviews) g.__clicaReviews = [];
   return g.__clicaReviews;
+}
+
+function opportunities(): Opportunity[] {
+  if (!g.__clicaOpportunities) g.__clicaOpportunities = [];
+  return g.__clicaOpportunities;
+}
+
+function applications(): Application[] {
+  if (!g.__clicaApplications) g.__clicaApplications = [];
+  return g.__clicaApplications;
 }
 
 function slugify(name: string, taken: (id: string) => boolean): string {
@@ -576,5 +595,94 @@ export const memoryReviewRepository: ReviewRepository = {
 
   async getByConversation(conversationId: string) {
     return reviews().find((r) => r.conversationId === conversationId) ?? null;
+  },
+};
+
+export const memoryOpportunityRepository: OpportunityRepository = {
+  async create(input: OpportunityInput) {
+    const opp: Opportunity = {
+      id: randomUUID(),
+      clientId: input.clientId,
+      clientName: input.clientName,
+      eventType: input.eventType,
+      eventDate: input.eventDate,
+      eventTime: input.eventTime,
+      eventLocation: input.eventLocation,
+      description: input.description,
+      slots: input.slots,
+      budgetMin: input.budgetMin,
+      budgetMax: input.budgetMax,
+      status: "aberta",
+      createdAt: new Date().toISOString(),
+    };
+    opportunities().push(opp);
+    return opp;
+  },
+
+  async getById(id: string) {
+    return opportunities().find((o) => o.id === id) ?? null;
+  },
+
+  async listOpen() {
+    return opportunities()
+      .filter((o) => o.status === "aberta")
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async listForClient(clientId: string) {
+    return opportunities()
+      .filter((o) => o.clientId === clientId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async close(id: string) {
+    const opp = opportunities().find((o) => o.id === id);
+    if (!opp) return null;
+    opp.status = "encerrada";
+    return opp;
+  },
+};
+
+export const memoryApplicationRepository: ApplicationRepository = {
+  async create(input: ApplicationInput) {
+    const app: Application = {
+      id: randomUUID(),
+      opportunityId: input.opportunityId,
+      professionalId: input.professionalId,
+      professionalName: input.professionalName,
+      message: input.message,
+      proposedAmount: input.proposedAmount,
+      status: "pendente",
+      createdAt: new Date().toISOString(),
+    };
+    applications().push(app);
+    return app;
+  },
+
+  async listForOpportunity(opportunityId: string) {
+    return applications()
+      .filter((a) => a.opportunityId === opportunityId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async getByPro(opportunityId: string, professionalId: string) {
+    return (
+      applications().find(
+        (a) => a.opportunityId === opportunityId && a.professionalId === professionalId
+      ) ?? null
+    );
+  },
+
+  async listForProfessional(professionalId: string) {
+    return applications()
+      .filter((a) => a.professionalId === professionalId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async setStatus(id: string, status: ApplicationStatus) {
+    const app = applications().find((a) => a.id === id);
+    if (!app) return null;
+    app.status = status;
+    return app;
   },
 };
