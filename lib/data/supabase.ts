@@ -1016,26 +1016,39 @@ export const supabaseOpportunityRepository: OpportunityRepository = {
   },
 
   async getById(id: string) {
-    const rows = await sbSelect<OpportunityRow>("opportunities", [q.select("*"), q.eq("id", id), q.limit(1)]);
-    return rows[0] ? toOpportunity(rows[0]) : null;
+    try {
+      const rows = await sbSelect<OpportunityRow>("opportunities", [q.select("*"), q.eq("id", id), q.limit(1)]);
+      return rows[0] ? toOpportunity(rows[0]) : null;
+    } catch {
+      // Tabela opportunities ainda não migrada: não quebra a página.
+      return null;
+    }
   },
 
   async listOpen() {
-    const rows = await sbSelect<OpportunityRow>("opportunities", [
-      q.select("*"),
-      q.eq("status", "aberta"),
-      q.order("created_at.desc"),
-    ]);
-    return rows.map(toOpportunity);
+    try {
+      const rows = await sbSelect<OpportunityRow>("opportunities", [
+        q.select("*"),
+        q.eq("status", "aberta"),
+        q.order("created_at.desc"),
+      ]);
+      return rows.map(toOpportunity);
+    } catch {
+      return [];
+    }
   },
 
   async listForClient(clientId: string) {
-    const rows = await sbSelect<OpportunityRow>("opportunities", [
-      q.select("*"),
-      q.eq("client_id", clientId),
-      q.order("created_at.desc"),
-    ]);
-    return rows.map(toOpportunity);
+    try {
+      const rows = await sbSelect<OpportunityRow>("opportunities", [
+        q.select("*"),
+        q.eq("client_id", clientId),
+        q.order("created_at.desc"),
+      ]);
+      return rows.map(toOpportunity);
+    } catch {
+      return [];
+    }
   },
 
   async close(id: string) {
@@ -1062,31 +1075,43 @@ export const supabaseApplicationRepository: ApplicationRepository = {
   },
 
   async listForOpportunity(opportunityId: string) {
-    const rows = await sbSelect<ApplicationRow>("applications", [
-      q.select("*"),
-      q.eq("opportunity_id", opportunityId),
-      q.order("created_at.desc"),
-    ]);
-    return rows.map(toApplication);
+    try {
+      const rows = await sbSelect<ApplicationRow>("applications", [
+        q.select("*"),
+        q.eq("opportunity_id", opportunityId),
+        q.order("created_at.desc"),
+      ]);
+      return rows.map(toApplication);
+    } catch {
+      return [];
+    }
   },
 
   async getByPro(opportunityId: string, professionalId: string) {
-    const rows = await sbSelect<ApplicationRow>("applications", [
-      q.select("*"),
-      q.eq("opportunity_id", opportunityId),
-      q.eq("professional_id", professionalId),
-      q.limit(1),
-    ]);
-    return rows[0] ? toApplication(rows[0]) : null;
+    try {
+      const rows = await sbSelect<ApplicationRow>("applications", [
+        q.select("*"),
+        q.eq("opportunity_id", opportunityId),
+        q.eq("professional_id", professionalId),
+        q.limit(1),
+      ]);
+      return rows[0] ? toApplication(rows[0]) : null;
+    } catch {
+      return null;
+    }
   },
 
   async listForProfessional(professionalId: string) {
-    const rows = await sbSelect<ApplicationRow>("applications", [
-      q.select("*"),
-      q.eq("professional_id", professionalId),
-      q.order("created_at.desc"),
-    ]);
-    return rows.map(toApplication);
+    try {
+      const rows = await sbSelect<ApplicationRow>("applications", [
+        q.select("*"),
+        q.eq("professional_id", professionalId),
+        q.order("created_at.desc"),
+      ]);
+      return rows.map(toApplication);
+    } catch {
+      return [];
+    }
   },
 
   async setStatus(id: string, status: ApplicationStatus) {
